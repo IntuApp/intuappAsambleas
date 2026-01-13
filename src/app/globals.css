@@ -3,6 +3,19 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Brand Colors */
+  --primary: #94a2ff;
+  --primary-hover: #7684d6; /* Darker shade of primary */
+  --primary-focus: #b6c0ff; /* Lighter/Glow shade */
+
+  --secondary-border: #0e3c42;
+  --secondary-text: #0e3c42;
+  --secondary-hover-bg: #0e3c42; /* Inverted for hover based on common patterns, or light tint */
+  --secondary-hover-text: #ffffff;
+
+  --disabled-bg: #d3dae0;
+  --disabled-text: #fcfcfc;
 }
 
 @theme inline {
@@ -10,8 +23,19 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-focus: var(--primary-focus);
+
+  --color-secondary-border: var(--secondary-border);
+  --color-secondary-text: var(--secondary-text);
+  --color-secondary-hover-bg: var(--secondary-hover-bg);
+  --color-secondary-hover-text: var(--secondary-hover-text);
+
+  --color-disabled-bg: var(--disabled-bg);
+  --color-disabled-text: var(--disabled-text);
+}
 
 body {
   background: var(--background);
