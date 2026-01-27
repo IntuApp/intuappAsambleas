@@ -1,7 +1,4 @@
 import { useState, useEffect } from "react";
-import { db } from "./firebase";
-import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
-import bcrypt from "bcryptjs";
 
 const USER_SESSION_KEY = "user_session";
 

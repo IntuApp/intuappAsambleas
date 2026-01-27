@@ -1,53 +1,19 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import bcrypt from "bcryptjs";
+import { loginUser } from "@/lib/auth-service";
 
 export async function POST(request) {
   try {
     const { email, password } = await request.json();
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 }
-      );
-    }
-
-    const q = query(collection(db, "user"), where("email", "==", email));
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) {
-      return NextResponse.json(
-        { error: "Usuario no encontrado" },
-        { status: 404 }
-      );
-    }
-
-    const userDoc = querySnapshot.docs[0];
-    const userData = userDoc.data();
-
-    const isValid = await bcrypt.compare(password, userData.password);
-
-    if (!isValid) {
-      return NextResponse.json(
-        { error: "Contraseña incorrecta" },
-        { status: 401 }
-      );
-    }
-
-    const userSession = {
-      uid: userDoc.id,
-      email: userData.email,
-      role: userData.role,
-      ...userData,
-    };
-
-    delete userSession.password;
-
-    return NextResponse.json(userSession);
+    const user = await loginUser(email, password);
+    return NextResponse.json(user);
   } catch (error) {
     console.error("Login error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+
+    let status = 500;
+    if (error.message === "Usuario no encontrado") status = 404;
+    if (error.message === "Contraseña incorrecta") status = 401;
+    if (error.message === "Email and password are required") status = 400;
+
+    return NextResponse.json({ error: error.message }, { status });
   }
 }
