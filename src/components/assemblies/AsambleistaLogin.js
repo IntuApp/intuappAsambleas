@@ -48,6 +48,7 @@ export default function AsambleistaLogin({
                   type="text"
                   value={document}
                   onChange={(e) => setDocument(e.target.value)}
+                  placeholder="Ejemplo: 1234567890"
                   className="w-full bg-white border border-[#EBEBEB] rounded-xl p-4 outline-none focus:border-[#94A2FF] font-medium text-[#0E3C42] text-lg placeholder:text-gray-300 transition-all shadow-sm"
                   autoFocus
                   onKeyDown={(e) => {
@@ -87,7 +88,7 @@ export default function AsambleistaLogin({
           /* STEP 0: WELCOME SPLIT VIEW */
           <>
             {/* Left Side Content */}
-            <div className="w-full md:w-[48%] p-8 md:p-16 flex flex-col justify-center relative bg-white overflow-visible">
+            <div className="w-full md:w-[48%] p-8 md:p-16 flex flex-col justify-center relative bg-white overflow-visible order-2 md:order-1">
               <div className="w-full max-w-[420px] mx-auto flex flex-col gap-10">
                 <div>
                   <h1 className="text-[42px] font-bold text-[#0E3C42] mb-1 tracking-tight">
@@ -192,7 +193,7 @@ export default function AsambleistaLogin({
             </div>
 
             {/* Right Side - Brand View */}
-            <div className="flex-1 bg-gradient-to-br from-[#EEF8F9] via-[#F2F6FF] to-[#E9EFFF] flex flex-col items-center justify-center p-12 relative overflow-hidden">
+            <div className="flex-1 bg-gradient-to-br from-[#EEF8F9] via-[#F2F6FF] to-[#E9EFFF] flex flex-col items-center justify-center p-12 relative overflow-hidden order-1 md:order-2">
               {/* Logo & Slogan */}
               <div
                 className="absolute rounded-full blur-[50px]"

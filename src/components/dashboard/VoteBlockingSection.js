@@ -14,7 +14,6 @@ const VoteBlockingSection = ({ registries, onToggleBlock }) => {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-white border-b border-gray-100 text-xs font-bold text-gray-800 uppercase tracking-wider">
-              <th className="py-4 px-6">Item</th>
               <th className="py-4 px-6">Tipo</th>
               <th className="py-4 px-6">Grupo</th>
               <th className="py-4 px-6">Propiedad</th>
@@ -30,9 +29,6 @@ const VoteBlockingSection = ({ registries, onToggleBlock }) => {
                   key={item.id || index}
                   className="border-b border-gray-50 hover:bg-gray-50 transition text-sm text-[#0E3C42]"
                 >
-                  <td className="py-4 px-6 text-gray-500 font-medium">
-                    {item.item || "-"}
-                  </td>
                   <td className="py-4 px-6 text-gray-500 font-medium">
                     {item.tipo || "-"}
                   </td>

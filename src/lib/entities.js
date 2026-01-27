@@ -360,12 +360,23 @@ export async function toggleVoteBlock(listId, registryId, isBlocked) {
 export async function toggleRegistryDeletion(listId, registryId, isDeleted) {
   try {
     const docRef = doc(db, "assemblyRegistriesList", listId);
-    await updateDoc(docRef, {
+    const updates = {
       [`assemblyRegistries.${registryId}.isDeleted`]: isDeleted,
-      [`assemblyRegistries.${registryId}.registerInAssembly`]: isDeleted
-        ? false
-        : false,
-    });
+    };
+
+    if (isDeleted) {
+      // If deleting, unregister and clear all registration info
+      updates[`assemblyRegistries.${registryId}.registerInAssembly`] = false;
+      updates[`assemblyRegistries.${registryId}.firstName`] = "";
+      updates[`assemblyRegistries.${registryId}.lastName`] = "";
+      updates[`assemblyRegistries.${registryId}.email`] = "";
+      updates[`assemblyRegistries.${registryId}.phone`] = "";
+      updates[`assemblyRegistries.${registryId}.powerUrl`] = "";
+      updates[`assemblyRegistries.${registryId}.role`] = "";
+      updates[`assemblyRegistries.${registryId}.userDocument`] = "";
+    }
+
+    await updateDoc(docRef, updates);
     return { success: true };
   } catch (error) {
     console.error("Error toggling registry deletion:", error);
@@ -399,6 +410,25 @@ export async function getEntityTypes() {
     return { success: true, data: types };
   } catch (error) {
     console.error("Error fetching entity types:", error);
+    return { success: false, error };
+  }
+}
+
+export async function addRegistryToList(listId, registryData) {
+  try {
+    const docRef = doc(db, "assemblyRegistriesList", listId);
+    const randomId = doc(collection(db, "temp")).id;
+    await updateDoc(docRef, {
+      [`assemblyRegistries.${randomId}`]: {
+        ...registryData,
+        voteBlocked: false,
+        registerInAssembly: false,
+        isDeleted: false,
+      },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error adding registry to list:", error);
     return { success: false, error };
   }
 }

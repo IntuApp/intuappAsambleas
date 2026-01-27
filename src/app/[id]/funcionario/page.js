@@ -23,6 +23,7 @@ import {
   Trash2,
   Video,
   Calendar,
+  InfoIcon,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { deleteAssemblyUser, getAssemblyUser } from "@/lib/assemblyUser";
@@ -210,13 +211,17 @@ const FuncionarioPage = () => {
   return (
     <div className="min-h-screen bg-[#F8F9FB] flex flex-col font-sans">
       {/* HEADER */}
-      <header className="bg-white border-b border-gray-100 py-3 px-10 flex justify-between items-center sticky top-0 z-50">
+      <header className="bg-white border-b border-gray-100 py-3 px-4 md:px-10 flex justify-between items-center sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <img src="/logos/assambly/iconLogo.png" alt="Logo" />
+          <img
+            src="/logos/assambly/iconLogo.png"
+            alt="Logo"
+            className="h-8 w-auto md:h-auto"
+          />
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-[10px] font-black text-[#0E3C42] uppercase tracking-[0.2em]">
-            Invitado| <span className="text-gray-400">Administrador</span>
+          <span className="text-[10px] font-black text-[#0E3C42] uppercase tracking-[0.2em] hidden md:block">
+            Invitado <span className="text-gray-400">| Administrador</span>
           </span>
           <div className="w-9 h-9 bg-indigo-50 rounded-full flex items-center justify-center text-[#8B9DFF] border border-indigo-100 shadow-sm">
             <Users size={18} />
@@ -224,68 +229,70 @@ const FuncionarioPage = () => {
         </div>
       </header>
 
-      <main className="mx-15">
+      <main className="container mx-auto px-4 md:px-8 pb-10">
         {/* ASSEMBLY INFO */}
-        <div className="my-8 p-5">
+        <div className="my-6 md:my-8 py-4 md:p-5">
           <div className="">
-            <div className=" flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start mb-4">
               <div className="w-full flex justify-between">
-                <h1 className="text-[32px] font-bold text-[#0E3C42] mb-1">
+                <h1 className="text-2xl md:text-[32px] font-bold text-[#0E3C42] mb-1">
                   {assembly.name}
                 </h1>
               </div>
             </div>
 
-            <div className="flex items-center gap-6 text-sm text-gray-600">
-              <p className="text-gray-500 font-medium text-[20px]">
+            <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 text-sm text-gray-600">
+              <p className="text-gray-500 font-medium text-lg md:text-[20px]">
                 {entity.name}
               </p>
-              <div className="flex items-center font-medium bg-[#FFF] px-3 py-1 rounded-full gap-2">
-                <Calendar size={18} className="text-[#0E3C42]" />
-                <span className="font-semibold">
-                  {assembly.date} - {assembly.hour}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full">
-                <Video size={18} className="" />
-                <span className="font-bold text-xs uppercase">
-                  {assembly.type}
-                </span>
-              </div>
-              <div>
-                <span
-                  className={`px-3 py-1 rounded-full font-bold text-xs uppercase flex items-center gap-1 ${
-                    assembly.status === "finished"
-                      ? "bg-[#B8EAF0] text-[#0E3C42]"
-                      : "bg-red-100 text-red-500"
-                  }`}
-                >
-                  {assembly.status === "started" && (
-                    <span className="w-2 h-2 rounded-full bg-red-500 "></span>
-                  )}
-                  {assembly.status === "create" ? (
-                    <span className="rounded-full bg-[#FFEDDD] text-[#C53F00]">
-                      {" "}
-                      Agendada
-                    </span>
-                  ) : assembly.status === "started" ? (
-                    <span className="rounded-full bg-[#FFEDDD] text-[#930002]">
-                      {" "}
-                      En vivo
-                    </span>
-                  ) : assembly.status === "registries_finalized" ? (
-                    "Registros Cerrados"
-                  ) : (
-                    "Finalizada"
-                  )}
-                </span>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center font-medium bg-[#FFF] px-3 py-1 rounded-full gap-2 border border-gray-100 md:border-none">
+                  <Calendar size={18} className="text-[#0E3C42]" />
+                  <span className="font-semibold">
+                    {assembly.date} - {assembly.hour}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full">
+                  <Video size={18} className="" />
+                  <span className="font-bold text-xs uppercase">
+                    {assembly.type}
+                  </span>
+                </div>
+                <div>
+                  <span
+                    className={`px-3 py-1 rounded-full font-bold text-xs uppercase flex items-center gap-1 ${
+                      assembly.status === "finished"
+                        ? "bg-[#B8EAF0] text-[#0E3C42]"
+                        : "bg-red-100 text-red-500"
+                    }`}
+                  >
+                    {assembly.status === "started" && (
+                      <span className="w-2 h-2 rounded-full bg-red-500 "></span>
+                    )}
+                    {assembly.status === "create" ? (
+                      <span className="rounded-full bg-[#FFEDDD] text-[#C53F00]">
+                        {" "}
+                        Agendada
+                      </span>
+                    ) : assembly.status === "started" ? (
+                      <span className="rounded-full bg-[#FFEDDD] text-[#930002]">
+                        {" "}
+                        En vivo
+                      </span>
+                    ) : assembly.status === "registries_finalized" ? (
+                      "Registros Cerrados"
+                    ) : (
+                      "Finalizada"
+                    )}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* TOP CARDS */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6  mb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
           {/* QUORUM CARD */}
           <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 flex flex-col">
             <div className="flex justify-between items-start mb-4">
@@ -318,10 +325,10 @@ const FuncionarioPage = () => {
         </div>
 
         {/* TABS - MATCHING IMAGE AESTHETICS */}
-        <div className="bg-[#E0E7FF]/20 p-2 rounded-full flex gap-1 mb-10 max-w-2xl mx-auto border border-[#E0E7FF]/40">
+        <div className="bg-[#E0E7FF]/20 p-1 md:p-2 rounded-full flex gap-1 mb-10 w-full max-w-2xl mx-auto border border-[#E0E7FF]/40 overflow-x-auto">
           <button
             onClick={() => setActiveTab("Asambleistas")}
-            className={`flex-1 py-3.5 px-8 rounded-full font-black text-xs uppercase tracking-[0.1em] transition-all duration-300 ${
+            className={`flex-1 py-3 px-4 md:px-8 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.1em] transition-all duration-300 whitespace-nowrap ${
               activeTab === "Asambleistas"
                 ? "bg-[#8B9DFF] text-white shadow-[0_8px_20px_rgba(139,157,255,0.4)]"
                 : "text-gray-400 hover:text-gray-600"
@@ -331,7 +338,7 @@ const FuncionarioPage = () => {
           </button>
           <button
             onClick={() => setActiveTab("Sobre IntuApp")}
-            className={`flex-1 py-3.5 px-8 rounded-full font-black text-xs uppercase tracking-[0.1em] transition-all duration-300 ${
+            className={`flex-1 py-3 px-4 md:px-8 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.1em] transition-all duration-300 whitespace-nowrap ${
               activeTab === "Sobre IntuApp"
                 ? "bg-[#8B9DFF] text-white shadow-[0_8px_20px_rgba(139,157,255,0.4)]"
                 : "text-gray-400 hover:text-gray-600"
@@ -363,150 +370,146 @@ const FuncionarioPage = () => {
           </>
         ) : (
           /* TAB 2: SOBRE INTUAPP */
-          <div className="mx-15 animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-10">
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-10">
             {/* HERO GRADIENT CARD */}
-            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-10">
-              {/* HERO GRADIENT CARD */}
-              <div className="bg-gradient-to-br from-[#80D9D1] via-[#8B9DFF] to-[#6372FF] rounded-[48px] p-16 text-white relative overflow-hidden shadow-[0_20px_50px_rgba(139,157,255,0.3)]">
-                {/* Decorative background shapes */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-[80px]" />
-                <div className="absolute bottom-0 left-0 w-96 h-96 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-[80px]" />
+            <div className="bg-gradient-to-br from-[#80D9D1] via-[#8B9DFF] to-[#6372FF] rounded-[32px] md:rounded-[48px] p-6 md:p-16 text-white relative overflow-hidden shadow-[0_20px_50px_rgba(139,157,255,0.3)]">
+              {/* Decorative background shapes */}
+              <div className="absolute top-0 right-0 w-64 md:w-96 h-64 md:h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-[80px]" />
+              <div className="absolute bottom-0 left-0 w-64 md:w-96 h-64 md:h-96 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-[80px]" />
 
-                {/* Blobs */}
-                <div
-                  className="absolute rounded-full blur-[50px]"
-                  style={{
-                    left: "-50px",
-                    top: "0px",
-                    width: "300px",
-                    height: "100px",
-                    background: "#94A2FF40",
-                    transform: "rotate(310deg)",
-                  }}
-                />
-                <div
-                  className="absolute rounded-full blur-[20px]"
-                  style={{
-                    left: "200px",
-                    top: "0",
-                    width: "500px",
-                    height: "200px",
-                    background: "#ABE7E540",
-                    transform: "rotate(14deg)",
-                  }}
-                />
-                <div
-                  className="absolute rounded-full blur-[20px]"
-                  style={{
-                    right: "200px",
-                    top: "100px",
-                    width: "500px",
-                    height: "200px",
-                    background: "#94A2FF40",
-                    transform: "rotate(335deg)",
-                  }}
-                />
-                <div
-                  className="absolute rounded-full blur-[20px]"
-                  style={{
-                    right: "20px",
-                    top: "30px",
-                    width: "300px",
-                    height: "200px",
-                    background: "#ABE7E540",
-                    transform: "rotate(157deg)",
-                  }}
-                />
+              {/* Blobs */}
+              <div
+                className="absolute rounded-full blur-[50px]"
+                style={{
+                  left: "-50px",
+                  top: "0px",
+                  width: "300px",
+                  height: "100px",
+                  background: "#94A2FF40",
+                  transform: "rotate(310deg)",
+                }}
+              />
+              <div
+                className="absolute rounded-full blur-[20px]"
+                style={{
+                  left: "200px",
+                  top: "0",
+                  width: "500px",
+                  height: "200px",
+                  background: "#ABE7E540",
+                  transform: "rotate(14deg)",
+                }}
+              />
+              <div
+                className="absolute rounded-full blur-[20px]"
+                style={{
+                  right: "200px",
+                  top: "100px",
+                  width: "500px",
+                  height: "200px",
+                  background: "#94A2FF40",
+                  transform: "rotate(335deg)",
+                }}
+              />
+              <div
+                className="absolute rounded-full blur-[20px]"
+                style={{
+                  right: "20px",
+                  top: "30px",
+                  width: "300px",
+                  height: "200px",
+                  background: "#ABE7E540",
+                  transform: "rotate(157deg)",
+                }}
+              />
 
-                {/* Header */}
-                <div className="relative z-10 flex flex-col items-center text-center">
-                  <div className="text-white font-black text-[56px] tracking-tighter flex items-center gap-3 mb-4 drop-shadow-lg">
-                    <div className="w-16 h-16 rounded-full border-[8px] border-white flex items-center justify-center shadow-lg">
-                      <div className="w-3.5 h-3.5 bg-white rounded-full" />
-                    </div>
-                    intuapp
+              {/* Header */}
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <div className="text-white font-black text-3xl md:text-[56px] tracking-tighter flex flex-col md:flex-row items-center gap-3 mb-4 drop-shadow-lg leading-tight">
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full border-[6px] md:border-[8px] border-white flex items-center justify-center shadow-lg">
+                    <div className="w-3 h-3 md:w-3.5 md:h-3.5 bg-white rounded-full" />
                   </div>
-                  <h3 className="text-2xl font-black opacity-95 tracking-tight italic">
-                    Lo complejo hecho simple
-                  </h3>
+                  intuapp
+                </div>
+                <h3 className="text-xl md:text-2xl font-black opacity-95 tracking-tight italic">
+                  Lo complejo hecho simple
+                </h3>
+              </div>
+
+              {/* GRID FEATURES */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 relative z-10 mt-10 md:mt-16 max-w-5xl mx-auto">
+                {/* Card 1 */}
+                <div className="bg-white rounded-[24px] md:rounded-[32px] p-6 md:p-10 shadow-lg border border-black/5 hover:shadow-xl transition-shadow">
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="w-10 h-10 bg-[#EEF2FF] rounded-xl flex items-center justify-center text-[#6372FF] shadow-sm shrink-0">
+                      <ShieldCheck size={24} strokeWidth={2.5} />
+                    </div>
+                    <h4 className="font-black uppercase tracking-[0.2em] text-[11px] md:text-[13px] text-[#0E3C42]">
+                      Nuestra Misión
+                    </h4>
+                  </div>
+                  <p className="text-sm md:text-[15px] leading-relaxed text-[#4B5563] font-semibold">
+                    Creamos herramientas funcionales con un enfoque intuitivo
+                    para simplificar lo complejo. Nuestro objetivo es hacer que
+                    la gestión de asambleas sea accesible y eficiente para
+                    todos.
+                  </p>
                 </div>
 
-                {/* GRID FEATURES */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 mt-16 max-w-5xl mx-auto">
-                  {/* Card 1 */}
-                  <div className="bg-white rounded-[32px] p-10 shadow-lg border border-black/5 hover:shadow-xl transition-shadow">
-                    <div className="flex items-center gap-4 mb-5">
-                      <div className="w-10 h-10 bg-[#EEF2FF] rounded-xl flex items-center justify-center text-[#6372FF] shadow-sm">
-                        <ShieldCheck size={24} strokeWidth={2.5} />
-                      </div>
-                      <h4 className="font-black uppercase tracking-[0.2em] text-[13px] text-[#0E3C42]">
-                        Nuestra Misión
-                      </h4>
+                {/* Card 2 */}
+                <div className="bg-white rounded-[24px] md:rounded-[32px] p-6 md:p-10 shadow-lg border border-black/5 hover:shadow-xl transition-shadow">
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="w-10 h-10 bg-[#EEF2FF] rounded-xl flex items-center justify-center text-[#6372FF] shadow-sm shrink-0">
+                      <Trophy size={24} strokeWidth={2.5} />
                     </div>
-                    <p className="text-[15px] leading-relaxed text-[#4B5563] font-semibold">
-                      Creamos herramientas funcionales con un enfoque intuitivo
-                      para simplificar lo complejo. Nuestro objetivo es hacer
-                      que la gestión de asambleas sea accesible y eficiente para
-                      todos.
-                    </p>
+                    <h4 className="font-black uppercase tracking-[0.2em] text-[11px] md:text-[13px] text-[#0E3C42]">
+                      Experiencia
+                    </h4>
                   </div>
+                  <p className="text-sm md:text-[15px] leading-relaxed text-[#4B5563] font-semibold">
+                    Más de 10 años de experiencia en la gestión de asambleas.
+                  </p>
+                  <div className="mt-3 flex flex-col gap-1 text-xs md:text-[13px] text-[#6B7280] uppercase tracking-wide font-semibold">
+                    <span>• 500+ asambleas exitosas</span>
+                    <span>• Miles de Asambleístas satisfechos</span>
+                  </div>
+                </div>
 
-                  {/* Card 2 */}
-                  <div className="bg-white rounded-[32px] p-10 shadow-lg border border-black/5 hover:shadow-xl transition-shadow">
-                    <div className="flex items-center gap-4 mb-5">
-                      <div className="w-10 h-10 bg-[#EEF2FF] rounded-xl flex items-center justify-center text-[#6372FF] shadow-sm">
-                        <Trophy size={24} strokeWidth={2.5} />
-                      </div>
-                      <h4 className="font-black uppercase tracking-[0.2em] text-[13px] text-[#0E3C42]">
-                        Experiencia
-                      </h4>
+                {/* Card 3 */}
+                <div className="bg-white rounded-[24px] md:rounded-[32px] p-6 md:p-10 shadow-lg border border-black/5 hover:shadow-xl transition-shadow">
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="w-10 h-10 bg-[#EEF2FF] rounded-xl flex items-center justify-center text-[#6372FF] shadow-sm shrink-0">
+                      <HelpCircle size={24} strokeWidth={2.5} />
                     </div>
-                    <p className="text-[15px] leading-relaxed text-[#4B5563] font-semibold">
-                      Más de 10 años de experiencia en la gestión de asambleas.
-                    </p>
-                    <div className="mt-3 flex flex-col gap-1 text-[13px] text-[#6B7280] uppercase tracking-wide font-semibold">
-                      <span>• 500+ asambleas exitosas</span>
-                      <span>• Miles de Asambleístas satisfechos</span>
-                    </div>
+                    <h4 className="font-black uppercase tracking-[0.2em] text-[11px] md:text-[13px] text-[#0E3C42]">
+                      ¿Qué hacemos?
+                    </h4>
                   </div>
+                  <p className="text-sm md:text-[15px] leading-relaxed text-[#4B5563] font-semibold">
+                    Somos una herramienta que facilita y dinamiza el proceso de
+                    registros y votaciones en las asambleas.
+                  </p>
+                </div>
 
-                  {/* Card 3 */}
-                  <div className="bg-white rounded-[32px] p-10 shadow-lg border border-black/5 hover:shadow-xl transition-shadow">
-                    <div className="flex items-center gap-4 mb-5">
-                      <div className="w-10 h-10 bg-[#EEF2FF] rounded-xl flex items-center justify-center text-[#6372FF] shadow-sm">
-                        <HelpCircle size={24} strokeWidth={2.5} />
-                      </div>
-                      <h4 className="font-black uppercase tracking-[0.2em] text-[13px] text-[#0E3C42]">
-                        ¿Qué hacemos?
-                      </h4>
+                {/* Card 4 */}
+                <div className="bg-white rounded-[24px] md:rounded-[32px] p-6 md:p-10 shadow-lg border border-black/5 hover:shadow-xl transition-shadow">
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="w-10 h-10 bg-[#EEF2FF] rounded-xl flex items-center justify-center text-[#6372FF] shadow-sm shrink-0">
+                      <History size={24} strokeWidth={2.5} />
                     </div>
-                    <p className="text-[15px] leading-relaxed text-[#4B5563] font-semibold">
-                      Somos una herramienta que facilita y dinamiza el proceso
-                      de registros y votaciones en las asambleas.
-                    </p>
+                    <h4 className="font-black uppercase tracking-[0.2em] text-[11px] md:text-[13px] text-[#0E3C42]">
+                      Nuestro Rol
+                    </h4>
                   </div>
-
-                  {/* Card 4 */}
-                  <div className="bg-white rounded-[32px] p-10 shadow-lg border border-black/5 hover:shadow-xl transition-shadow">
-                    <div className="flex items-center gap-4 mb-5">
-                      <div className="w-10 h-10 bg-[#EEF2FF] rounded-xl flex items-center justify-center text-[#6372FF] shadow-sm">
-                        <History size={24} strokeWidth={2.5} />
-                      </div>
-                      <h4 className="font-black uppercase tracking-[0.2em] text-[13px] text-[#0E3C42]">
-                        Nuestro Rol
-                      </h4>
-                    </div>
-                    <p className="text-[15px] leading-relaxed text-[#4B5563] font-semibold">
-                      Somos la herramienta tecnológica que facilita el proceso,
-                      no el operador logístico que realiza tu asamblea.
-                    </p>
-                  </div>
+                  <p className="text-sm md:text-[15px] leading-relaxed text-[#4B5563] font-semibold">
+                    Somos la herramienta tecnológica que facilita el proceso, no
+                    el operador logístico que realiza tu asamblea.
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* LEGAL INFO BOXES - MATCHING DESIGN */}
-            <div className="bg-[#FFF4E5] border border-orange-100 rounded-[40px] p-10 relative overflow-hidden group">
+            <div className="bg-[#FFF4E5] border border-orange-100 rounded-[24px] md:rounded-[40px] p-6 md:p-10 relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-2 h-full bg-orange-400/20" />
               <button className="absolute top-8 right-8 text-orange-300 opacity-40 hover:opacity-100 transition">
                 <X size={20} />
@@ -515,16 +518,16 @@ const FuncionarioPage = () => {
                 <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-orange-500 shadow-md flex-shrink-0 group-hover:rotate-12 transition-transform">
                   <AlertTriangle size={28} strokeWidth={2.5} />
                 </div>
-                <div className="space-y-6">
-                  <h4 className="font-black text-orange-950 text-xs uppercase tracking-[0.2em]">
+                <div className="space-y-4 md:space-y-6">
+                  <h4 className="font-black text-orange-950 text-[10px] md:text-xs uppercase tracking-[0.2em]">
                     Sobre el resultado de las votaciones
                   </h4>
-                  <p className="text-orange-900/80 text-[13px] font-black leading-relaxed">
+                  <p className="text-orange-900/80 text-xs md:text-[13px] font-black leading-relaxed">
                     Los resultados emitidos en la plataforma se obtienen con
                     base en los coeficientes, según lo establecido en la Ley 675
                     de 2001:
                   </p>
-                  <ul className="space-y-4 text-orange-900/70 text-[12px] font-bold">
+                  <ul className="space-y-4 text-orange-900/70 text-xs md:text-[12px] font-bold">
                     <li className="flex gap-4">
                       <div className="w-2 h-2 bg-orange-400 rounded-full mt-1.5 flex-shrink-0" />
                       <span>
@@ -558,7 +561,7 @@ const FuncionarioPage = () => {
               </div>
             </div>
 
-            <div className="bg-[#F5F7FF] border border-indigo-100 rounded-[40px] p-10 relative overflow-hidden group">
+            <div className="bg-[#F5F7FF] border border-indigo-100 rounded-[24px] md:rounded-[40px] p-6 md:p-10 relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-2 h-full bg-[#8B9DFF]/20" />
               <button className="absolute top-8 right-8 text-[#8B9DFF] opacity-40 hover:opacity-100 transition">
                 <X size={20} />
@@ -568,10 +571,10 @@ const FuncionarioPage = () => {
                   <Info size={28} strokeWidth={2.5} />
                 </div>
                 <div className="space-y-4">
-                  <h4 className="font-black text-[#0E3C42] text-xs uppercase tracking-[0.2em]">
+                  <h4 className="font-black text-[#0E3C42] text-[10px] md:text-xs uppercase tracking-[0.2em]">
                     Importante
                   </h4>
-                  <ul className="space-y-3 text-indigo-900/60 text-[12px] font-bold list-disc pl-6 leading-relaxed">
+                  <ul className="space-y-3 text-indigo-900/60 text-xs md:text-[12px] font-bold list-disc pl-6 leading-relaxed">
                     <li>
                       <span className="font-black text-[#0E3C42]">Intuapp</span>{" "}
                       es una herramienta tecnológica de apoyo: facilita la
@@ -596,7 +599,7 @@ const FuncionarioPage = () => {
       </main>
 
       {/* FOOTER */}
-      <footer className="py-12 border-t border-gray-100 bg-white/50 text-center">
+      <footer className="py-8 border-t border-gray-100 bg-white/50 text-center">
         <div className="flex flex-col items-center gap-3">
           <div className="text-[#8B9DFF] font-black text-xl tracking-tighter opacity-30 grayscale filter">
             intuapp

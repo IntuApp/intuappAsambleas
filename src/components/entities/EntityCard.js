@@ -62,12 +62,12 @@ export default function EntityCard({
       <div className="mb-4 flex flex-col gap-3">
         {activeAssembly ? (
           <div className="bg-[#EEF2FF] border border-[#D5DAFF] rounded-xl p-3 flex items-center justify-between">
-            <div className="flex flex-col">
+            <div className="flex ">
               <span className="text-[14px] font-bold text-[#000000]">
-                {activeAssembly.name}
+                {activeAssembly.name + " "}
               </span>
-              <span className="font-normal text-[11px] text-gray-500">
-                Inició hace {activeAssembly.startedAgo || "pocos minutos"}
+              <span className="font-normal text-[14px] text-gray-500">
+                · Inició hace {activeAssembly.startedAgo || "pocos minutos"}
               </span>
             </div>
             <div className="flex items-center gap-1.5 bg-[#FACCCD] text-[#930002] px-2 py-0.5 rounded-full text-[11px] font-bold">

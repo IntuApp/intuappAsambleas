@@ -90,7 +90,7 @@ export const validateExcelTotals = (data) => {
   });
 
   // Range 98 - 100.5
-  if (totalCoefficient < 98 || totalCoefficient > 100.5) {
+  if (totalCoefficient < 90 || totalCoefficient > 120) {
     errors.push(
       `La suma total de coeficientes es ${totalCoefficient.toFixed(
         4

@@ -9,6 +9,7 @@ import {
   resetAssemblyRegistries,
   toggleVoteBlock,
   toggleRegistryDeletion,
+  addRegistryToList,
 } from "@/lib/entities";
 import * as XLSX from "xlsx";
 
@@ -20,6 +21,7 @@ import {
 import {
   createAssemblyUser,
   getAssemblyUser,
+  deleteAssemblyUser,
   deleteAllAssemblyUsers,
 } from "@/lib/assemblyUser";
 import { db, storage } from "@/lib/firebase";
@@ -501,6 +503,16 @@ const AssemblyDashboardPage = () => {
     )
       return;
 
+    const registry = registries.find((r) => r.id === registryId);
+    if (!currentDeleted && registry) {
+      // If deleting, also remove from active users collection
+      // Document to match is registry.userDocument or registry.documento (whichever was used for login)
+      const docToDelete = registry.userDocument || registry.documento;
+      if (docToDelete) {
+        await deleteAssemblyUser(docToDelete, assemblyId);
+      }
+    }
+
     const res = await toggleRegistryDeletion(
       entity?.assemblyRegistriesListId,
       registryId,
@@ -513,6 +525,44 @@ const AssemblyDashboardPage = () => {
     } else {
       toast.error("Error al actualizar estado");
     }
+  };
+
+  const handleAddRegistry = async (data) => {
+    // Check if property name already exists
+    const exists = registries.find(
+      (r) =>
+        r.propiedad?.toLowerCase() === data.propiedad?.toLowerCase() &&
+        !r.isDeleted,
+    );
+    if (exists) {
+      return toast.error("Esa propiedad ya existe en la base de datos.");
+    }
+
+    // Validate Coeficiente Sum
+    const currentTotal = registries.reduce(
+      (acc, r) =>
+        acc + parseFloat(String(r.coeficiente || 0).replace(",", ".")),
+      0,
+    );
+    const newCoef = parseFloat(String(data.coeficiente || 0).replace(",", "."));
+    const finalTotal = currentTotal + newCoef;
+
+    if (finalTotal > 120) {
+      return toast.error(
+        `Error: La suma total de coeficientes sería ${finalTotal.toFixed(
+          4,
+        )}. El máximo permitido es 110.`,
+      );
+    }
+
+    setLoading(true);
+    const res = await addRegistryToList(entity.assemblyRegistriesListId, data);
+    if (res.success) {
+      toast.success("Asambleísta añadido correctamente");
+    } else {
+      toast.error("Error al añadir asambleísta");
+    }
+    setLoading(false);
   };
 
   const exportToExcel = async () => {
@@ -1178,9 +1228,10 @@ const AssemblyDashboardPage = () => {
               </div>
             </div>
             <div className="flex gap-2">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setIsQrModalOpen(true)}
-                className="flex-1 border-2 border-[#0E3C42] rounded-3xl py-1.5 font-bold text-[#0E3C42] hover:bg-gray-50 flex items-center justify-center gap-2 text-xs"
+                className="flex-1 border-2 border-[#0E3C42] rounded-3xl !py-2 font-bold text-[#0E3C42] hover:bg-gray-50 flex items-center justify-center gap-2 text-xs"
               >
                 <div className="hidden">
                   <QRCodeCanvas
@@ -1191,13 +1242,15 @@ const AssemblyDashboardPage = () => {
                   />
                 </div>
                 <QrCode size={14} /> Ver QR
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
                 onClick={downloadQR}
-                className="flex-1 bg-[#94A2FF] rounded-3xl py-1.5 font-bold text-[#0E3C42] flex items-center justify-center gap-2 text-xs"
+                className="flex-1 bg-[#94A2FF] rounded-3xl !py-2 font-bold !text-[#0E3C42] flex items-center justify-center gap-2 text-xs"
+                icon={Download}
               >
-                <Download size={14} /> Descargar QR
-              </button>
+                Descargar QR
+              </Button>
             </div>
           </div>
 
@@ -1458,6 +1511,7 @@ const AssemblyDashboardPage = () => {
                 if (type === "delete") handleToggleDelete(item.id, false);
                 else handleToggleDelete(item.id, true);
               }}
+              onAddRegistry={handleAddRegistry}
             />
 
             <VoteBlockingSection

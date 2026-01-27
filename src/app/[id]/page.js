@@ -356,15 +356,6 @@ export default function AssemblyAccessPage() {
     );
   }
 
-  if (regStep === 0)
-    return (
-      <AsambleistaLogin
-        assembly={assembly}
-        entity={entity}
-        onLogin={handleAccess}
-        loading={loading}
-      />
-    );
 
   return (
     <RegistrationWizard

@@ -2,7 +2,7 @@ import React from "react";
 
 const AssemblyStatsBoxes = ({ registeredCount, totalCount, blockedCount }) => {
   return (
-    <div className="flex gap-4 flex-1">
+    <div className="flex flex-wrap gap-4 flex-1">
       {/* Box 1: Registered */}
       <div className="flex-1 bg-[#F9FBFF] border border-[#F0F4FF] rounded-[24px] p-5 flex flex-col justify-between shadow-sm min-h-[160px]">
         <div className="w-10 h-10 rounded-xl bg-[#E0E7FF] flex items-center justify-center mb-3">
