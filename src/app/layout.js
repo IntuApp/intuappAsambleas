@@ -1,10 +1,11 @@
-import { Red_Hat_Display , Geist_Mono } from "next/font/google";
+import { Red_Hat_Display } from "next/font/google";
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
 
 const redHat = Red_Hat_Display({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-red-hat",
 });
 
 export const metadata = {
@@ -15,7 +16,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={redHat.className}>
+      <body className={`${redHat.className} ${redHat.variable}`}>
         {children}
         <ToastContainer />
       </body>

@@ -2,12 +2,12 @@ export const getRequiredKeys = (keys) => {
   const propertyKey = keys.find(
     (k) =>
       k.toLowerCase().includes("propiedad") ||
-      k.toLowerCase().includes("nombre")
+      k.toLowerCase().includes("nombre"),
   );
   const coefficientKey = keys.find(
     (k) =>
       k.toLowerCase().includes("coeficiente") ||
-      k.toLowerCase().includes("participación")
+      k.toLowerCase().includes("participación"),
   );
   return { propertyKey, coefficientKey };
 };
@@ -88,15 +88,6 @@ export const validateExcelTotals = (data) => {
       }
     }
   });
-
-  // Range 98 - 100.5
-  if (totalCoefficient < 90 || totalCoefficient > 120) {
-    errors.push(
-      `La suma total de coeficientes es ${totalCoefficient.toFixed(
-        4
-      )}. Debe estar entre 98 y 100.`
-    );
-  }
 
   return {
     valid: errors.length === 0,

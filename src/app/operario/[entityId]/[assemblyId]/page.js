@@ -547,14 +547,6 @@ const AssemblyDashboardPage = () => {
     const newCoef = parseFloat(String(data.coeficiente || 0).replace(",", "."));
     const finalTotal = currentTotal + newCoef;
 
-    if (finalTotal > 120) {
-      return toast.error(
-        `Error: La suma total de coeficientes sería ${finalTotal.toFixed(
-          4,
-        )}. El máximo permitido es 110.`,
-      );
-    }
-
     setLoading(true);
     const res = await addRegistryToList(entity.assemblyRegistriesListId, data);
     if (res.success) {
