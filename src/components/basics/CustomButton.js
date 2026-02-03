@@ -1,28 +1,52 @@
-'use client';
-import React from 'react';
-import PropTypes from 'prop-types';
+"use client";
+import React from "react";
+import PropTypes from "prop-types";
 
-/**
- * CustomButton - botón reutilizable completamente controlado por className.
- * @param {ReactNode} children - contenido del botón (texto o ícono)
- * @param {function} onClick - función al hacer clic
- * @param {string} className - clases de estilo externas (Tailwind u otras)
- * @param {string} type - tipo de botón (button, submit, reset)
- * @param {boolean} disabled - desactiva el botón si es true
- */
+const variantButton = {
+  primary: `
+    border-2 border-[#94A2FF]
+    bg-[#94A2FF]
+    text-[#00093F]
+
+    hover:bg-[#94A2FF]
+    hover:border-[#00093F]
+  `,
+  secondary: `
+    border-2 border-[#0E3C42]
+    bg-[#FFFFFF]
+    text-[#0E3C42]
+
+    hover:bg-[#ABE7E5]
+    hover:border-[#0E3C42]
+  `,
+};
+
+const disabledStyles = `
+  border-2 border-[#D3DAE0]
+  bg-[#D3DAE0]
+  text-[#838383]
+  cursor-not-allowed
+  pointer-events-none
+`;
+
 export default function CustomButton({
   children,
   onClick,
-  className = '',
-  type = 'button',
+  className = "",
+  variant = "primary",
+  type = "button",
   disabled = false,
 }) {
   return (
     <button
       type={type}
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
       disabled={disabled}
-      className={`${className} ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+      className={`
+        rounded-full transition-all duration-200
+        ${className}
+        ${disabled ? disabledStyles : variantButton[variant]}
+      `}
     >
       {children}
     </button>
@@ -30,9 +54,10 @@ export default function CustomButton({
 }
 
 CustomButton.propTypes = {
+  variant: PropTypes.oneOf(["primary", "secondary"]),
   children: PropTypes.node.isRequired,
   onClick: PropTypes.func,
   className: PropTypes.string,
-  type: PropTypes.oneOf(['button', 'submit', 'reset']),
+  type: PropTypes.oneOf(["button", "submit", "reset"]),
   disabled: PropTypes.bool,
 };

@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 import { Home, ChevronRight } from "lucide-react";
 
 import { usePageTitle } from "@/context/PageTitleContext";
+import CustomIcon from "../basics/CustomIcon";
+import { ICON_PATHS } from "@/app/constans/iconPaths";
 
 export default function Breadcrumbs({ overrides = {}, pageTitle = null }) {
   const pathname = usePathname() || "/";
@@ -28,15 +30,12 @@ export default function Breadcrumbs({ overrides = {}, pageTitle = null }) {
   let pathAccumulator = "";
 
   return (
-    <nav
-      className="flex items-center gap-2 text-sm text-gray-600"
-      aria-label="Breadcrumb"
-    >
+    <nav className="flex items-center gap-2" aria-label="Breadcrumb">
       <Link
         href={`/${segments[0] || ""}`}
         className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
       >
-        <Home size={16} />
+        <CustomIcon path={ICON_PATHS.home} size={18}></CustomIcon>
       </Link>
 
       {isRootOfRole

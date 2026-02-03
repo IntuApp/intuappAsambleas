@@ -1,12 +1,10 @@
-import { Red_Hat_Display } from "next/font/google";
+import { redHatDisplay } from "./font";
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
-
-const redHat = Red_Hat_Display({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  variable: "--font-red-hat",
-});
+<link
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+  rel="stylesheet"
+/>;
 
 export const metadata = {
   title: "Intuapp Asambleas",
@@ -15,8 +13,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`${redHat.className} ${redHat.variable}`}>
+    <html lang="es" className={redHatDisplay.className}>
+      <body>
         {children}
         <ToastContainer />
       </body>

@@ -1,21 +1,56 @@
-'use client';
-import React from 'react';
-import PropTypes from 'prop-types';
+"use client";
+import React from "react";
+import PropTypes from "prop-types";
 
-/**
- * CustomText - componente reutilizable para texto tipo párrafo (<p>)
- * @param {string} className - clases personalizadas (Tailwind u otras)
- * @param {ReactNode} children - contenido del texto
- */
-export default function CustomText({ className = '', children }) {
+const textStyles = {
+  Title: "text-[57px] leading-[72px] font-bold",
+  TitleL: "text-[32px] leading-[40px]",
+  SubTitle: "text-[24px] leading-[32px]",
+
+  bodyX: "text-[22px] leading-[32px]",
+  bodyL: "text-[18px] leading-[24px]",
+  bodyM: "text-[16px] leading-[24px]",
+  bodyS: "text-[14px] leading-[16px]",
+
+  labelL: "text-[16px] leading-[24px] ",
+  labelM: "text-[14px] leading-[16px] ",
+  labelS: "text-[12px] leading-[16px] ",
+
+  captionL: "text-[12px] leading-[12px]",
+  captionS: "text-[9px] leading-[12px]",
+};
+
+export default function CustomText({
+  variant = "",
+  as = "p",
+  className = "",
+  children,
+}) {
+  const Component = as;
+
   return (
-    <p className={`text-base text-gray-700 leading-relaxed ${className}`}>
+    <Component className={`${textStyles[variant]} ${className}`}>
       {children}
-    </p>
+    </Component>
   );
 }
 
 CustomText.propTypes = {
+  variant: PropTypes.oneOf([
+    "Title",
+    "TitleL",
+    "SubTitle",
+    "bodyL",
+    "bodyM",
+    "bodyS",
+    "bodyX",
+    "labelL",
+    "labelM",
+    "labelS",
+    "captionL",
+    "captionS",
+  ]),
+  as: PropTypes.string,
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
 };

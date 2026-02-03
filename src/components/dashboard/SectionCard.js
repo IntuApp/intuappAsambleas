@@ -1,7 +1,10 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import Button from "@/components/basics/Button";
+import CustomText from "../basics/CustomText";
+import CustomButton from "../basics/CustomButton";
+import CustomIcon from "../basics/CustomIcon";
+import { ICON_PATHS } from "@/app/constans/iconPaths";
 
 export default function SectionCard({
   title,
@@ -10,43 +13,48 @@ export default function SectionCard({
   children,
   viewAllHref,
   viewAllText = "Ver todos",
+  isOperator,
   className = "",
   classButton = "",
   iconButton = null,
-  contentClassName = "max-h-[500px]",
+  contentClassName = "",
 }) {
   return (
     <div
-      className={`bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col ${className}`}
+      className={`bg-[#FFFFFF] border border-[#F3F6F9] shadow-sm flex flex-col ${className}`}
     >
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-[#0E3C42]">{title}</h2>
+      <div className="flex items-center justify-between">
+        <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">
+          {title}
+        </CustomText>
         {actionLabel && onAction && (
-          <Button
+          <CustomButton
             variant="primary"
-            size="S"
             onClick={onAction}
-            className={`${classButton} !text-sm !py-1.5 !px-4 !bg-[#94A2FF] !text-[#000000] !font-bold `}
-            icon={iconButton}
+            className={`${classButton}`}
           >
-            {actionLabel}
-          </Button>
+            {iconButton} {actionLabel}
+          </CustomButton>
         )}
       </div>
 
       <div
         className={`space-y-3 overflow-y-auto scrollbar-hide ${contentClassName}`}
+
       >
         {children}
       </div>
 
-      {viewAllHref && (
-        <div className="mt-6 text-center pt-2 ">
+      {!isOperator && viewAllHref && (
+        <div className="text-center pt-2 h-[40px]">
           <Link
             href={viewAllHref}
-            className="text-[#6A7EFF] font-bold hover:underline inline-flex items-center gap-1 "
+            className="text-[#4059FF] hover:underline underline-offset-2 inline-flex items-center gap-1 "
           >
-            {viewAllText} <ArrowUpRight size={20} />
+            <CustomText variant="labelM" className="font-medium text-[#4059FF]">
+              {viewAllText}
+            </CustomText>
+            <CustomIcon path={ICON_PATHS.arrowOutward} size={16} color="#4059FF"/>
           </Link>
         </div>
       )}

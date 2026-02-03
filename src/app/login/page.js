@@ -80,78 +80,111 @@ export default function LoginPage() {
       id="login-container"
       className="bg-[#F3F6F9] w-full h-screen flex justify-center items-center"
     >
-      <div className="container flex flex-row justify-evenly items-center">
-        <div>
-          <CustomTitle level="h1" className="text-black text-4xl">
-            {isResetMode ? "Restablecer contraseña" : "Bienvenido"}
-          </CustomTitle>
+      <div className="flex justify-center items-center max-w-[1128px] w-full max-h-[698px] h-full">
+        <div className="flex justify-center items-center max-w-[552px] max-h-[698px] w-full h-full">
+          <div className="flex flex-col justify-center items-start max-w-[455px] max-h-[480px] w-full h-full gap-8">
+            <div className="w-full max-h-[80px] h-full ">
+              <CustomTitle as="h2" className="text-[#0E3C42] mb-2">
+                {isResetMode ? "Restablecer contraseña" : "Bienvenido"}
+              </CustomTitle>
 
-          <CustomText>
-            {isResetMode
-              ? "Te enviaremos un enlace para restablecer tu contraseña."
-              : "Accede a tu cuenta y disfruta de todos nuestros servicios."}
-          </CustomText>
+              <CustomText variant="bodyL" className="font-normal">
+                {isResetMode
+                  ? "Te enviaremos un enlace para restablecer tu contraseña."
+                  : "Accede a tu cuenta y disfruta de todos nuestros servicios."}
+              </CustomText>
+            </div>
 
-          <CustomInput
-            label="Correo"
-            type="email"
-            placeholder="Escribe aquí tu correo"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-6"
-          />
+            <div className="w-full">
+              <div className="flex flex-col gap-6">
+                <CustomInput
+                  variant="labelM"
+                  label="Correo"
+                  type="email"
+                  placeholder="Escribe aquí tu correo"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full gap-2"
+                  classLabel="font-bold"
+                  classInput="bg-[#FFFFFF] rounded-lg border border-[#D3DAE0] px-6 py-5 text-[18px]"
+                />
 
-          {!isResetMode && (
-            <CustomInput
-              label="Contraseña"
-              type="password"
-              placeholder="Escribe aquí tu contraseña"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-4"
-            />
-          )}
+                {!isResetMode && (
+                  <CustomInput
+                    variant="labelM"
+                    label="Contraseña"
+                    type="password"
+                    placeholder="Escribe aquí tu contraseña"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full gap-2"
+                    classLabel="font-bold"
+                    classInput="bg-[#FFFFFF] rounded-lg border border-[#D3DAE0] px-6 py-5 text-[18px]"
+                  />
+                )}
 
-          <CustomButton
-            className={`w-full gap-2 opacity-100 rounded-full bg-[#94A2FF] py-3 px-lg mt-4 font-bold`}
-            onClick={isResetMode ? handleResetPassword : handleLogin}
-          >
-            {isResetMode ? "Restablecer contraseña" : "Iniciar sesión"}
-          </CustomButton>
-
-          <CustomText className="mt-8 text-center">
-            {isResetMode
-              ? "¿Ya recordaste tu contraseña?"
-              : "¿Problemas para iniciar sesión?"}
-          </CustomText>
-
-          <div className="flex justify-center gap-5 mt-3">
-            {isResetMode ? (
-              <Link
-                href="#"
-                onClick={() => setIsResetMode(false)}
-                className="text-blue-500 underline font-bold"
-              >
-                Volver al inicio de sesión
-              </Link>
-            ) : (
-              <>
-                <Link href="#" className="text-blue-500 underline font-bold">
-                  Contactar Soporte
-                </Link>
-                <Link
-                  href="#"
-                  onClick={() => setIsResetMode(true)}
-                  className="text-blue-500 underline font-bold"
+                <CustomButton
+                  className={`w-full gap-2 py-4 px-6 border-[2px]`}
+                  onClick={isResetMode ? handleResetPassword : handleLogin}
+                  variant="primary"
+                  disabled={!email || !password}
                 >
-                  Solicitar contraseña
-                </Link>
-              </>
-            )}
+                  <CustomText variant="labelL" className="font-bold">
+                    {isResetMode ? "Restablecer contraseña" : "Iniciar sesión"}
+                  </CustomText>
+                </CustomButton>
+              </div>
+            </div>
+            <div className="flex justify-center items-center w-full">
+              <div className="max-w-[228px] max-h-[56px] w-full md:max-w-[328px] md:max-h-[46px] w-full ">
+                <CustomText variant="bodyM" className=" text-center">
+                  {isResetMode
+                    ? "¿Ya recordaste tu contraseña?"
+                    : "¿Problemas para iniciar sesión?"}
+                </CustomText>
+
+                <div className="max-w-[228px] max-h-[56px] w-full md:max-w-[328px] md:max-h-[46px] flex justify-around">
+                  {isResetMode ? (
+                    <Link
+                      href="#"
+                      onClick={() => setIsResetMode(false)}
+                      className="text-[#4059FF] text-[16px] leading-[24px] font-bold underline"
+                    >
+                      Volver al inicio de sesión
+                    </Link>
+                  ) : (
+                    <>
+                      <Link
+                        href="https://wa.me/573005199651"
+                        className="text-[#4059FF] text-[16px] leading-[24px] font-bold underline"
+                      >
+                        Contactar Soporte
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <img src="/logos/login.png" alt="Login" className="w-[45%]" />
+        <div className="relative w-full h-full flex justify-center items-center max-w-[552px] max-h-[598px] md:max-w-[552px] md:max-h-[650px]">
+          <img
+            src="/bg/bg.png"
+            alt="Login"
+            className="w-full h-full rounded-[56px] object-cover"
+          />
+          <div className="absolute flex flex-col text-center w-[401px] h-[64px] w-full h-full md:w-[501px] md:h-[74px]">
+            <img
+              src="/logos/logo-intuapp/component.png"
+              alt="Logo"
+              className="w-full h-[75px]"
+            />
+            <CustomTitle as="h4" className="text-[#0E3C42] mb-2">
+              Lo complejo hecho simple
+            </CustomTitle>
+          </div>
+        </div>
       </div>
     </div>
   );

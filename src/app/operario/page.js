@@ -14,6 +14,10 @@ import { Plus, CalendarDays, X, Download } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { getEntitiesByOperator, getEntityTypes } from "@/lib/entities";
 import { getAllAssemblies } from "@/lib/assembly";
+import CustomButton from "@/components/basics/CustomButton";
+import CustomText from "@/components/basics/CustomText";
+import CustomIcon from "@/components/basics/CustomIcon";
+import { ICON_PATHS } from "../constans/iconPaths";
 
 export default function OperarioPage() {
   const { user } = useUser();
@@ -116,47 +120,69 @@ export default function OperarioPage() {
       document.body.removeChild(downloadLink);
     }
   };
+  const iconEntidades = (
+    <path d="M200-120q-33 0-56.5-23.5T120-200v-400q0-33 23.5-56.5T200-680h80v-80q0-33 23.5-56.5T360-840h240q33 0 56.5 23.5T680-760v240h80q33 0 56.5 23.5T840-440v240q0 33-23.5 56.5T760-120H520v-160h-80v160H200Zm0-80h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 320h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 480h80v-80h-80v80Zm0-160h80v-80h-80v80Z" />
+  );
+  const iconCalendar = (
+    <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v187q0 17-11.5 28.5T800-493q-17 0-28.5-11.5T760-533v-27H200v400h232q17 0 28.5 11.5T472-120q0 17-11.5 28.5T432-80H200Zm520 40q-83 0-141.5-58.5T520-240q0-83 58.5-141.5T720-440q83 0 141.5 58.5T920-240q0 83-58.5 141.5T720-40Zm67-105 28-28-75-75v-112h-40v128l87 87Z" />
+  );
 
   return (
-    <div>
-      <section className="mt-8 mx-9">
-        <WelcomeSection userName={user?.name} />
-      </section>
+    <div className="flex flex-col gap-8">
+      <WelcomeSection userName={user?.name} />
 
-      <section className="mt-8 mx-9">
-        <div className="flex flex-start gap-6 mb-8">
+      <section className=" ">
+        <div className="flex flex-start gap-6">
           <StatCard
-            icon={Building2}
+            icon={
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 -960 960 960"
+                className="w-[40px] h-[40px] text-[#6A7EFF]"
+                fill="currentColor"
+              >
+                {iconEntidades}
+              </svg>
+            }
             label="Total Entidades"
             value={entities.length}
-            iconColor="text-[#6470FF]"
-            iconBgColor="bg-[#EEF3FF]"
-            width="w-full h-auto sm:w-[264px] sm:h-[104px] md:w-[304px] md:h-[104px]"
+            iconColor="#001497"
+            iconBgColor="bg-[#EEF0FF] w-[56px] h-[56px]"
+            className="w-full h-full max-w-[264px] max-h-[104px] rounded-[16px] border-[#F3F6F9] p-6"
           />
           <StatCard
-            icon={CalendarClock}
+            icon={
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 -960 960 960"
+                className="w-[40px] h-[40px] text-[#6A7EFF]"
+                fill="currentColor"
+              >
+                {iconCalendar}
+              </svg>
+            }
             label="Asambleas agendadas"
             value={assemblies.length}
-            iconColor="text-[#6470FF]"
-            iconBgColor="bg-[#EEF3FF]"
-            width="w-full h-auto sm:w-[264px] sm:h-[104px] md:w-[304px] md:h-[104px]"
+            iconColor="#001497"
+            iconBgColor="bg-[#EEF0FF] w-[56px] h-[56px]"
+            className="w-full h-full max-w-[264px] max-h-[104px] rounded-[16px] border-[#F3F6F9] p-6"
           />
         </div>
       </section>
 
-      <section className="mx-9 grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <section className="w-full h-full max-h-[789px] flex justify-between">
         {/* Left Column */}
-        <div className="space-y-8">
+        <div className="space-y-8 max-w-[552px] w-full max-h-[424px]">
           <SectionCard
             title="Entidades"
-            className="h-fit"
-            actionLabel="Crear Entidad"
+            className=" border-[#F3F6F9] rounded-[24px] p-6 gap-6"
+            actionLabel={"Crear Entidad"}
             onAction={() => router.push("/operario/crear-entidad")}
             viewAllHref="/operario/entidades"
             viewAllText="Ver todas las Entidades"
-            classButton="!text-sm !py-3 !px-4 !bg-[#94A2FF] !text-[#000000] !font-bold"
-            iconButton={Plus}
-            contentClassName="max-h-[380px]" // Limit to approx 4 items
+            classButton="flex items-center gap-2 font-bold py-2 px-3 text-[14px]"
+            iconButton={<Plus size={16} />}
+            contentClassName="max-w-[504px] max-h-[204px] w-full pb-2"
           >
             {entities.map((entity) => (
               <ListItem
@@ -165,6 +191,7 @@ export default function OperarioPage() {
                 entity={entity}
                 showNextAssembly={true}
                 onClick={() => router.push(`/operario/${entity.id}`)}
+                classContainer="max-w-[504px] w-full h-[72px] rounded-2xl shadow-soft border border-[#F3F6F9] py-3 px-4 gap-4"
               />
             ))}
             {entities.length === 0 && (
@@ -176,11 +203,11 @@ export default function OperarioPage() {
         </div>
 
         {/* Right Column */}
-        <div className="space-y-8">
+        <div className="space-y-8 max-w-[550px] w-full max-h-[789px]">
           <SectionCard
             title="Asambleas en curso"
-            className="h-fit"
-            contentClassName="max-h-[380px]" // Limit to approx 4 items
+            className=" border-[#F3F6F9] rounded-[24px] p-6 gap-6 max-h-[264px]"
+            contentClassName="max-w-[502px] max-h-[160px] w-full pb-2"
           >
             {assemblies.filter((a) => a.status === "started").length > 0 ? (
               assemblies
@@ -188,8 +215,9 @@ export default function OperarioPage() {
                 .map((assembly) => (
                   <ListItem
                     key={assembly.id}
-                    title={`${assembly.entityName} · Asambleas Ordinaria`}
+                    title={`${assembly.entityName} · ${assembly.name}`}
                     subtitle={`Inició hace...`}
+                    classContainer="max-w-[502px] w-full h-[72px] rounded-2xl shadow-soft border border-[#F3F6F9] py-3 px-4 gap-4"
                     status={{
                       text: "En vivo",
                       color: "bg-red-100 text-red-600",
@@ -203,21 +231,24 @@ export default function OperarioPage() {
                   />
                 ))
             ) : (
-              <div className="flex items-center justify-center border border-[#94A2FF] bg-[#EEF0FF] rounded-xl p-4 h-full">
-                <p className=" text-center py-2 font-bold text-[16px]">
+              <div className="flex items-center justify-center border border-[#94A2FF] bg-[#EEF0FF] rounded-[8px] p-4 h-[56px]">
+                <CustomText
+                  variant="labelL"
+                  className="text-[#1F1F23] font-bold"
+                >
                   No hay asambleas en curso.
-                </p>
+                </CustomText>
               </div>
             )}
           </SectionCard>
 
           <SectionCard
             title="Próximas Asambleas"
-            className="h-fit"
-            viewAllHref="/operario/asambleas"
+            isOperator
+            className=" border-[#F3F6F9] rounded-[24px] p-6 gap-6"
+            viewAllHref="/operario/entidades"
             viewAllText="Ver entidades con asambleas"
-            classButton="!text-sm !py-3 !px-4 !bg-[#94A2FF] !text-[#000000] !font-bold"
-            contentClassName="max-h-[460px]" // Limit to approx 3 items (they are taller)
+            contentClassName="max-w-[502px] max-h-[324px] w-full pb-2"
           >
             {assemblies.filter(
               (a) => a.status !== "started" && a.status !== "finished",
@@ -229,7 +260,7 @@ export default function OperarioPage() {
                 .map((assembly) => (
                   <div
                     key={assembly.id}
-                    className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm mb-4 last:mb-0"
+                    className="max-w-[504px] w-full h-[152px] rounded-2xl shadow-soft border border-[#F3F6F9] py-3 px-4 gap-4"
                   >
                     <ListItem
                       title={assembly.entityName}
@@ -238,33 +269,36 @@ export default function OperarioPage() {
                       }`}
                       status={{
                         text: assembly.date || "Fecha pendiente",
-                        color: "bg-[#B8EAF0] text-[#0E3C42]",
+                        color: "bg-[#B8EAF0] text#0E3C42]",
                         dot: false,
                         icon: CalendarDays,
                       }}
                       isAssamblea
-                      className="!border-0 !p-0 !shadow-none mb-4 cursor-default hover:shadow-none"
-                      onClick={() => {}} // Non-clickable here as buttons handle actions
+                      classContainer="py-3 gap-4"
                     />
                     <div className="flex gap-2">
-                      <button
+                      <CustomButton
+                        variant="secondary"
                         onClick={() => openQrModal(assembly)}
-                        className="px-4 py-2 border border-[#0E3C42]  rounded-l-3xl rounded-r-3xl hover:bg-gray-50 !text-[#000000] transition-colors"
+                        className="px-4 py-2 border-[2px] border-[#0E3C42]  rounded-l-3xl rounded-r-3xl hover:bg-gray-50 !text-[#000000] transition-colors"
                       >
                         <QrCode size={18} />
-                      </button>
-                      <Button
+                      </CustomButton>
+                      <CustomButton
                         variant="primary"
                         size="M"
-                        className="flex-1 flex items-center gap-2 justify-center !py-2 !text-[#000000] font-bold"
+                        className="flex-1 flex items-center gap-2 justify-center py-3 px-4 !text-[#000000] font-bold"
                         onClick={() =>
                           router.push(
                             `/operario/${assembly.entityId}/${assembly.id}`,
                           )
                         }
                       >
-                        <Settings size={16} /> Gestionar
-                      </Button>
+                        <CustomIcon path={ICON_PATHS.settings} size={16} />
+                        <CustomText variant="labelM" className="font-bold">
+                          Gestionar
+                        </CustomText>
+                      </CustomButton>
                     </div>
                   </div>
                 ))
@@ -278,28 +312,20 @@ export default function OperarioPage() {
       </section>
       <HelpFullBanner />
 
-      {/* QR MODAL */}
       {isQrModalOpen && selectedAssemblyForQr && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[32px] p-10 max-w-sm w-full relative animate-in zoom-in duration-300">
-            <button
-              onClick={() => setIsQrModalOpen(false)}
-              className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 p-2 bg-gray-50 rounded-full transition"
-            >
-              <X size={20} />
-            </button>
-            <div className="text-center">
-              <h3 className="text-2xl font-black text-[#0E3C42] mb-2">
-                Código QR
-              </h3>
-              <p className="text-gray-400 text-sm mb-8">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-lg">
+          <SectionCard
+            title="Código QR"
+            isOperator
+            className=" border-[#F3F6F9] rounded-[24px] p-6 gap-6 max-w-[502px] w-full"
+            contentClassName="max-w-[502px] max-h-[400px] w-full pb-2"
+          >
+            <div className="text-center flex flex-col justify-center items-center gap-2">
+              <CustomText variant="labelM" className="text-[#] font-medium">
                 Escanea para acceder a la asamblea: <br />
-                <span className="font-bold text-[#0E3C42]">
-                  {selectedAssemblyForQr.entityName}
-                </span>
-              </p>
+              </CustomText>
 
-              <div className="bg-white p-6 rounded-3xl border-2 border-dashed border-gray-100 inline-block mb-8">
+              <div className="rounded-3xl border-4 border-[#F3F6F9] inline-block mb-8">
                 <QRCodeCanvas
                   id="qr-gen-dashboard"
                   value={`${window.location.origin}/${selectedAssemblyForQr.id}`}
@@ -309,22 +335,32 @@ export default function OperarioPage() {
                 />
               </div>
 
-              <div className="flex flex-col gap-3">
-                <button
+              <div className="flex gap-3">
+                <CustomButton
+                  variant="primary"
                   onClick={downloadQR}
-                  className="bg-[#8B9DFF] text-white font-bold py-4 rounded-2xl hover:bg-[#7a8ce0] transition flex items-center justify-center gap-2"
+                  className="px-4 py-2 flex items-center gap-2"
                 >
-                  <Download size={20} /> Descargar Imagen
-                </button>
-                <button
+                  <CustomIcon path={ICON_PATHS.download} />
+                  <CustomText
+                    variant="labelM"
+                    className="text-[#000000] font-bold"
+                  >
+                    Descargar Imagen
+                  </CustomText>
+                </CustomButton>
+                <CustomButton
+                  variant="secondary"
                   onClick={() => setIsQrModalOpen(false)}
-                  className="text-gray-400 font-bold py-2 text-sm"
+                  className="px-4 py-2 flex items-center gap-2"
                 >
-                  Cerrar
-                </button>
+                  <CustomText variant="labelM" className="font-bold">
+                    Cerrar
+                  </CustomText>
+                </CustomButton>
               </div>
             </div>
-          </div>
+          </SectionCard>
         </div>
       )}
     </div>

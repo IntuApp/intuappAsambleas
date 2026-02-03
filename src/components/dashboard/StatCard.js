@@ -1,25 +1,31 @@
 import React from "react";
+import CustomText from "../basics/CustomText";
+import CustomTitle from "../basics/CustomTitle";
 
 export default function StatCard({
   icon: Icon,
   label,
   value,
   iconBgColor = "bg-[#EEF3FF]",
-  iconColor = "text-[#6470FF]",
-  width = "",
+  className = "",
 }) {
   return (
     <div
-      className={`${width} bg-white rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 py-4 px-6`}
+      className={`${className} bg-white border shadow-sm flex items-center gap-4`}
     >
       <div
         className={` rounded-lg ${iconBgColor} flex justify-center items-center text-center`}
       >
-        {Icon && <Icon size={32} className={iconColor} />}
+        {Icon}
       </div>
       <div className="flex-1">
-        <p className="text-xs text-gray-500 mb-1">{label}</p>
-        <p className="text-2xl font-bold text-[#0F2537]">{value}</p>
+        <CustomText variant="labelM" className="font-medium text-[#3D3D44]">
+          {label}
+        </CustomText>
+        <CustomTitle as="h4" className="text-[#1F1F23] font-bold">
+          {" "}
+          {value}
+        </CustomTitle>
       </div>
     </div>
   );

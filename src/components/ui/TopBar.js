@@ -4,6 +4,9 @@ import React, { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import { CircleUserRound } from "lucide-react";
 import Breadcrumbs from "./Breadcrumbs";
+import CustomText from "../basics/CustomText";
+import CustomIcon from "../basics/CustomIcon";
+import { ICON_PATHS } from "@/app/constans/iconPaths";
 
 export default function TopBar({ pageTitle = null, overrides = {} }) {
   const { user } = useUser();
@@ -26,17 +29,22 @@ export default function TopBar({ pageTitle = null, overrides = {} }) {
   }, [user?.role]);
 
   return (
-    <div className="w-full flex items-center justify-between px-15 pt-8 border-b border-transparent">
-      <div className="flex items-center bg-white py-2 px-4 rounded-3xl">
+    <div className="w-full flex items-center justify-between">
+      <div className="flex items-center bg-white p-2 rounded-full border border-[#F3F6F9]">
         <Breadcrumbs overrides={overrides} pageTitle={pageTitle} />
       </div>
 
-      <div className="flex items-center gap-4 bg-white py-2 px-4 rounded-md">
+      <div className="flex items-center gap-4 bg-white py-2 px-4 rounded-xl">
         <div className="text-xs flex gap-1 items-center">
-          <strong>{user?.name || "..."}</strong> |
-          <span className="text-gray-800 font-medium">{roleName || "..."}</span>
+          <CustomText variant="labelS" className="font-bold">
+            {user?.name || "..."} |
+          </CustomText>
+          <CustomText variant="labelS" className="font-medium">
+            {roleName || "..."}
+          </CustomText>
+
           <div className="bg-[#ABE7E5] rounded-3xl p-1">
-            <CircleUserRound size={20} />
+            <CustomIcon path={ICON_PATHS.accountCircle} size={18} color="#1C6168"/>
           </div>
         </div>
       </div>

@@ -1,5 +1,7 @@
 import React from "react";
-import { ChevronRight } from "lucide-react";
+import { ICON_PATHS } from "@/app/constans/iconPaths";
+import CustomIcon from "@/components/basics/CustomIcon";
+import CustomText from "../basics/CustomText";
 
 export default function ListItem({
   overline, // Top small text
@@ -11,21 +13,22 @@ export default function ListItem({
   isAssamblea,
   showNextAssembly = false,
   icon: Icon, // Optional left icon
-  className = "",
+  classContainer = "",
 }) {
-  const getEntityTypeIcon = () => {
-    const typeLabel = (entity?.typeName || entity?.type || "").toLowerCase();
+  const getIconPath = () => {
+    const type = (entity?.typeName || entity?.type || "").toLowerCase();
 
-    if (typeLabel.includes("cooperativa"))
-      return "/logos/type/iconCooperativa.png";
-    if (typeLabel.includes("empresa")) return "/logos/type/iconEmpresa.png";
     if (
-      typeLabel.includes("propiedad") ||
-      typeLabel.includes("horizontal") ||
-      typeLabel.includes("residencial")
+      type.includes("propiedad") ||
+      type.includes("horizontal") ||
+      type.includes("residencial") ||
+      type.includes("conjunto")
     )
-      return "/logos/type/iconPropiedad.png";
-    if (typeLabel.includes("sindicato")) return "/logos/type/iconSindicato.png";
+      return ICON_PATHS.conjunto;
+
+    if (type.includes("sindicato")) return ICON_PATHS.sindicato;
+    if (type.includes("empresa")) return ICON_PATHS.empresa;
+    if (type.includes("cooperativa")) return ICON_PATHS.cooperativa;
 
     return null;
   };
@@ -60,41 +63,32 @@ export default function ListItem({
     }
   };
 
-  const typeIconPath = getEntityTypeIcon();
   const displayStatusText = formatDate(status?.text);
 
   return (
-    <div
-      onClick={onClick}
-      className={`bg-white border border-gray-200 rounded-xl p-3 shadow-md hover:shadow-lg transition-shadow cursor-pointer group flex items-center justify-between ${className}`}
-    >
-      <div className="flex items-center gap-4 flex-1">
-        {(typeIconPath || Icon) && (
-          <div className="w-14 h-14 rounded-xl
- bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0 overflow-hidden">
-            {typeIconPath ? (
-              <img
-                src={typeIconPath}
-                alt="Entity Type"
-                className="w-10 h-10 object-contain"
-              />
+    <div onClick={onClick} className={`flex items-center ${classContainer}`}>
+      <div className="flex items-center gap-4 flex-1 ">
+        {(getIconPath() || Icon) && (
+          <div className="w-14 h-14 p-2 rounded-lg bg-[#EEF0FF] flex items-center justify-center shrink-0 overflow-hidden">
+            {getIconPath() ? (
+              <CustomIcon path={getIconPath()} size={40} color="#6A7EFF" />
             ) : (
               <Icon size={32} />
             )}
           </div>
         )}
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 ">
           {overline && (
             <p className="text-xs text-gray-500 truncate">{overline}</p>
           )}
 
-          <h3 className="text-[18px] font-bold text-[#0E3C42] truncate leading-tight">
+          <CustomText variant="labelL" className="text-[#000000] font-bold">
             {entity?.name || title}
-          </h3>
+          </CustomText>
 
           {(entity?.typeName || entity?.type || subtitle) && (
-            <p className="text-[14px]  truncate">
+            <CustomText variant="labelM" className="text-[#3D3D44] font-medium">
               {entity?.typeName || entity?.type || subtitle}
               {showNextAssembly && (
                 <>
@@ -108,32 +102,37 @@ export default function ListItem({
                   )}
                 </>
               )}
-            </p>
+            </CustomText>
           )}
         </div>
       </div>
 
       <div className="flex items-center gap-3 pl-2">
-        {status && (
+        {status && !isAssamblea && (
           <span
-            className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5  ${
-              status.color || "bg-gray-100 text-gray-600"
-            }`}
+            className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 bg-[#FACCCD]`}
           >
-            {status.icon && (
-              <span className="rounded-full ">
-                <status.icon size={16} />
-              </span>
-            )}
-            {displayStatusText}
+            <CustomIcon path={ICON_PATHS.record} size={16} color="#930002" />
+
+            <CustomText variant="labelM" className="text-[#930002] font-bold">
+              {displayStatusText}
+            </CustomText>
           </span>
         )}
-
+        {status && isAssamblea && (
+          <span
+            className={`px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 bg-[#B8EAF0] `}
+          >
+            <CustomIcon path={ICON_PATHS.calendar} size={16} color="#0E3C42" />
+            <CustomText variant="labelM" className="text-[#0E3C42] font-bold">
+              {displayStatusText}
+            </CustomText>
+          </span>
+        )}
+      </div>
+      <div>
         {!isAssamblea && (
-          <ChevronRight
-            size={20}
-            className=" group-hover:text-[#6A7EFF] transition-colors"
-          />
+          <CustomIcon path={ICON_PATHS.arrowRight} size={16} color="#000000" />
         )}
       </div>
     </div>

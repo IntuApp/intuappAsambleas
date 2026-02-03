@@ -1,5 +1,7 @@
 import React from "react";
 import { formatName } from "@/lib/utils"; // We might need to move formatName to utils or keep it local and duplicated for now if no utils exist.
+import CustomTitle from "../basics/CustomTitle";
+import CustomText from "../basics/CustomText";
 // Actually I'll implement a helper inside or expect it passed. The logic was in page.js
 
 const formatUserName = (name) => {
@@ -13,9 +15,9 @@ const formatUserName = (name) => {
 
 export default function WelcomeSection({ userName }) {
   return (
-    <div className="flex flex-col md:flex-row justify-evenly gap-6 mb-8">
+    <div className="flex flex-col md:flex-row justify-evenly gap-6">
       {/* Welcome Card */}
-      <div className="relative w-full max-w-4xl h-auto opacity-100 rounded-3xl border border-gray-300 p-8 md:p-10 bg-white overflow-hidden flex flex-col justify-center">
+      <div className="relative max-w-[744px] max-h-[168px] w-full h-full opacity-100 rounded-3xl border border-gray-300 p-8 md:p-10 bg-white overflow-hidden flex flex-col justify-center">
         <img
           src="/logos/decorations/figureOne.png"
           className="absolute top-0 left-0 w-28 md:w-36 pointer-events-none select-none"
@@ -23,20 +25,20 @@ export default function WelcomeSection({ userName }) {
         />
         <img
           src="/logos/decorations/figureTwo.png"
-          className="absolute bottom-0 right-0 w-28 md:w-50 pointer-events-none select-none"
+          className="absolute bottom-0 right-0 w-[164px] h-[192px]  pointer-events-none select-none"
           alt="decoration"
         />
 
-        <p className="font-sans font-medium text-[1.8rem] leading-snug tracking-normal text-[#0E3C42]">
+        <CustomText variant="SubTitle" className="text-[#0E3C42] font-medium">
           Bienvenido,
-        </p>
-        <h1 className="font-sans font-bold text-[2rem] md:text-[4rem] leading-tight tracking-tight text-[#0E3C42] z-10">
+        </CustomText>
+        <CustomText variant="Title" className="text-[#0E3C42]">
           {formatUserName(userName)} !
-        </h1>
+        </CustomText>
       </div>
 
       {/* Brand/Logo Card */}
-      <div className="relative w-full max-w-sm rounded-3xl border border-white/20 backdrop-blur-2xl shadow-lg p-8 flex flex-col items-center justify-center overflow-hidden bg-white/50">
+      <div className="relative max-w-[360px] max-h-[168px] w-full rounded-3xl border border-white/20 backdrop-blur-2xl shadow-lg p-8 flex flex-col items-center justify-center overflow-hidden bg-white/50">
         {/* Abstract Blobs */}
         <div
           className="absolute rounded-full blur-[50px]"
@@ -89,7 +91,9 @@ export default function WelcomeSection({ userName }) {
             alt="Intuapp"
             className="h-12 w-auto object-contain"
           />
-          <p className="text-gray-800 font-medium">Lo complejo hecho simple</p>
+          <CustomText variant="labelL font-medium">
+            Lo complejo hecho simple
+          </CustomText>
         </div>
       </div>
     </div>
