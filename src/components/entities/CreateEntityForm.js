@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
-import {
-  Download,
-  Upload,
-  Bot,
-  FileSpreadsheet,
-  Trash2,
-  Check,
-  Building2,
-} from "lucide-react";
+import { Download, Upload, FileSpreadsheet, Trash2, Check } from "lucide-react";
 
 import CustomInput from "@/components/basics/CustomInput";
 import { ExcelEditor } from "@/components/basics/ExcelEditor";
@@ -26,6 +18,11 @@ import {
 } from "@/lib/entities";
 import { getEntityTypes } from "@/lib/masterData";
 import { colombiaCities } from "@/lib/colombiaCities";
+import CustomText from "../basics/CustomText";
+import CustomSelect from "../basics/CustomSelect";
+import CustomButton from "../basics/CustomButton";
+import CustomIcon from "../basics/CustomIcon";
+import { ICON_PATHS } from "@/app/constans/iconPaths";
 
 export default function CreateEntityForm({
   operatorId,
@@ -225,75 +222,89 @@ export default function CreateEntityForm({
   };
 
   return (
-    <div className="gap-5 flex flex-col">
-      <div className="bg-white rounded-xl shadow-sm p-8">
-        <h2 className="text-xl font-bold text-[#0E3C42] mb-1">
+    <div className="gap-5 flex flex-col h-full">
+      <div className="max-w-[1128px] w-full h-full bg-[#FFFFFF] border border-[#F3F6F9] rounded-3xl p-6 flex flex-col gap-5">
+        <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">
           1. Datos de la Entidad
-        </h2>
-        <p className="text-gray-500 mb-6">
+        </CustomText>
+        <CustomText variant="bodyL" className="text-[#333333] font-regular">
           Ingrese los detalles básicos de la unidad privada:
-        </p>
+        </CustomText>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <CustomInput
-            label="Nombre de la entidad *"
+            label="Nombre de la entidad"
+            variant="labelM"
+            className="max-w-[344px] max-h-[80px]"
+            classLabel="text-[#333333] font-bold"
+            classInput="max-w-[344px] max-h-[56px] w-full pl-4 pr-4 py-3 rounded-lg border"
             value={entityForm.name}
             onChange={(e) =>
               setEntityForm({ ...entityForm, name: e.target.value })
             }
             placeholder="Escribe aquí el nombre"
           />
+
           <CustomInput
             label="Nit"
+            variant="labelM"
+            optional
+            className="max-w-[344px] max-h-[80px] "
+            classLabel="text-[#333333] font-bold"
+            classInput="max-w-[344px] max-h-[56px] w-full pl-4 pr-4 py-3 rounded-lg border"
             value={entityForm.nit}
             onChange={(e) =>
               setEntityForm({ ...entityForm, nit: e.target.value })
             }
             placeholder="Escribe aquí el Nit"
           />
-          <div className="flex flex-col gap-2">
-            <label className="font-bold text-sm text-gray-700 block">
-              Tipo de entidad *
-            </label>
-            <select
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-blue-500 bg-white"
-              value={entityForm.type}
-              onChange={(e) =>
-                setEntityForm({ ...entityForm, type: e.target.value })
-              }
-            >
-              <option value="">Selecciona aquí el tipo</option>
-              {entityTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {getTypeNameInSpanish(type.name)}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CustomSelect
+            label="Tipo de entidad "
+            variant="labelM"
+            className="max-w-[344px] max-h-[80px]"
+            classLabel="text-[#333333] font-bold"
+            classSelect="text-[#838383] font-normal border-[#D3DAE0] "
+            value={entityForm.type}
+            onChange={(e) =>
+              setEntityForm({ ...entityForm, type: e.target.value })
+            }
+          >
+            <option value="">Selecciona aquí el tipo de unidad</option>
+            {entityTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {getTypeNameInSpanish(type.name)}
+              </option>
+            ))}
+          </CustomSelect>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="flex flex-col gap-2">
-            <label className="font-bold text-sm text-gray-700 block">
-              Ciudad
-            </label>
-            <select
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-blue-500 bg-white"
-              value={entityForm.city}
-              onChange={(e) =>
-                setEntityForm({ ...entityForm, city: e.target.value })
-              }
-            >
-              <option value="">Selecciona aquí la ciudad</option>
-              {colombiaCities.map((city) => (
-                <option key={city} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          <CustomSelect
+            label="Ciudad"
+            variant="labelM"
+            optional
+            className="max-w-[344px] max-h-[80px]"
+            classLabel="text-[#333333] font-bold"
+            classSelect="text-[#838383] font-normal border-[#D3DAE0] "
+            value={entityForm.city}
+            onChange={(e) =>
+              setEntityForm({ ...entityForm, city: e.target.value })
+            }
+          >
+            <option value="">Selecciona aquí la ciudad</option>
+            {colombiaCities.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </CustomSelect>
           <CustomInput
             label="Dirección"
+            variant="labelM"
+            optional
+            className="max-w-[344px] max-h-[80px]"
+            classLabel="text-[#333333] font-bold"
+            classInput="max-w-[344px] max-h-[56px] w-full pl-4 pr-4 py-3 rounded-lg border"
             value={entityForm.address}
             onChange={(e) =>
               setEntityForm({ ...entityForm, address: e.target.value })
@@ -302,16 +313,21 @@ export default function CreateEntityForm({
           />
         </div>
 
-        <div className="rounded-t border border-[#D3DAE0] mb-5"></div>
+        <div className="rounded-t border border-[#D3DAE0]"></div>
 
-        <p className="text-[18px] text-[#000000] mb-2">
+        <CustomText variant="bodyL" className="text-[#333333] font-regular">
           Ingrese los detalles básicos del administrador o funcionario de la
           entidad:
-        </p>
+        </CustomText>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <CustomInput
             label="Nombre"
+            variant="labelM"
+            optional
+            className="max-w-[344px] max-h-[80px]"
+            classLabel="text-[#333333] font-bold"
+            classInput="max-w-[344px] max-h-[56px] w-full pl-4 pr-4 py-3 rounded-lg border"
             value={entityForm.adminName}
             onChange={(e) =>
               setEntityForm({ ...entityForm, adminName: e.target.value })
@@ -320,6 +336,11 @@ export default function CreateEntityForm({
           />
           <CustomInput
             label="Correo"
+            variant="labelM"
+            optional
+            className="max-w-[344px] max-h-[80px]"
+            classLabel="text-[#333333] font-bold"
+            classInput="max-w-[344px] max-h-[56px] w-full pl-4 pr-4 py-3 rounded-lg border"
             value={entityForm.adminEmail}
             onChange={(e) =>
               setEntityForm({ ...entityForm, adminEmail: e.target.value })
@@ -328,6 +349,11 @@ export default function CreateEntityForm({
           />
           <CustomInput
             label="Número de celular"
+            variant="labelM"
+            optional
+            className="max-w-[344px] max-h-[80px]"
+            classLabel="text-[#333333] font-bold"
+            classInput="max-w-[344px] max-h-[56px] w-full pl-4 pr-4 py-3 rounded-lg border"
             value={entityForm.adminPhone}
             onChange={(e) =>
               setEntityForm({ ...entityForm, adminPhone: e.target.value })
@@ -337,63 +363,79 @@ export default function CreateEntityForm({
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-        <div className="">
-          <h2 className="text-xl font-bold text-[#0E3C42] mb-2">
-            2. Cargar Base de Datos de Asambleísta{" "}
-            <span className="text-red-500 font-normal text-lg">*</span>
-          </h2>
-          <p className="text-gray-500 mb-6">
-            Es obligatorio cargar la base de datos para crear la entidad.
-          </p>
+      <div className="max-w-[1128px] w-full bg-[#FFFFFF] border border-[#F3F6F9] rounded-3xl p-6 flex flex-col gap-5">
+        <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">
+          2. Cargar Base de Datos de Asambleísta{" "}
+        </CustomText>
 
-          <div className="flex flex-col gap-6">
-            <div className="flex gap-4 items-start">
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-2 flex-col">
+            <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-[#ABE7E5] flex items-center justify-center text-[#0E3C42] font-bold shrink-0">
                 1
               </div>
-              <div className="flex-1">
-                <p className="text-gray-600 mb-3">
-                  Descargue la plantilla y llénela con la información de los
-                  asambleístas.
-                </p>
-                <button
-                  className="flex items-center gap-2 border border-[#0E3C42] text-[#0E3C42] px-4 py-2 rounded-full font-bold hover:bg-gray-50 transition"
-                  onClick={() => {
-                    // Trigger download logic or link to file
-                    const link = document.createElement("a");
-                    link.href = "/files/Plantilla_Asambleista_PH.xlsx";
-                    link.download = "Plantilla_Asambleista_PH.xlsx";
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                  }}
-                >
-                  <Download size={18} />
-                  Descargar Plantilla Excel
-                </button>
-              </div>
+              <CustomText
+                variant="bodyM"
+                className="text-[#333333] font-regular"
+              >
+                Descargue la plantilla y llénela con la información de los
+                asambleístas.
+              </CustomText>
             </div>
+            <div className="max-w-[298px] max-h-[40px] w-full pl-10">
+              <CustomButton
+                className="flex items-center gap-2 px-4 py-2"
+                variant="secondary"
+                onClick={() => {
+                  const link = document.createElement("a");
+                  link.href =
+                    "https://drive.google.com/uc?export=download&id=1XxSZcO5Iaowek6WONif94qn4p9wi_WVQ";
+                  link.download = "Plantilla_Asambleista_PH.xlsx";
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+              >
+                <Download size={18} />
+                <CustomText
+                  variant="labelM"
+                  className="text-[#0E3C42] font-bold"
+                >
+                  Descargar Plantilla Excel
+                </CustomText>
+              </CustomButton>
+            </div>
+          </div>
 
-            <div className="flex gap-4 items-center">
+          <div className="flex gap-4 items-center">
+            <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-[#ABE7E5] flex items-center justify-center text-[#0E3C42] font-bold shrink-0">
                 2
               </div>
-              <p className="text-gray-600">
+              <CustomText
+                variant="bodyM"
+                className="text-[#333333] font-regular"
+              >
                 Guarde el archivo en formato Excel (.xlsx).
-              </p>
+              </CustomText>
             </div>
+          </div>
 
-            <div className="flex gap-4 items-start">
-              <div className="w-8 h-8 rounded-full bg-[#ABE7E5] flex items-center justify-center text-[#0E3C42] font-bold shrink-0">
-                3
-              </div>
-              <div className="flex-1">
-                <p className="text-gray-600 mb-4">
+          <div className="flex gap-4 items-start">
+            <div className="flex gap-2 flex-col">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#ABE7E5] flex items-center justify-center text-[#0E3C42] font-bold shrink-0">
+                  3
+                </div>
+                <CustomText
+                  variant="bodyM"
+                  className="text-[#333333] font-regular"
+                >
                   Cargue solo esa plantilla diligenciada. Otros formatos no
                   serán aceptados.
-                </p>
-
+                </CustomText>
+              </div>
+              <div className="w-full pl-10">
                 <div className="flex gap-6 flex-col lg:flex-row">
                   <div className="flex-1 flex flex-col gap-4">
                     {/* Upload Box */}
@@ -422,65 +464,78 @@ export default function CreateEntityForm({
 
                     {/* File Card (if file uploaded) */}
                     {excelFileName && (
-                      <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600 shrink-0">
-                            <FileSpreadsheet size={24} />
-                          </div>
-                          <div>
-                            <p className="font-bold text-[#0E3C42] text-sm">
-                              {excelFileName}
-                            </p>
+                      <div className="bg-[#FFFFFF] max-w-[320px] w-full border border-[#F3F6F9] shadow-soft rounded-xl p-4 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2">
+                        <div className="flex items-center flex-col w-full">
+                          <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-2">
-                              <div className="h-1.5 w-24 bg-gray-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-green-500 w-full rounded-full"></div>
-                              </div>
-                              <div className="bg-green-100 text-green-700 rounded-full p-0.5">
-                                <Check size={12} strokeWidth={3} />
-                              </div>
+                              <img
+                                src="/icons/excel.png"
+                                alt="Excel"
+                                className="w-10 h-10"
+                              />
+                              <CustomText
+                                variant="labelM"
+                                className="text-[#3D3D44] font-bold"
+                              >
+                                {excelFileName}
+                              </CustomText>
+                            </div>
+
+                            <CustomButton
+                              onClick={() => {
+                                setExcelData([]);
+                                setExcelHeaders([]);
+                                setExcelFileName("");
+                              }}
+                              className="bg-transparent border-none hover:bg-transparent"
+                              title="Eliminar archivo"
+                            >
+                              <CustomIcon path={ICON_PATHS.delete} />
+                            </CustomButton>
+                          </div>
+                          <div className="flex items-center gap-2 w-full">
+                            <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-full bg-[#5B9900] w-full rounded-full"></div>
+                            </div>
+                            <div className="bg-[#5B9900] text-[#FFFFFF] rounded-full p-0.5">
+                              <Check size={12} strokeWidth={3} />
                             </div>
                           </div>
                         </div>
-                        <button
-                          onClick={() => {
-                            setExcelData([]);
-                            setExcelHeaders([]);
-                            setExcelFileName("");
-                          }}
-                          className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-red-500 transition"
-                          title="Eliminar archivo"
-                        >
-                          <Trash2 size={20} />
-                        </button>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="flex gap-4 items-start pt-4 border-t border-gray-100">
-              <div className="w-8 h-8 rounded-full bg-[#ABE7E5] flex items-center justify-center text-[#0E3C42] font-bold shrink-0">
-                4
-              </div>
-              <div className="w-full">
-                <p className="text-gray-600 mb-4">
-                  Verifique que los datos son correctos y edite los nombres de
-                  las columnas si es necesario. Si todo está bien, haga clic en
-                  Crear Entidad para continuar
-                </p>
+          <div className="flex gap-4 items-start pt-4 border-t border-gray-100">
+            <div
+              className={`w-8 h-8 rounded-full ${excelData.length > 0 ? "bg-[#ABE7E5]" : "bg-[#D3DAE0] text-[#838383] border border-[#838383]"} flex items-center justify-center font-bold shrink-0`}
+            >
+              4
+            </div>
+            <div className="w-full">
+              <CustomText
+                variant="bodyM"
+                className="text-[#333333] font-regular"
+              >
+                Verifique que los datos son correctos y edite los nombres de las
+                columnas si es necesario. Si todo está bien, haga clic en Crear
+                Entidad para continuar
+              </CustomText>
 
-                {excelData.length > 0 && (
-                  <div className="mt-4 animate-in fade-in duration-300">
-                    <ExcelEditor
-                      data={excelData}
-                      setData={setExcelData}
-                      headers={excelHeaders}
-                      setHeaders={setExcelHeaders}
-                    />
-                  </div>
-                )}
-              </div>
+              {excelData.length > 0 && (
+                <div className="mt-4 animate-in fade-in duration-300">
+                  <ExcelEditor
+                    data={excelData}
+                    setData={setExcelData}
+                    headers={excelHeaders}
+                    setHeaders={setExcelHeaders}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

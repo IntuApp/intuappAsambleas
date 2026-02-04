@@ -4,7 +4,9 @@ import PropTypes from "prop-types";
 
 const textStyles = {
   Title: "text-[57px] leading-[72px] font-bold",
+  TitleX: "text-[40px] leading-[48px]",
   TitleL: "text-[32px] leading-[40px]",
+  TitleM: "text-[24px] leading-[32px]",
   SubTitle: "text-[24px] leading-[32px]",
 
   bodyX: "text-[22px] leading-[32px]",

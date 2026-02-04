@@ -8,6 +8,11 @@ import {
   Settings,
 } from "lucide-react";
 import Button from "@/components/basics/Button";
+import CustomText from "../basics/CustomText";
+import CustomIcon from "../basics/CustomIcon";
+import { ICON_PATHS } from "@/app/constans/iconPaths";
+import CustomButton from "../basics/CustomButton";
+import { getIconPath } from "@/lib/utils";
 
 export default function EntityCard({
   entity,
@@ -27,79 +32,99 @@ export default function EntityCard({
   } = entity;
 
   return (
-    <div className="bg-white rounded-[32px] p-6 border border-gray-100 shadow-sm flex flex-col h-full hover:shadow-md transition-all">
+    <div className="max-w-[550px] max-h-[312px] w-full h-full rounded-3xl border border-[#F3F6F9] bg-[#FFFFFF] p-6 flex flex-col gap-5 hover:shadow-soft transition-all">
       {/* Header */}
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="font-bold text-[#0E3C42] text-xl leading-tight flex-1 mr-4">
+      <div className="max-w-[502px] max-h-[40px] w-full flex justify-between items-center">
+        <CustomText variant="bodyX" className="font-bold text-[#0E3C42]">
           {name}
-        </h3>
-        <div className="w-10 h-10 rounded-full bg-[#EEF2FF] flex items-center justify-center shrink-0 overflow-hidden">
-          <Building2 className="text-indigo-500" size={20} />
+        </CustomText>
+        <div className="w-10 h-10 rounded-full bg-[#D5DAFF] flex items-center justify-center shrink-0 overflow-hidden">
+          <CustomIcon path={getIconPath(entity)} size={24} color="#00093F" />
         </div>
       </div>
 
       {/* Stats */}
-      <div className="space-y-1 mb-4">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-medium text-gray-400 text-[15px]">
+      <div className="max-w-[502px] max-h-[56px] w-full flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <CustomText variant="bodyM" className="font-regular text-[#3D3D44]">
             Asambleistas:
-          </span>
-          <span className="font-bold text-[#0E3C42] text-[15px]">
+          </CustomText>
+          <CustomText variant="bodyM" className="font-bold text-[#333333]">
             {asambleistasCount}
-          </span>
+          </CustomText>
         </div>
-        <div className="flex items-start gap-2 text-sm text-gray-400">
-          <span className="font-medium whitespace-nowrap text-[15px]">
+        <div className="flex items-center gap-2">
+          <CustomText variant="bodyM" className="font-regular text-[#3D3D44]">
             Ubicación:
-          </span>
-          <span className="font-bold text-[#0E3C42] text-[15px] line-clamp-1">
-            {address}, {city}
-          </span>
+          </CustomText>
+          <CustomText variant="bodyM" className="font-bold text-[#333333]">
+            {address ? address + ", " : "Sin dirección,"}{" "}
+            {city ? city : "Sin ciudad"}
+          </CustomText>
         </div>
       </div>
 
       {/* Assembly Info Section - Priority based */}
-      <div className="mb-4 flex flex-col gap-3">
+      <div className="max-w-[502px] max-h-[56px] w-full flex flex-col gap-2">
         {activeAssembly ? (
-          <div className="bg-[#EEF2FF] border border-[#D5DAFF] rounded-xl p-3 flex items-center justify-between">
+          <div className="bg-[#EEF0FF] border border-#94A2FF rounded-xl p-4 flex items-center justify-between">
             <div className="flex ">
-              <span className="text-[14px] font-bold text-[#000000]">
+              <CustomText variant="labelL" className="text-[#1F1F23] font-bold">
                 {activeAssembly.name + " "}
-              </span>
-              <span className="font-normal text-[14px] text-gray-500">
-                · Inició hace {activeAssembly.startedAgo || "pocos minutos"}
-              </span>
+              </CustomText>
+              <CustomText
+                variant="labelL"
+                className="text-[#333333] font-regular"
+              >
+                · Inició hace {activeAssembly.hour || "pocos minutos"}
+              </CustomText>
             </div>
-            <div className="flex items-center gap-1.5 bg-[#FACCCD] text-[#930002] px-2 py-0.5 rounded-full text-[11px] font-bold">
-              <span className="w-1.5 h-1.5 bg-[#930002] rounded-full animate-pulse"></span>
-              En vivo
+            <div className="flex items-center bg-[#FACCCD] px-2 py-1 rounded-full ">
+              <CustomIcon path={ICON_PATHS.record} size={16} color="#930002" />
+              <CustomText
+                variant="labelM"
+                className="text-[#930002] font-medium"
+              >
+                En vivo
+              </CustomText>
             </div>
           </div>
         ) : nextAssembly ? (
-          <div className="pt-1">
+          <div className="max-w-[502px] max-h-[56px] w-full flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-gray-400 font-medium text-[15px]">
+              <CustomText
+                variant="bodyM"
+                className="font-regular text-[#3D3D44]"
+              >
                 Próxima asamblea:
-              </span>
-              <span className="text-[#0E3C42] font-bold text-[15px]">
+              </CustomText>
+              <CustomText variant="bodyM" className="font-bold text-[#333333]">
                 {nextAssembly.date}
-              </span>
+              </CustomText>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-gray-400 font-medium text-[15px]">
+              <CustomText
+                variant="bodyM"
+                className="font-medium text-[#3D3D44]"
+              >
                 Hora:
-              </span>
-              <span className="text-[#0E3C42] font-bold text-[15px]">
+              </CustomText>
+              <CustomText variant="bodyM" className="font-bold text-[#333333]">
                 {nextAssembly.time}
-              </span>
+              </CustomText>
             </div>
           </div>
         ) : !hasAssemblies ? (
-          <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 flex items-center gap-3">
-            <Info size={16} className="text-gray-400" />
-            <span className="text-[13px] font-bold text-gray-400 italic">
-              Esta entidad no tiene asambleas creadas
-            </span>
+          <div className="bg-gray-100 border border-gray-200 rounded-xl p-4 flex items-center justify-between">
+            <div className="flex gap-2 items-center">
+              <CustomIcon path={ICON_PATHS.info} size={20} color="#b9b9c0ff" />
+              <CustomText
+                variant="bodyM"
+                className="font-bold text-gray-400 italic"
+              >
+                Esta entidad no tiene asambleas creadas
+              </CustomText>
+            </div>
           </div>
         ) : null}
 
@@ -107,34 +132,52 @@ export default function EntityCard({
           <div className="bg-orange-50 border border-orange-100 rounded-lg p-2.5 flex items-start gap-2 text-[11px] text-orange-800">
             <AlertTriangle size={14} className="shrink-0 mt-0.5" />
             <span>
-              <span className="font-bold">Base de datos pendiente</span> · Sube
-              la BD
+              <CustomText variant="bodyM" className="font-bold">
+                Base de datos pendiente
+              </CustomText>{" "}
+              · Sube la BD
             </span>
           </div>
         )}
       </div>
 
       {/* Footer Buttons */}
-      <div className="flex gap-3 mt-auto pt-2">
-        <button
+      <div className="flex justify-between">
+        <CustomButton
           onClick={() =>
             activeAssembly
               ? onViewAssembly && onViewAssembly(entity)
               : onCreateAssembly && onCreateAssembly(entity)
           }
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 border-2 border-[#0E3C42] rounded-full text-[#0E3C42] font-bold text-xs hover:bg-gray-50 transition-all active:scale-95 whitespace-nowrap"
+          variant="secondary"
+          className="max-w-[243px] flex-1 flex items-center justify-center gap-2 py-3 px-4"
         >
-          {activeAssembly ? <Eye size={16} /> : <Plus size={16} />}
-          {activeAssembly ? "Ver Asamblea" : "Crear Asamblea"}
-        </button>
+          {activeAssembly ? (
+            <CustomIcon path={ICON_PATHS.eye} size={16} color="#0E3C42" />
+          ) : (
+            <CustomIcon path={ICON_PATHS.add} size={16} color="#0E3C42" />
+          )}
+          {activeAssembly ? (
+            <CustomText variant="labelM" className="font-bold text-[#0E3C42]">
+              Ver Asamblea
+            </CustomText>
+          ) : (
+            <CustomText variant="labelM" className="font-bold text-[#0E3C42]">
+              Crear Asamblea
+            </CustomText>
+          )}
+        </CustomButton>
 
-        <button
+        <CustomButton
           onClick={() => onManage && onManage(entity)}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#94A2FF] rounded-full text-[#0E3C42] font-extrabold text-xs hover:opacity-90 transition-all active:scale-95 shadow-sm"
+          variant="primary"
+          className="max-w-[243px] flex-1 flex items-center justify-center gap-2"
         >
-          <Settings size={16} />
-          Gestionar
-        </button>
+          <CustomIcon path={ICON_PATHS.settings} size={16} />
+          <CustomText variant="labelM" className="font-bold text-[#000000]">
+            Gestionar
+          </CustomText>
+        </CustomButton>
       </div>
     </div>
   );

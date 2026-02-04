@@ -6,6 +6,7 @@ import CreateEntityForm from "@/components/entities/CreateEntityForm";
 import TopBar from "@/components/ui/TopBar";
 import Loader from "@/components/basics/Loader";
 import { getOperatorById } from "@/lib/operators";
+import CustomText from "@/components/basics/CustomText";
 
 export default function CreateEntityPage() {
   const { user } = useUser();
@@ -42,16 +43,12 @@ export default function CreateEntityPage() {
   }
 
   return (
-    <div className="flex flex-col w-full">
-      <div className="hidden">
-        <TopBar pageTitle="Crear Nueva Entidad" />
-      </div>
-
-      <div className="py-5 px-15 flex flex-col gap-8 w-full">
+    <div className="flex flex-col w-full h-full">
+      <div className="flex flex-col gap-8 w-full h-full">
         <div className="flex items-center justify-between">
-          <h1 className="text-[32px] font-bold text-[#0E3C42]">
+          <CustomText variant="TitleL" className="text-[#0E3C42] font-bold">
             Crear Entidad
-          </h1>
+          </CustomText>
         </div>
 
         <CreateEntityForm

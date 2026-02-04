@@ -11,7 +11,7 @@ const Layout = ({ children }) => {
         <main className="flex w-full h-full bg-[#F3F6F9]">
           <HeaderOperario />
           <div className="flex w-full h-full flex-col justify-center items-center align-center ">
-            <div className=" w-full h-full max-w-[1128px] max-h-[1380px] my-8 flex flex-col gap-8">
+            <div className=" w-full h-full max-w-[1128px] my-8 flex flex-col gap-8">
               <TopBar />
               {children}
             </div>

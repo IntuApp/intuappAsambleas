@@ -13,7 +13,7 @@ export const ExcelEditor = ({ data, setData, headers, setHeaders }) => {
   const [editingHeaderIndex, setEditingHeaderIndex] = useState(null);
   const [tempHeaderName, setTempHeaderName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8; // Adjust to fit UI nicely
+  const itemsPerPage = 20; // Adjust to fit UI nicely
 
   if (!data || data.length === 0) return null;
 
@@ -68,7 +68,7 @@ export const ExcelEditor = ({ data, setData, headers, setHeaders }) => {
     <div className="w-full">
       <div className="w-[95%]  overflow-x-auto border border-gray-200 rounded-lg">
         <table className="w-full text-sm text-left border-collapse">
-          <thead className="bg-[#F9FAFB]">
+          <thead className="">
             <tr>
               {headers.map((header, index) => (
                 <th

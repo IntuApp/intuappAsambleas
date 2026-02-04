@@ -10,6 +10,10 @@ import {
 } from "@/lib/entities";
 import { getAllAssemblies } from "@/lib/assembly";
 import { Plus } from "lucide-react";
+import CustomText from "@/components/basics/CustomText";
+import CustomButton from "@/components/basics/CustomButton";
+import CustomIcon from "@/components/basics/CustomIcon";
+import { ICON_PATHS } from "@/app/constans/iconPaths";
 
 export default function OperarioEntidadesPage() {
   const { user } = useUser();
@@ -90,17 +94,19 @@ export default function OperarioEntidadesPage() {
   }, [user]);
 
   return (
-    <div className="px-15">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-4xl font-bold text-[#0E3C42]">Entidades</h1>
-        <Button
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-between items-center">
+        <CustomText variant="TitleX" className="text-[#0E3C42] font-bold">
+          Entidades
+        </CustomText>
+        <CustomButton
           variant="primary"
-          size="M"
-          className="!text-sm !py-3 !px-4 !bg-[#94A2FF] !text-[#000000] !font-bold"
+          className="py-3 px-4 flex gap-2"
           onClick={() => router.push("/operario/crear-entidad")}
         >
-          <Plus size={18} /> Crear Entidad
-        </Button>
+          <CustomIcon path={ICON_PATHS.add} size={24} />
+          <CustomText variant="labelL" className="font-bold">Crear Entidad</CustomText>
+        </CustomButton>
       </div>
 
       <EntitiesList

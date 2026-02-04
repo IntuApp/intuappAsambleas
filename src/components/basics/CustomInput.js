@@ -1,7 +1,7 @@
-'use client';
-import React from 'react';
-import PropTypes from 'prop-types';
-import CustomText from './CustomText';
+"use client";
+import React from "react";
+import PropTypes from "prop-types";
+import CustomText from "./CustomText";
 
 /**
  * CustomInput - campo de texto reutilizable con label y estilos personalizados.
@@ -10,18 +10,42 @@ import CustomText from './CustomText';
  * @param {string} className - clases adicionales (Tailwind u otras)
  * @param {object} rest - cualquier otra prop estándar de input (onChange, value, type, etc.)
  */
-export default function CustomInput({ label, placeholder, className = '', classInput, classLabel, variant, ...rest }) {
+export default function CustomInput({
+  label,
+  placeholder,
+  className = "",
+  classInput,
+  classLabel,
+  variant,
+  optional,
+  ...rest
+}) {
   return (
-    <div className={`flex flex-col  ${className}`}>
-      {label && (
-        <CustomText variant={variant} className={classLabel}>
-          {label}
-        </CustomText>
-      )}
+    <div className={`flex flex-col gap-2 ${className}`}>
+      <div className="flex items-start gap-1">
+        {label && (
+          <div className="flex items-center gap-1">
+            <CustomText
+              variant={variant}
+              className={`${classLabel} flex gap-1`}
+            >
+              {label} {!optional && <span className="text-red-500">*</span>}
+            </CustomText>
+            {optional && (
+              <CustomText
+                variant="labelS"
+                className="text-[#838383] font-normal items-start"
+              >
+                (opcional)
+              </CustomText>
+            )}
+          </div>
+        )}
+      </div>
       <input
         placeholder={placeholder}
         className={`
-          text-[18px] leading-[24px] text-[#838383] font-normal
+         leading-[24px] text-[#838383] font-normal
         ${classInput}`}
         {...rest}
       />
