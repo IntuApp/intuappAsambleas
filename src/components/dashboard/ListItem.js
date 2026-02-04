@@ -12,7 +12,6 @@ export default function ListItem({
   onClick,
   isAssamblea,
   showNextAssembly = false,
-  icon: Icon, // Optional left icon
   classContainer = "",
 }) {
   const getIconPath = () => {
@@ -68,12 +67,16 @@ export default function ListItem({
   return (
     <div onClick={onClick} className={`flex items-center ${classContainer}`}>
       <div className="flex items-center gap-4 flex-1 ">
-        {(getIconPath() || Icon) && (
+        {getIconPath() && (
           <div className="w-14 h-14 p-2 rounded-lg bg-[#EEF0FF] flex items-center justify-center shrink-0 overflow-hidden">
             {getIconPath() ? (
-              <CustomIcon path={getIconPath()} size={40} color="#6A7EFF" />
+              <CustomIcon
+                path={getIconPath()}
+                size={40}
+                className="text-[#6A7EFF]"
+              />
             ) : (
-              <Icon size={32} />
+              ""
             )}
           </div>
         )}

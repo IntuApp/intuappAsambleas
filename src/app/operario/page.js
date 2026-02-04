@@ -187,7 +187,6 @@ export default function OperarioPage() {
             {entities.map((entity) => (
               <ListItem
                 key={entity.id}
-                icon={Building2}
                 entity={entity}
                 showNextAssembly={true}
                 onClick={() => router.push(`/operario/${entity.id}`)}
@@ -271,7 +270,6 @@ export default function OperarioPage() {
                         text: assembly.date || "Fecha pendiente",
                         color: "bg-[#B8EAF0] text#0E3C42]",
                         dot: false,
-                        icon: CalendarDays,
                       }}
                       isAssamblea
                       classContainer="py-3 gap-4"

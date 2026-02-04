@@ -54,7 +54,7 @@ export default function SectionCard({
             <CustomText variant="labelM" className="font-medium text-[#4059FF]">
               {viewAllText}
             </CustomText>
-            <CustomIcon path={ICON_PATHS.arrowOutward} size={16} color="#4059FF"/>
+            <CustomIcon path={ICON_PATHS.arrowOutward} size={16} className="text-[#4059FF]"/>
           </Link>
         </div>
       )}
