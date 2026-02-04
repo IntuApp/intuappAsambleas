@@ -120,12 +120,6 @@ export default function OperarioPage() {
       document.body.removeChild(downloadLink);
     }
   };
-  const iconEntidades = (
-    <path d="M200-120q-33 0-56.5-23.5T120-200v-400q0-33 23.5-56.5T200-680h80v-80q0-33 23.5-56.5T360-840h240q33 0 56.5 23.5T680-760v240h80q33 0 56.5 23.5T840-440v240q0 33-23.5 56.5T760-120H520v-160h-80v160H200Zm0-80h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 320h80v-80h-80v80Zm0-160h80v-80h-80v80Zm0-160h80v-80h-80v80Zm160 480h80v-80h-80v80Zm0-160h80v-80h-80v80Z" />
-  );
-  const iconCalendar = (
-    <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v187q0 17-11.5 28.5T800-493q-17 0-28.5-11.5T760-533v-27H200v400h232q17 0 28.5 11.5T472-120q0 17-11.5 28.5T432-80H200Zm520 40q-83 0-141.5-58.5T520-240q0-83 58.5-141.5T720-440q83 0 141.5 58.5T920-240q0 83-58.5 141.5T720-40Zm67-105 28-28-75-75v-112h-40v128l87 87Z" />
-  );
 
   return (
     <div className="flex flex-col gap-8">
@@ -134,36 +128,19 @@ export default function OperarioPage() {
       <section className=" ">
         <div className="flex flex-start gap-6">
           <StatCard
-            icon={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 -960 960 960"
-                className="w-[40px] h-[40px] text-[#6A7EFF]"
-                fill="currentColor"
-              >
-                {iconEntidades}
-              </svg>
-            }
+            iconPath={ICON_PATHS.conjunto}
             label="Total Entidades"
             value={entities.length}
-            iconColor="#001497"
+            classIcon="text-[#6A7EFF] w-[40px] h-[40px]"
             iconBgColor="bg-[#EEF0FF] w-[56px] h-[56px]"
             className="w-full h-full max-w-[264px] max-h-[104px] rounded-[16px] border-[#F3F6F9] p-6"
           />
+
           <StatCard
-            icon={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 -960 960 960"
-                className="w-[40px] h-[40px] text-[#6A7EFF]"
-                fill="currentColor"
-              >
-                {iconCalendar}
-              </svg>
-            }
+            iconPath={ICON_PATHS.calendarTime}
             label="Asambleas agendadas"
             value={assemblies.length}
-            iconColor="#001497"
+            classIcon="text-[#6A7EFF] w-[40px] h-[40px]"
             iconBgColor="bg-[#EEF0FF] w-[56px] h-[56px]"
             className="w-full h-full max-w-[264px] max-h-[104px] rounded-[16px] border-[#F3F6F9] p-6"
           />

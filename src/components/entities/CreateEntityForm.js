@@ -439,27 +439,47 @@ export default function CreateEntityForm({
                 <div className="flex gap-6 flex-col lg:flex-row">
                   <div className="flex-1 flex flex-col gap-4">
                     {/* Upload Box */}
-                    <div className="border-2 border-dashed border-[#94A2FF] bg-[#F5F7FF] rounded-xl p-8 flex flex-col items-center justify-center text-center min-h-[200px] relative">
-                      <input
-                        type="file"
-                        accept=".xlsx, .xls"
-                        onChange={handleFileUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                      />
-                      <div className="bg-[#6A7EFF] p-2 rounded-lg text-white mb-3">
-                        <Upload size={24} />
+                    <div className="border-2 border-dashed border-[#94A2FF] rounded-3xl relative">
+                      <div className="flex flex-col items-center justify-center text-center max-w-[544px] w-full p-4 gap-4">
+                        <input
+                          type="file"
+                          accept=".xlsx, .xls"
+                          onChange={handleFileUpload}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <CustomIcon
+                          path={ICON_PATHS.uploadFile}
+                          size={32}
+                          color="#6A7EFF"
+                        />
+                        <div className="flex flex-col gap-2 items-center">
+                          <CustomText
+                            variant="labelM"
+                            className="text-[#242330] font-bold"
+                          >
+                            Arrastra y suelta aquí o
+                          </CustomText>
+                          <CustomButton
+                            variant="primary"
+                            className="rounded-full pointer-events-none max-w-[180px] max-h-[40px] w-full py-3 px-4"
+                          >
+                            <CustomText
+                              variant="labelM"
+                              className="text-[#000000] font-bold"
+                            >
+                              Selecciona el archivo
+                            </CustomText>
+                          </CustomButton>
+                          <CustomText
+                            variant="labelS"
+                            className="text-[#3D3D44] font-regular"
+                          >
+                            Debe usar la misma plantilla descargada
+                            anteriormente. Si usa otro archivo, el sistema no
+                            reconocerá la información
+                          </CustomText>
+                        </div>
                       </div>
-                      <p className="font-bold text-[#0E3C42] mb-2">
-                        Arrastra y suelta aquí o
-                      </p>
-                      <button className="bg-[#8B9DFF] text-white px-6 py-2 rounded-full font-bold hover:bg-[#7a8ce0] transition pointer-events-none">
-                        Selecciona el archivo
-                      </button>
-                      <p className="text-xs text-gray-500 mt-4 max-w-xs">
-                        Debe usar la misma plantilla descargada anteriormente.
-                        Si usa otro archivo, el sistema no reconocerá la
-                        información
-                      </p>
                     </div>
 
                     {/* File Card (if file uploaded) */}

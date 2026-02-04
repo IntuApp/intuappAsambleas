@@ -1,11 +1,13 @@
 import React from "react";
 import CustomText from "../basics/CustomText";
 import CustomTitle from "../basics/CustomTitle";
+import CustomIcon from "../basics/CustomIcon";
 
 export default function StatCard({
-  icon: Icon,
+  iconPath,
   label,
   value,
+  classIcon = "",
   iconBgColor = "bg-[#EEF3FF]",
   className = "",
 }) {
@@ -16,7 +18,7 @@ export default function StatCard({
       <div
         className={` rounded-lg ${iconBgColor} flex justify-center items-center text-center`}
       >
-        {Icon}
+        <CustomIcon path={iconPath} className={classIcon} />
       </div>
       <div className="flex-1">
         <CustomText variant="labelM" className="font-medium text-[#3D3D44]">

@@ -19,6 +19,7 @@ import { getOperatorsCount, getEntitiesCount } from "@/lib/stats";
 import { getOperators } from "@/lib/operators";
 import { getEntitiesByOperator, getEntityById } from "@/lib/entities";
 import { getAllAssemblies } from "@/lib/assembly";
+import { ICON_PATHS } from "../constans/iconPaths";
 
 const SuperAdminPage = () => {
   const { user } = useUser();
@@ -102,24 +103,24 @@ const SuperAdminPage = () => {
       <section className="mt-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <StatCard
-            icon={UsersRound}
+            iconPath={ICON_PATHS.groupPeople}
             label="Operadores Logísticos"
             value={stats.operators}
-            iconColor="text-[#6470FF]"
+            classIcon="text-[#6470FF]"
             iconBgColor="bg-[#EEF3FF]"
           />
           <StatCard
-            icon={HousePlus}
+            iconPath={ICON_PATHS.conjunto}
             label="Entidades en total"
             value={stats.entities}
-            iconColor="text-[#6470FF]"
+            classIcon="text-[#6470FF] "
             iconBgColor="bg-[#EEF3FF]"
           />
           <StatCard
-            icon={CalendarClock}
+            iconPath={ICON_PATHS.calendarTime}
             label="Asambleas agendadas"
             value={assembliesWithDetails.length}
-            iconColor="text-[#6470FF]"
+            classIcon="text-[#6470FF]"
             iconBgColor="bg-[#EEF3FF]"
           />
         </div>
