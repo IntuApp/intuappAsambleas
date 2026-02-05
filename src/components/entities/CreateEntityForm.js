@@ -5,7 +5,6 @@ import { Download, Upload, FileSpreadsheet, Trash2, Check } from "lucide-react";
 
 import CustomInput from "@/components/basics/CustomInput";
 import { ExcelEditor } from "@/components/basics/ExcelEditor";
-import Button from "@/components/basics/Button"; // Standardized button
 
 import {
   validateExcelStructure,
@@ -23,6 +22,8 @@ import CustomSelect from "../basics/CustomSelect";
 import CustomButton from "../basics/CustomButton";
 import CustomIcon from "../basics/CustomIcon";
 import { ICON_PATHS } from "@/app/constans/iconPaths";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import SuccessModal from "../modals/SuccessModal";
 
 export default function CreateEntityForm({
   operatorId,
@@ -32,6 +33,13 @@ export default function CreateEntityForm({
 }) {
   const [loading, setLoading] = useState(false);
   const [entityTypes, setEntityTypes] = useState([]);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [excelData, setExcelData] = useState([]);
+  const [excelHeaders, setExcelHeaders] = useState([]);
+  const [excelFileName, setExcelFileName] = useState("");
+  const [columnAliases, setColumnAliases] = useState({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdEntity, setCreatedEntity] = useState(null);
 
   // Form State
   const [entityForm, setEntityForm] = useState({
@@ -45,10 +53,12 @@ export default function CreateEntityForm({
     adminPhone: "",
   });
 
-  // Excel State
-  const [excelData, setExcelData] = useState([]);
-  const [excelHeaders, setExcelHeaders] = useState([]);
-  const [excelFileName, setExcelFileName] = useState("");
+  const isCreateDisabled =
+    loading ||
+    !entityForm.name.trim() ||
+    !entityForm.type ||
+    !entityForm.address.trim() ||
+    excelData.length === 0;
 
   useEffect(() => {
     const fetchTypes = async () => {
@@ -113,6 +123,11 @@ export default function CreateEntityForm({
       }
     };
     reader.readAsBinaryString(file);
+  };
+
+  const handleConfirmCreate = async () => {
+    setShowConfirmationModal(false);
+    await handleCreateEntity();
   };
 
   const handleCreateEntity = async () => {
@@ -203,6 +218,7 @@ export default function CreateEntityForm({
       address: entityForm.address,
       databaseStatus: "done",
       assemblyRegistriesListId: assemblyRegistriesListId,
+      columnAliases: columnAliases || {}, // Save aliases
     };
 
     const resEntity = await createEntity(
@@ -213,16 +229,37 @@ export default function CreateEntityForm({
     );
 
     if (resEntity.success) {
-      toast.success("Entidad creada correctamente");
-      if (onSuccess) onSuccess(resEntity);
+      setCreatedEntity(resEntity);
+      setShowSuccessModal(true);
     } else {
       toast.error("Error creando entidad");
     }
+
     setLoading(false);
   };
 
   return (
     <div className="gap-5 flex flex-col h-full">
+      <ConfirmationModal
+        entityForm={entityForm}
+        isOpen={showConfirmationModal}
+        confirmText="Si"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmCreate}
+        onClose={() => setShowConfirmationModal(false)}
+        title="¿Registrar nueva entidad?"
+        message={`Podrás completar o modificar su información más adelante.`}
+      />
+      <SuccessModal
+        isOpen={showSuccessModal}
+        message="La entidad ha sido creada y guardada correctamente. Ahora puedes añadir asambleas o gestionar sus datos."
+        onConfirm={() => {
+          setShowSuccessModal(false);
+          if (onSuccess && createdEntity) {
+            onSuccess(createdEntity);
+          }
+        }}
+      />
       <div className="max-w-[1128px] w-full h-full bg-[#FFFFFF] border border-[#F3F6F9] rounded-3xl p-6 flex flex-col gap-5">
         <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">
           1. Datos de la Entidad
@@ -301,7 +338,6 @@ export default function CreateEntityForm({
           <CustomInput
             label="Dirección"
             variant="labelM"
-            optional
             className="max-w-[344px] max-h-[80px]"
             classLabel="text-[#333333] font-bold"
             classInput="max-w-[344px] max-h-[56px] w-full pl-4 pr-4 py-3 rounded-lg border"
@@ -439,46 +475,44 @@ export default function CreateEntityForm({
                 <div className="flex gap-6 flex-col lg:flex-row">
                   <div className="flex-1 flex flex-col gap-4">
                     {/* Upload Box */}
-                    <div className="border-2 border-dashed border-[#94A2FF] rounded-3xl relative">
-                      <div className="flex flex-col items-center justify-center text-center max-w-[544px] w-full p-4 gap-4">
-                        <input
-                          type="file"
-                          accept=".xlsx, .xls"
-                          onChange={handleFileUpload}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                        />
-                        <CustomIcon
-                          path={ICON_PATHS.uploadFile}
-                          size={32}
-                          color="#6A7EFF"
-                        />
-                        <div className="flex flex-col gap-2 items-center">
+                    <div className=" flex flex-col items-center justify-center text-center max-w-[574px] w-full p-4 gap-4 border-2 border-dashed border-[#94A2FF] rounded-3xl relative">
+                      <input
+                        type="file"
+                        accept=".xlsx, .xls"
+                        onChange={handleFileUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      />
+                      <CustomIcon
+                        path={ICON_PATHS.uploadFile}
+                        size={32}
+                        color="#6A7EFF"
+                      />
+                      <div className="flex flex-col gap-2 items-center w-full">
+                        <CustomText
+                          variant="labelM"
+                          className="text-[#242330] font-bold"
+                        >
+                          Arrastra y suelta aquí o
+                        </CustomText>
+                        <CustomButton
+                          variant="primary"
+                          className="rounded-full pointer-events-none max-w-[180px] max-h-[40px] w-full py-3 px-4"
+                        >
                           <CustomText
                             variant="labelM"
-                            className="text-[#242330] font-bold"
+                            className="text-[#000000] font-bold"
                           >
-                            Arrastra y suelta aquí o
+                            Selecciona el archivo
                           </CustomText>
-                          <CustomButton
-                            variant="primary"
-                            className="rounded-full pointer-events-none max-w-[180px] max-h-[40px] w-full py-3 px-4"
-                          >
-                            <CustomText
-                              variant="labelM"
-                              className="text-[#000000] font-bold"
-                            >
-                              Selecciona el archivo
-                            </CustomText>
-                          </CustomButton>
-                          <CustomText
-                            variant="labelS"
-                            className="text-[#3D3D44] font-regular"
-                          >
-                            Debe usar la misma plantilla descargada
-                            anteriormente. Si usa otro archivo, el sistema no
-                            reconocerá la información
-                          </CustomText>
-                        </div>
+                        </CustomButton>
+                        <CustomText
+                          variant="labelS"
+                          className="text-[#3D3D44] font-medium"
+                        >
+                          Debe usar la misma plantilla descargada anteriormente.
+                          Si usa otro archivo, el sistema no reconocerá la
+                          información
+                        </CustomText>
                       </div>
                     </div>
 
@@ -553,6 +587,8 @@ export default function CreateEntityForm({
                     setData={setExcelData}
                     headers={excelHeaders}
                     setHeaders={setExcelHeaders}
+                    columnAliases={columnAliases}
+                    setColumnAliases={setColumnAliases}
                   />
                 </div>
               )}
@@ -562,17 +598,27 @@ export default function CreateEntityForm({
       </div>
 
       <div className="flex justify-end gap-4 mt-8">
-        <Button variant="secondary" size="L" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button
-          variant="primary"
+        <CustomButton
+          variant="secondary"
           size="L"
-          onClick={handleCreateEntity}
-          disabled={loading}
+          className="px-4 py-2 border-[2px]"
+          onClick={onCancel}
         >
-          {loading ? "Creando..." : "Crear Entidad"}
-        </Button>
+          <CustomText variant="labelL" className="font-bold text-[#0E3C42]">
+            Cancelar
+          </CustomText>
+        </CustomButton>
+        <CustomButton
+          variant="primary"
+          className="py-3 px-4 flex gap-2"
+          onClick={() => setShowConfirmationModal(true)}
+          disabled={isCreateDisabled}
+        >
+          <CustomIcon path={ICON_PATHS.check} size={24} />
+          <CustomText variant="labelL" className="font-bold">
+            Crear Entidad
+          </CustomText>
+        </CustomButton>
       </div>
     </div>
   );

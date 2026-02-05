@@ -356,12 +356,12 @@ export default function AssemblyAccessPage() {
     );
   }
 
-
   return (
     <RegistrationWizard
       regStep={regStep}
       setRegStep={setRegStep}
       assembly={assembly}
+      entity={entity} // Pass entity to access columnAliases
       userInfo={userInfo}
       setUserInfo={setUserInfo}
       regDocument={regDocument}

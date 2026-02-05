@@ -96,6 +96,10 @@ const AssemblyDashboardPage = () => {
   const [entity, setEntity] = useState(null);
   const [registries, setRegistries] = useState([]);
 
+  // Derived state for list ID
+  const activeRegistriesListId =
+    assembly?.assemblyRegistriesListId || entity?.assemblyRegistriesListId;
+
   // Stats
   const [quorum, setQuorum] = useState(0);
   const [registeredCount, setRegisteredCount] = useState(0);
@@ -209,12 +213,14 @@ const AssemblyDashboardPage = () => {
       if (resEntity.success) {
         setEntity(resEntity.data);
         setSegmentTitle(entityId, resEntity.data.name);
-        if (resEntity.data.assemblyRegistriesListId) {
-          const listRef = doc(
-            db,
-            "assemblyRegistriesList",
-            resEntity.data.assemblyRegistriesListId,
-          );
+
+        // Determine which list to use (assembly-specific or entity-master)
+        const listIdToUse =
+          assembly.assemblyRegistriesListId ||
+          resEntity.data.assemblyRegistriesListId;
+
+        if (listIdToUse) {
+          const listRef = doc(db, "assemblyRegistriesList", listIdToUse);
           unsubRegs = onSnapshot(listRef, (listSnap) => {
             if (listSnap.exists()) {
               const regsMap = listSnap.data().assemblyRegistries || {};
@@ -228,11 +234,15 @@ const AssemblyDashboardPage = () => {
                 (r) => r.registerInAssembly === true,
               );
               const totalC = regs.reduce(
-                (acc, item) => acc + parseFloat(item.coeficiente || 0),
+                (acc, item) =>
+                  acc +
+                  parseFloat(String(item.coeficiente || 0).replace(",", ".")),
                 0,
               );
               const regC = registeredRegs.reduce(
-                (acc, item) => acc + parseFloat(item.coeficiente || 0),
+                (acc, item) =>
+                  acc +
+                  parseFloat(String(item.coeficiente || 0).replace(",", ".")),
                 0,
               );
 
@@ -249,7 +259,12 @@ const AssemblyDashboardPage = () => {
 
     setupRegistries();
     return () => unsubRegs();
-  }, [assembly?.entityId, entityId, setSegmentTitle]);
+  }, [
+    assembly?.entityId,
+    assembly?.assemblyRegistriesListId,
+    entityId,
+    setSegmentTitle,
+  ]);
 
   useEffect(() => {
     if (!assembly?.questions || assembly.questions.length === 0) {
@@ -372,14 +387,16 @@ const AssemblyDashboardPage = () => {
       )
     ) {
       if (entity?.assemblyRegistriesListId) {
-        setLoading(true);
-        const res = await resetAssemblyRegistries(
-          entity.assemblyRegistriesListId,
-        );
-        if (!res.success) {
-          toast.error("Error al resetear registros");
-          setLoading(false);
-          return;
+        // Here we should reset the active list explicitly
+        const listToReset = activeRegistriesListId;
+        if (listToReset) {
+          setLoading(true);
+          const res = await resetAssemblyRegistries(listToReset);
+          if (!res.success) {
+            toast.error("Error al resetear registros");
+            setLoading(false);
+            return;
+          }
         }
       }
 
@@ -483,7 +500,7 @@ const AssemblyDashboardPage = () => {
 
   const handleToggleVoteBlock = async (registryId, currentBlocked) => {
     const res = await toggleVoteBlock(
-      entity?.assemblyRegistriesListId,
+      activeRegistriesListId,
       registryId,
       !currentBlocked,
     );
@@ -514,7 +531,7 @@ const AssemblyDashboardPage = () => {
     }
 
     const res = await toggleRegistryDeletion(
-      entity?.assemblyRegistriesListId,
+      activeRegistriesListId,
       registryId,
       !currentDeleted,
     );
@@ -548,7 +565,7 @@ const AssemblyDashboardPage = () => {
     const finalTotal = currentTotal + newCoef;
 
     setLoading(true);
-    const res = await addRegistryToList(entity.assemblyRegistriesListId, data);
+    const res = await addRegistryToList(activeRegistriesListId, data);
     if (res.success) {
       toast.success("Asambleísta añadido correctamente");
     } else {

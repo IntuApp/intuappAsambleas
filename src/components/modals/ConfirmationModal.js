@@ -1,11 +1,15 @@
 import React from "react";
 import Button from "@/components/basics/Button";
 import { AlertTriangle, X } from "lucide-react";
+import CustomText from "../basics/CustomText";
+import CustomButton from "../basics/CustomButton";
+import { getTypeName } from "@/lib/utils";
 
 export default function ConfirmationModal({
   isOpen,
   onClose,
   onConfirm,
+  entityForm,
   title,
   message,
   confirmText = "Eliminar",
@@ -14,6 +18,8 @@ export default function ConfirmationModal({
   isLoading = false,
 }) {
   if (!isOpen) return null;
+
+  const typeName = getTypeName(entityForm);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -24,48 +30,45 @@ export default function ConfirmationModal({
       />
 
       {/* Modal Content */}
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 transform transition-all scale-100">
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <X size={20} />
-        </button>
+      <div className="relative bg-white rounded-2xl max-w-[540px] max-h-[300px] p-8">
+        <div className=" flex flex-col text-start gap-6">
+          <CustomText variant="TitleL" className="font-bold text-[#0E3C42]">
+            {title}
+          </CustomText>
 
-        <div className="flex flex-col items-center text-center gap-4">
-          <div
-            className={`w-14 h-14 rounded-full flex items-center justify-center ${
-              isDestructive
-                ? "bg-red-100 text-red-500"
-                : "bg-blue-100 text-blue-500"
-            }`}
-          >
-            <AlertTriangle size={28} />
+          <div>
+            <CustomText variant="bodyM">
+              ¿Deseas crear la entidad{" "}
+              <strong className="font-bold">
+                {typeName} {entityForm.name}
+              </strong>
+              ?
+            </CustomText>
+            <CustomText variant="bodyM" className="text-[#333333] font-normal">
+              {message}
+            </CustomText>
           </div>
 
-          <h3 className="text-xl font-bold text-gray-900">{title}</h3>
-
-          <p className="text-gray-500 leading-relaxed">{message}</p>
-
           <div className="flex gap-3 w-full mt-4">
-            <button
+            <CustomButton
+              variant="secondary"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
-              disabled={isLoading}
+              className={`flex-1 px-4 py-2.5 shadow-md transition-all `}
             >
-              {cancelText}
-            </button>
-            <button
+              <CustomText variant="labelL" className="text-[#0E3C42] font-bold">
+                {cancelText}
+              </CustomText>
+            </CustomButton>
+            <CustomButton
+              variant="primary"
               onClick={onConfirm}
               disabled={isLoading}
-              className={`flex-1 px-4 py-2.5 text-white rounded-xl font-medium shadow-md transition-all ${
-                isDestructive
-                  ? "bg-red-500 hover:bg-red-600 shadow-red-200"
-                  : "bg-blue-600 hover:bg-blue-700 shadow-blue-200"
-              } ${isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+              className={`flex-1 px-4 py-2.5 shadow-md transition-all `}
             >
-              {isLoading ? "Procesando..." : confirmText}
-            </button>
+              <CustomText variant="labelL" className="text-[#000000] font-bold">
+                {confirmText}
+              </CustomText>
+            </CustomButton>
           </div>
         </div>
       </div>

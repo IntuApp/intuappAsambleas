@@ -165,7 +165,20 @@ export default function AssemblyDashboardView({
 
   // ... (registries useEffect)
 
-  // ... (questions useEffect)
+  useEffect(() => {
+    if (!assembly?.questions?.length) {
+      setTimeout(() => setQuestions([]), 0);
+      return;
+    }
+    const qRef = collection(db, "question");
+    const unsub = onSnapshot(qRef, (snap) => {
+      const qList = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .filter((q) => assembly.questions.includes(q.id) && !q.isDeleted);
+      setQuestions(qList);
+    });
+    return () => unsub();
+  }, [assembly?.questions]);
 
   // ... (handlers)
 
@@ -218,65 +231,74 @@ export default function AssemblyDashboardView({
       />
       <TopBar />
       {/* Actions */}
+      {/* Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {isPreStart ? (
-          isExpired ? (
-            <div className="py-3 rounded-full bg-red-50 text-red-500 font-bold text-sm border border-red-100 flex items-center justify-center gap-2 px-4 text-center leading-tight">
-              <AlertTriangle size={16} className="shrink-0" />
-              Fecha vencida. Actualiza fecha/hora.
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowStartConfirm(true)}
-              className="py-3 rounded-full bg-[#E0F7FA] text-[#0E3C42] font-bold text-sm hover:bg-[#b2ebf2] transition flex items-center justify-center gap-2"
-            >
-              <Video size={18} /> Iniciar asamblea
-            </button>
-          )
+        {assembly.status === "finished" ? (
+          <div className="col-span-3 py-3 rounded-full bg-gray-100 text-gray-500 font-bold text-sm text-center border border-gray-200">
+            Asamblea Finalizada
+          </div>
         ) : (
-          <button className="py-3 rounded-full bg-gray-200 text-gray-400 font-bold text-sm cursor-not-allowed flex items-center justify-center gap-2">
-            Asamblea en curso
-          </button>
-        )}
-        {/* More actions omitted for brevity but logic is straightforward to add */}
-        <button
-          onClick={() =>
-            updateStatus(
-              assembly.status === "registries_finalized"
-                ? "started"
-                : "registries_finalized"
-            )
-          }
-          disabled={
-            assembly.status === "finished" || assembly.status === "create"
-          }
-          className={`py-3 rounded-full font-bold text-sm transition flex items-center justify-center gap-2 ${
-            assembly.status === "registries_finalized"
-              ? "bg-orange-100 text-[#FF9F43]"
-              : "bg-[#FFF4E5] text-[#FF9F43] hover:bg-[#ffeac2]"
-          } ${
-            assembly.status === "finished" || assembly.status === "create"
-              ? "opacity-50 cursor-not-allowed"
-              : ""
-          }`}
-        >
-          <Users size={18} />{" "}
-          {assembly.status === "registries_finalized"
-            ? "Activar registros"
-            : "Finalizar registros"}
-        </button>
+          <>
+            {isPreStart ? (
+              isExpired ? (
+                <div className="py-3 rounded-full bg-red-50 text-red-500 font-bold text-sm border border-red-100 flex items-center justify-center gap-2 px-4 text-center leading-tight">
+                  <AlertTriangle size={16} className="shrink-0" />
+                  Fecha vencida. Actualiza fecha/hora.
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowStartConfirm(true)}
+                  className="py-3 rounded-full bg-[#E0F7FA] text-[#0E3C42] font-bold text-sm hover:bg-[#b2ebf2] transition flex items-center justify-center gap-2"
+                >
+                  <Video size={18} /> Iniciar asamblea
+                </button>
+              )
+            ) : (
+              <button className="py-3 rounded-full bg-gray-200 text-gray-400 font-bold text-sm cursor-not-allowed flex items-center justify-center gap-2">
+                Asamblea en curso
+              </button>
+            )}
 
-        <button
-          onClick={() => updateStatus("create")} // Finish sets to Create (Reset)
-          disabled={isPreStart}
-          className={`py-3 rounded-full font-bold text-sm transition flex items-center justify-center gap-2 ${
-            isPreStart
-              ? "bg-red-50 text-red-300 opacity-50 cursor-not-allowed"
-              : "bg-[#FFE5E5] text-[#FF4343] hover:bg-[#ffcdd2]"
-          }`}
-        >
-          <AlertTriangle size={18} /> Finalizar asamblea
-        </button>
+            <button
+              onClick={() =>
+                updateStatus(
+                  assembly.status === "registries_finalized"
+                    ? "started"
+                    : "registries_finalized",
+                )
+              }
+              disabled={
+                assembly.status === "finished" || assembly.status === "create"
+              }
+              className={`py-3 rounded-full font-bold text-sm transition flex items-center justify-center gap-2 ${
+                assembly.status === "registries_finalized"
+                  ? "bg-orange-100 text-[#FF9F43]"
+                  : "bg-[#FFF4E5] text-[#FF9F43] hover:bg-[#ffeac2]"
+              } ${
+                assembly.status === "finished" || assembly.status === "create"
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+            >
+              <Users size={18} />{" "}
+              {assembly.status === "registries_finalized"
+                ? "Activar registros"
+                : "Finalizar registros"}
+            </button>
+
+            <button
+              onClick={() => updateStatus("create")} // Finish sets to Create (Reset)
+              disabled={isPreStart}
+              className={`py-3 rounded-full font-bold text-sm transition flex items-center justify-center gap-2 ${
+                isPreStart
+                  ? "bg-red-50 text-red-300 opacity-50 cursor-not-allowed"
+                  : "bg-[#FFE5E5] text-[#FF4343] hover:bg-[#ffcdd2]"
+              }`}
+            >
+              <AlertTriangle size={18} /> Finalizar asamblea
+            </button>
+          </>
+        )}
       </div>
 
       {/* Tabs */}

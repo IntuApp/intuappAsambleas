@@ -69,7 +69,9 @@ const QuestionItem = ({
   q,
   userRegistries = [],
   assembly,
-  userVotingPreference,
+  entity,
+  userInfo,
+  setUserInfo,
   onSetVotingPreference,
   forceModalOnly = false,
 }) => {
@@ -682,6 +684,7 @@ export default function AssemblyAccessPage() {
   const [loading, setLoading] = useState(true);
   const [assembly, setAssembly] = useState(null);
   const [entity, setEntity] = useState(null);
+  const [activeRegistriesListId, setActiveRegistriesListId] = useState(null);
   const [registries, setRegistries] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -781,12 +784,14 @@ export default function AssemblyAccessPage() {
           const resEntity = await getEntityById(assemblyData.entityId);
           if (resEntity.success) {
             setEntity(resEntity.data);
-            if (resEntity.data.assemblyRegistriesListId) {
-              const listRef = doc(
-                db,
-                "assemblyRegistriesList",
-                resEntity.data.assemblyRegistriesListId,
-              );
+
+            const listId =
+              assemblyData.assemblyRegistriesListId ||
+              resEntity.data.assemblyRegistriesListId;
+            setActiveRegistriesListId(listId);
+
+            if (listId) {
+              const listRef = doc(db, "assemblyRegistriesList", listId);
               unsubDetails = onSnapshot(listRef, (listSnap) => {
                 if (listSnap.exists()) {
                   const regs = Object.entries(
@@ -1224,19 +1229,14 @@ export default function AssemblyAccessPage() {
       const res = await createAssemblyUser(userData);
 
       if (res.success) {
-        if (entity?.assemblyRegistriesListId) {
+        if (activeRegistriesListId) {
           await Promise.all(
             finalRegistries.map((r) =>
-              updateRegistryStatus(
-                entity.assemblyRegistriesListId,
-                r.registryId,
-                true,
-                {
-                  ...userData,
-                  powerUrl: r.powerUrl,
-                  role: r.role,
-                },
-              ),
+              updateRegistryStatus(activeRegistriesListId, r.registryId, true, {
+                ...userData,
+                powerUrl: r.powerUrl,
+                role: r.role,
+              }),
             ),
           );
         }
@@ -1686,7 +1686,7 @@ export default function AssemblyAccessPage() {
                 {hasMultipleTypes && (
                   <div className="flex flex-col">
                     <label className="text-[10px] font-black text-[#8B9DFF] uppercase mb-1 ml-1">
-                      Tipo de propiedad *
+                      {entity?.columnAliases?.["tipo"] || "Tipo de propiedad"} *
                     </label>
                     <div className="relative">
                       <select
@@ -1721,7 +1721,9 @@ export default function AssemblyAccessPage() {
                         "casa" && (
                         <div className="flex flex-col animate-in fade-in slide-in-from-top-2">
                           <label className="text-[10px] font-black text-[#8B9DFF] uppercase mb-1 ml-1">
-                            Grupo / Torre / Bloque *
+                            {entity?.columnAliases?.["grupo"] ||
+                              "Grupo / Torre / Bloque"}{" "}
+                            *
                           </label>
                           <div className="relative">
                             <select
@@ -1732,7 +1734,10 @@ export default function AssemblyAccessPage() {
                               }}
                               className="w-full bg-gray-50 border-none rounded-xl p-4 outline-none font-bold text-[#0E3C42] appearance-none"
                             >
-                              <option value="">Selecciona el grupo</option>
+                              <option value="">
+                                Selecciona:{" "}
+                                {entity?.columnAliases?.["grupo"] || "Grupo"}
+                              </option>
                               {availableGroups.map((g) => (
                                 <option key={g} value={g}>
                                   {g}
@@ -1750,7 +1755,9 @@ export default function AssemblyAccessPage() {
                       availableGroups.length === 0) && (
                       <div className="flex flex-col animate-in fade-in slide-in-from-top-2">
                         <label className="text-[10px] font-black text-[#8B9DFF] uppercase mb-1 ml-1">
-                          Número de propiedad *
+                          {entity?.columnAliases?.["propiedad"] ||
+                            "Número de propiedad"}{" "}
+                          *
                         </label>
                         <div className="relative">
                           <select
@@ -1764,7 +1771,11 @@ export default function AssemblyAccessPage() {
                             }
                             className="w-full bg-gray-50 border-none rounded-xl p-4 outline-none font-bold text-[#0E3C42] appearance-none disabled:opacity-50"
                           >
-                            <option value="">Selecciona el número</option>
+                            <option value="">
+                              Selecciona:{" "}
+                              {entity?.columnAliases?.["propiedad"] ||
+                                "Propiedad"}
+                            </option>
                             {filteredProperties.map((r) => (
                               <option key={r.id} value={r.id}>
                                 {r.propiedad}

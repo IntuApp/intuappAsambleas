@@ -432,3 +432,54 @@ export async function addRegistryToList(listId, registryData) {
     return { success: false, error };
   }
 }
+
+export async function cloneAndResetAssemblyRegistriesList(originalListId) {
+  try {
+    const docRef = doc(db, "assemblyRegistriesList", originalListId);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return { success: false, error: "Original list not found" };
+    }
+
+    const oldRegistries = docSnap.data().assemblyRegistries || {};
+    const newRegistries = {};
+
+    Object.keys(oldRegistries).forEach((key) => {
+      const oldReg = oldRegistries[key];
+      // Create a clean copy, preserving structural data but resetting status/user info
+      newRegistries[key] = {
+        item: oldReg.item,
+        tipo: oldReg.tipo,
+        grupo: oldReg.grupo,
+        propiedad: oldReg.propiedad,
+        coeficiente: oldReg.coeficiente,
+        numeroVotos: oldReg.numeroVotos,
+        documento: oldReg.documento,
+        // Reset dynamic fields
+        voteBlocked: false,
+        registerInAssembly: false,
+        isDeleted: false,
+        // Ensure no user data is carried over (set to empty strings as in mapRegistryRow/updateRegistryStatus resets)
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        role: "",
+        powerUrl: "",
+        userDocument: "",
+      };
+    });
+
+    const newDocRef = await addDoc(collection(db, "assemblyRegistriesList"), {
+      assemblyRegistries: newRegistries,
+      createdAt: serverTimestamp(),
+      clonedFrom: originalListId,
+    });
+
+    return { success: true, id: newDocRef.id };
+  } catch (error) {
+    console.error("Error cloning list:", error);
+    return { success: false, error };
+  }
+}

@@ -1,19 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   getEntityById,
   getAssemblyRegistriesList,
-  updateAssemblyRegistriesList,
-  createAssemblyRegistriesList,
   updateEntity,
   deleteEntity,
 } from "@/lib/entities";
 import { getEntityTypes } from "@/lib/masterData";
 import { colombiaCities } from "@/lib/colombiaCities";
-import { updateDoc, doc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import Loader from "@/components/basics/Loader";
 import { toast } from "react-toastify";
 import TopBar from "@/components/ui/TopBar";
@@ -27,9 +23,7 @@ import {
   ChevronRight,
   Eye,
   Calendar,
-  CloudUpload,
   Download,
-  Upload,
   Bot,
   Check,
   X,
@@ -44,6 +38,12 @@ import { getAssemblyById } from "@/lib/assembly";
 
 import EntityDatabaseManager from "@/components/entities/EntityDatabaseManager";
 import Button from "@/components/basics/Button";
+import CustomText from "@/components/basics/CustomText";
+import CustomButton from "@/components/basics/CustomButton";
+import CustomIcon from "@/components/basics/CustomIcon";
+import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { getIconPath } from "@/lib/utils";
+import AssemblySearchBar from "@/components/searchBar/AssemblySearch";
 
 const EntityDetailPage = () => {
   const { entityId } = useParams();
@@ -67,6 +67,7 @@ const EntityDetailPage = () => {
   const [assemblySearchTerm, setAssemblySearchTerm] = useState("");
   const [assemblyTypeFilter, setAssemblyTypeFilter] = useState("");
   const [assemblyStatusFilter, setAssemblyStatusFilter] = useState("");
+  const [assemblySort, setAssemblySort] = useState("");
 
   const fetchEntityData = useCallback(async () => {
     if (!entityId) return;
@@ -156,7 +157,7 @@ const EntityDetailPage = () => {
       const res = await deleteEntity(entityId);
       if (res.success) {
         toast.success("Entidad eliminada correctamente");
-        router.push(`/operario/${entityId}`);
+        router.push(`/operario/entidades`);
       } else {
         toast.error("Error al eliminar entidad");
         setLoading(false);
@@ -182,6 +183,46 @@ const EntityDetailPage = () => {
     return getTypeNameInSpanish(typeIdOrName);
   };
 
+  const filteredAssemblies = useMemo(() => {
+    let result = [...assemblies];
+
+    if (assemblySearchTerm) {
+      result = result.filter((a) =>
+        a.name?.toLowerCase().includes(assemblySearchTerm.toLowerCase()),
+      );
+    }
+
+    if (assemblyTypeFilter) {
+      result = result.filter((a) => a.type === assemblyTypeFilter);
+    }
+
+    if (assemblyStatusFilter) {
+      result = result.filter((a) => a.status === assemblyStatusFilter);
+    }
+
+    if (assemblySort === "name-asc") {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    if (assemblySort === "name-desc") {
+      result.sort((a, b) => b.name.localeCompare(a.name));
+    }
+
+    if (assemblySort === "recent") {
+      result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+
+    return result;
+  }, [
+    assemblies,
+    assemblySearchTerm,
+    assemblyTypeFilter,
+    assemblyStatusFilter,
+    assemblySort,
+  ]);
+
+  if (!entityData) return null;
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50">
@@ -189,70 +230,80 @@ const EntityDetailPage = () => {
       </div>
     );
   }
-
-  if (!entityData) return null;
-
   return (
-    <div className="flex flex-col w-full">
-      {/* Override TopBar Title */}
-      <div className="hidden">
-        <TopBar pageTitle={`Gestionar Entidad - ${entityData.name}`} />
-      </div>
-
+    <div className="flex flex-col w-full max-w-[1128px]">
       <div className="flex flex-col gap-8 mx-15">
-        {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-[32px] font-bold text-[#0E3C42]">
-            {entityData.name}
-          </h1>
-          <Button
-            onClick={handleDeleteEntity}
-            className="flex items-center gap-2 bg-[#94A2FF] !text-[#000000] hover:bg-[#7a8ce0] !font-bold px-6 py-3 font-semibold shadow-md transition"
+          <CustomText
+            variant="TitleL"
+            as="h3"
+            className="font-bold text-[#0E3C42]"
           >
-            <Trash2 size={20} />
-            Eliminar Entidad
-          </Button>
+            {entityData.name}
+          </CustomText>
+          <CustomButton
+            variant="primary"
+            onClick={handleDeleteEntity}
+            className="px-5 py-3 flex items-center gap-1"
+          >
+            <CustomIcon path={ICON_PATHS.delete} size={20} />
+            <CustomText variant="bodyM" className="font-bold">
+              Eliminar Entidad
+            </CustomText>
+          </CustomButton>
         </div>
 
         {/* Section 1: General Info */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-white max-w-[1128px] rounded-3xl border border-[#F3F6F9] p-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-[#0E3C42]">
+            <CustomText
+              variant="bodyX"
+              as="h5"
+              className="font-bold text-[#0E3C42]"
+            >
               Información General
-            </h2>
+            </CustomText>
             {!isEditing ? (
-              <Button
+              <CustomButton
+                variant="primary"
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-2 bg-[#94A2FF] !text-[#000000] hover:bg-[#7a8ce0] !font-bold px-6 py-3 font-semibold shadow-md transition"
+                className="flex items-center gap-1 px-4 py-2"
               >
-                <Edit2 size={16} />
-                Editar información
-              </Button>
+                <CustomIcon path={ICON_PATHS.pencil} size={20} />
+                <CustomText variant="bodyM" className="font-bold">
+                  Editar información
+                </CustomText>
+              </CustomButton>
             ) : (
               <div className="flex gap-2">
-                <Button
+                <CustomButton
                   variant="secondary"
                   onClick={() => setIsEditing(false)}
                   icon={X}
-                  className="px-10 py-4 border border-gray-200 rounded-full font-bold text-[#0E3C42] hover:bg-white transition"
+                  className="px-10 py-4 font-bold"
                 >
                   Cancelar
-                </Button>
-                <Button
+                </CustomButton>
+                <CustomButton
                   variant="primary"
                   onClick={handleSaveEntity}
-                  className="flex items-center gap-2 bg-[#94A2FF] !text-[#000000] hover:bg-[#7a8ce0] !font-bold px-6 py-3 font-semibold shadow-md transition"
+                  className="font-bold px-6 py-3"
                   icon={Save}
                 >
                   Guardar
-                </Button>
+                </CustomButton>
               </div>
             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <label className="text-sm text-gray-500 block mb-1">Nit</label>
+            <div className="flex flex-col gap-1">
+              <CustomText
+                variant="labelM"
+                className="font-medium text-[#3D3D44]"
+              >
+                Nit
+              </CustomText>
               {isEditing ? (
                 <input
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
@@ -262,15 +313,21 @@ const EntityDetailPage = () => {
                   }
                 />
               ) : (
-                <p className="font-semibold text-gray-800 text-lg">
+                <CustomText
+                  variant="labelL"
+                  className="font-medium text-[#000000]"
+                >
                   {entityData.nit}
-                </p>
+                </CustomText>
               )}
             </div>
-            <div>
-              <label className="text-sm text-gray-500 block mb-1">
+            <div className="flex flex-col gap-1">
+              <CustomText
+                variant="labelM"
+                className="font-medium text-[#3D3D44]"
+              >
                 Tipo entidad
-              </label>
+              </CustomText>
               {isEditing ? (
                 <select
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500 bg-white"
@@ -287,22 +344,38 @@ const EntityDetailPage = () => {
                   ))}
                 </select>
               ) : (
-                <span className="bg-indigo-100 text-[#000000] px-3 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1">
-                  <Building2 size={14} />
-                  {getTypeLabel(entityData.type)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <CustomText
+                    variant="labelM"
+                    className="flex items-center gap-1 font-medium text-[#000000] bg-[#D5DAFF] px-2 py-1 rounded-full"
+                  >
+                    <CustomIcon path={getIconPath(entityData)} size={14} />
+                    {getTypeLabel(entityData.type)}
+                  </CustomText>
+                </div>
               )}
             </div>
-            <div>
-              <label className="text-sm text-gray-500 block mb-1">
+            <div className="flex flex-col gap-1">
+              <CustomText
+                variant="labelM"
+                className="font-medium text-[#3D3D44]"
+              >
                 Asambleistas registrados
-              </label>
-              <p className="font-semibold text-gray-800 text-lg">
+              </CustomText>
+              <CustomText
+                variant="labelL"
+                className="font-medium text-[#000000]"
+              >
                 {registries.length}
-              </p>
+              </CustomText>
             </div>
-            <div>
-              <label className="text-sm text-gray-500 block mb-1">Ciudad</label>
+            <div className="flex flex-col gap-1">
+              <CustomText
+                variant="labelM"
+                className="font-medium text-[#3D3D44]"
+              >
+                Ciudad
+              </CustomText>
               {isEditing ? (
                 <select
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
@@ -319,15 +392,21 @@ const EntityDetailPage = () => {
                   ))}
                 </select>
               ) : (
-                <p className="font-semibold text-gray-800 text-lg">
+                <CustomText
+                  variant="labelL"
+                  className="font-medium text-[#3D3D44]"
+                >
                   {entityData.city}
-                </p>
+                </CustomText>
               )}
             </div>
-            <div>
-              <label className="text-sm text-gray-500 block mb-1">
+            <div className="flex flex-col gap-1">
+              <CustomText
+                variant="labelM"
+                className="font-medium text-[#3D3D44]"
+              >
                 Dirección
-              </label>
+              </CustomText>
               {isEditing ? (
                 <input
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
@@ -337,63 +416,52 @@ const EntityDetailPage = () => {
                   }
                 />
               ) : (
-                <p className="font-semibold text-gray-800 text-lg">
+                <CustomText
+                  variant="labelL"
+                  className="font-medium text-[#3D3D44]"
+                >
                   {entityData.address}
-                </p>
+                </CustomText>
               )}
             </div>
           </div>
         </div>
 
         {/* Section 2: Asambleas */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-[#FFFFFF] max-w-[1128px] rounded-3xl border border-[#F3F6F9] p-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-[22px] font-bold text-[#0E3C42]">Asambleas</h2>
-            <Button
+            <CustomText
+              variant="bodyX"
+              as="h5"
+              className="font-bold text-[#0E3C42]"
+            >
+              Asambleas
+            </CustomText>
+            <CustomButton
+              variant="primary"
               onClick={() =>
                 router.push(`/operario/${entityId}/crear-asamblea`)
               }
-              className="flex items-center gap-2 bg-[#94A2FF] !text-[#000000] hover:bg-[#7a8ce0] !font-bold px-6 py-3 font-semibold shadow-md transition"
+              className="flex items-center gap-1 px-4 py-2"
             >
-              <Plus size={20} />
-              Crear Asamblea
-            </Button>
+              <CustomIcon path={ICON_PATHS.add} size={20} />
+              <CustomText variant="bodyM" className="font-bold">
+                Crear asamblea
+              </CustomText>
+            </CustomButton>
           </div>
 
           <div className="flex gap-4 mb-6">
-            <div className="flex-1 relative">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2"
-                size={20}
-              />
-              <input
-                type="text"
-                placeholder="Buscar asamblea por nombre"
-                value={assemblySearchTerm}
-                onChange={(e) => setAssemblySearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg outline-none focus:border-[#8B9DFF] transition"
-              />
-            </div>
-            <select
-              value={assemblyTypeFilter}
-              onChange={(e) => setAssemblyTypeFilter(e.target.value)}
-              className="border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-[#8B9DFF] bg-white min-w-[140px] transition"
-            >
-              <option value="">Tipo</option>
-              <option value="Virtual">Virtual</option>
-              <option value="Presencial">Presencial</option>
-              <option value="Mixta">Mixta</option>
-            </select>
-            <select
-              value={assemblyStatusFilter}
-              onChange={(e) => setAssemblyStatusFilter(e.target.value)}
-              className="border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-[#8B9DFF] bg-white min-w-[140px] transition"
-            >
-              <option value="">Estado</option>
-              <option value="created">Por iniciar</option>
-              <option value="started">En vivo</option>
-              <option value="finished">Finalizada</option>
-            </select>
+            <AssemblySearchBar
+              searchTerm={assemblySearchTerm}
+              onSearchChange={setAssemblySearchTerm}
+              typeFilter={assemblyTypeFilter}
+              onTypeChange={setAssemblyTypeFilter}
+              statusFilter={assemblyStatusFilter}
+              onStatusChange={setAssemblyStatusFilter}
+              sortBy={assemblySort}
+              onSortChange={setAssemblySort}
+            />
           </div>
 
           {/* Assemblies Table */}
@@ -432,109 +500,97 @@ const EntityDetailPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  assemblies
-                    .filter((assembly) => {
-                      const matchesSearch = assembly.name
-                        ?.toLowerCase()
-                        .includes(assemblySearchTerm.toLowerCase());
-                      const matchesType =
-                        !assemblyTypeFilter ||
-                        assembly.type === assemblyTypeFilter;
-                      const matchesStatus =
-                        !assemblyStatusFilter ||
-                        assembly.status === assemblyStatusFilter;
-                      return matchesSearch && matchesType && matchesStatus;
-                    })
-                    .map((assembly) => {
-                      const getStatusBadge = () => {
-                        if (
-                          assembly.status === "started" ||
-                          assembly.status === "registries_finalized"
-                        ) {
-                          return {
-                            text: "En vivo",
-                            className: "bg-red-100 text-red-600",
-                            dot: true,
-                          };
-                        } else if (assembly.status === "finished") {
-                          return {
-                            text: "Finalizada",
-                            className: "bg-teal-100 text-teal-600",
-                            dot: false,
-                          };
-                        } else {
-                          return {
-                            text: "Agendada",
-                            className: "bg-orange-100 text-orange-600",
-                            dot: false,
-                          };
-                        }
-                      };
+                  filteredAssemblies.map((assembly) => {
+                    const getStatusBadge = () => {
+                      if (
+                        assembly.status === "started" ||
+                        assembly.status === "registries_finalized"
+                      ) {
+                        return {
+                          text: "En vivo",
+                          className: "bg-red-100 text-red-600",
+                          dot: true,
+                        };
+                      } else if (assembly.status === "finished") {
+                        return {
+                          text: "Finalizada",
+                          className: "bg-teal-100 text-teal-600",
+                          dot: false,
+                        };
+                      } else {
+                        return {
+                          text: "Agendada",
+                          className: "bg-orange-100 text-orange-600",
+                          dot: false,
+                        };
+                      }
+                    };
 
-                      const statusBadge = getStatusBadge();
+                    const statusBadge = getStatusBadge();
 
-                      return (
-                        <tr
-                          key={assembly.id}
-                          className="border-b border-gray-100 hover:bg-gray-50 transition"
-                        >
-                          <td className="py-4 px-6">
-                            <span className="font-medium text-gray-900 text-[14px]">
-                              {assembly.name}
-                            </span>
-                          </td>
-                          <td className="py-4 px-6 text-gray-600 text-[14px]">
-                            {assembly.date || "-"}
-                          </td>
-                          <td className="py-4 px-6 text-gray-600 text-[14px]">
-                            {assembly.hour || "-"}
-                          </td>
-                          <td className="py-4 px-6 text-center">
-                            <span className="text-[14px] text-[#000000] font-bold inline-flex items-center border rounded-full px-2 py-1 gap-1 font-bold ">
-                              {assembly.type === "Presencial" ? (
-                                <>
-                                  <Users size={14} />
-                                  Presencial
-                                </>
-                              ) : assembly.type === "Virtual" ? (
-                                <>
-                                  <Video size={14} />
-                                  Virtual
-                                </>
-                              ) : (
-                                <>
-                                  <Users size={14} />
-                                  Mixta
-                                </>
-                              )}
-                            </span>
-                          </td>
-                          <td className="py-4 px-6 text-center">
-                            <span
-                              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statusBadge.className}`}
-                            >
-                              {statusBadge.dot && (
-                                <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                              )}
-                              {statusBadge.text}
-                            </span>
-                          </td>
-                          <td className="py-4 px-6 flex justify-center">
-                            <button
-                              onClick={() =>
-                                router.push(
-                                  `/operario/${entityId}/${assembly.id}`,
-                                )
-                              }
-                              className="w-10 h-10 rounded-full bg-[#8B9DFF] hover:bg-[#7a8ce0] flex items-center justify-center text-black transition shadow-md"
-                              title="Ver asamblea"
-                            >
-                              <Eye size={18} />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
+                    return (
+                      <tr
+                        key={assembly.id}
+                        className="border-b border-gray-100 hover:bg-gray-50 transition"
+                      >
+                        <td className="py-4 px-6">
+                          <span className="font-medium text-gray-900 text-[14px]">
+                            {assembly.name}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-gray-600 text-[14px]">
+                          {assembly.date || "-"}
+                        </td>
+                        <td className="py-4 px-6 text-gray-600 text-[14px]">
+                          {assembly.hour || "-"}
+                        </td>
+                        <td className="py-4 px-6 text-center">
+                          <span className="text-[14px] text-[#000000] font-bold inline-flex items-center border rounded-full px-2 py-1 gap-1 font-bold ">
+                            {assembly.type === "Presencial" ? (
+                              <>
+                                <Users size={14} />
+                                Presencial
+                              </>
+                            ) : assembly.type === "Virtual" ? (
+                              <>
+                                <Video size={14} />
+                                Virtual
+                              </>
+                            ) : (
+                              <>
+                                <Users size={14} />
+                                Mixta
+                              </>
+                            )}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-center">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statusBadge.className}`}
+                          >
+                            {statusBadge.dot && (
+                              <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                            )}
+                            {statusBadge.text}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 flex justify-center">
+                          <CustomButton
+                            variant="primary"
+                            onClick={() =>
+                              router.push(
+                                `/operario/${entityId}/${assembly.id}`,
+                              )
+                            }
+                            className=" p-2 "
+                            title="Ver asamblea"
+                          >
+                            <CustomIcon path={ICON_PATHS.eye} size={24} />
+                          </CustomButton>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

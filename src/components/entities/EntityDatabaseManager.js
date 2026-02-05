@@ -64,7 +64,7 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
               )}
             </ul>
           </div>,
-          { autoClose: 10000 }
+          { autoClose: 10000 },
         );
         e.target.value = "";
         return;
@@ -85,7 +85,7 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
         // Update existing list
         const res = await updateAssemblyRegistriesList(
           entityData.assemblyRegistriesListId,
-          excelData
+          excelData,
         );
         if (res.success) {
           toast.success("Base de datos actualizada correctamente");
@@ -122,7 +122,7 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
     // Check if property is currently registered in an assembly
     if (itemToDelete.registerInAssembly) {
       return toast.error(
-        "No se puede eliminar una propiedad que ya tiene un registro de asambleísta activo. Por favor, elimine primero el registro desde la gestión de la asamblea."
+        "No se puede eliminar una propiedad que ya tiene un registro de asambleísta activo. Por favor, elimine primero el registro desde la gestión de la asamblea.",
       );
     }
 
@@ -132,7 +132,7 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
 
         const res = await updateAssemblyRegistriesList(
           entityData.assemblyRegistriesListId,
-          updatedList
+          updatedList,
         );
 
         if (res.success) {
@@ -152,7 +152,7 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
   const filteredRegistries = registries.filter((item) => {
     const searchLower = searchTerm.toLowerCase();
     return Object.values(item).some((val) =>
-      String(val).toLowerCase().includes(searchLower)
+      String(val).toLowerCase().includes(searchLower),
     );
   });
 
@@ -161,7 +161,7 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredRegistries.slice(
     indexOfFirstItem,
-    indexOfLastItem
+    indexOfLastItem,
   );
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -185,7 +185,7 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
                 setShowPreviewModal(true);
               } else {
                 toast.info(
-                  "No hay datos para editar. Cargue un archivo primero."
+                  "No hay datos para editar. Cargue un archivo primero.",
                 );
               }
             }}
@@ -200,7 +200,12 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
               onChange={handleFileUpload}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             />
-            <Button variant="primary" size="S" icon={CloudUpload} className="flex items-center gap-2 bg-[#94A2FF] !text-[#000000] hover:bg-[#7a8ce0] !font-bold px-6 py-3 font-semibold shadow-md transition">
+            <Button
+              variant="primary"
+              size="S"
+              icon={CloudUpload}
+              className="flex items-center gap-2 bg-[#94A2FF] !text-[#000000] hover:bg-[#7a8ce0] !font-bold px-6 py-3 font-semibold shadow-md transition"
+            >
               Actualizar Base de Datos
             </Button>
           </div>
@@ -242,7 +247,6 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
         <table className="w-full text-left border-collapse">
           <thead className="bg-gray-50">
             <tr className="border-b border-gray-200 text-sm text-gray-800">
-              <th className="py-3 px-4 font-bold">Item</th>
               <th className="py-3 px-4 font-bold">Tipo</th>
               <th className="py-3 px-4 font-bold">Grupo</th>
               <th className="py-3 px-4 font-bold">Propiedad</th>
@@ -259,9 +263,6 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
                   key={index}
                   className="border-b border-gray-50 hover:bg-blue-50/30 transition-colors text-sm"
                 >
-                  <td className="py-4 px-4 text-gray-700">
-                    {reg.item || reg.Item || "-"}
-                  </td>
                   <td className="py-4 px-4 text-gray-700">
                     {reg.tipo || reg.Tipo || "-"}
                   </td>

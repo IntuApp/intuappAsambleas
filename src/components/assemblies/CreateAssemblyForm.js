@@ -19,7 +19,11 @@ import {
   getAssemblyById,
   updateAssembly,
 } from "@/lib/assembly";
-import { getEntityById, getAssemblyRegistriesList } from "@/lib/entities";
+import {
+  getEntityById,
+  getAssemblyRegistriesList,
+  cloneAndResetAssemblyRegistriesList,
+} from "@/lib/entities";
 
 const CheckIcon = () => <Check size={14} color="white" strokeWidth={4} />;
 
@@ -218,8 +222,31 @@ export default function CreateAssemblyForm({
         toast.error("Error al actualizar la asamblea");
       }
     } else {
+      // Creation Logic
+      let newListId = null;
+
+      // Clean Slate: If entity has a master list, clone it for this specific assembly
+      const entityRes = await getEntityById(entityId);
+      if (entityRes.success && entityRes.data.assemblyRegistriesListId) {
+        const cloneRes = await cloneAndResetAssemblyRegistriesList(
+          entityRes.data.assemblyRegistriesListId,
+        );
+        if (cloneRes.success) {
+          newListId = cloneRes.id;
+        } else {
+          // If cloning fails, should we stop?
+          // We can proceed but warn, or strictly stop.
+          // For now, let's proceed but alert console.
+          console.error("Failed to clone registries list", cloneRes.error);
+        }
+      }
+
       const res = await createAssembly(
-        { ...assemblyData, createdAt: new Date().toISOString() },
+        {
+          ...assemblyData,
+          createdAt: new Date().toISOString(),
+          assemblyRegistriesListId: newListId, // Link new clean list
+        },
         entityId,
       );
       if (res.success) {
