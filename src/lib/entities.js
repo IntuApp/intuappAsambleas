@@ -200,7 +200,12 @@ export async function getAssemblyRegistriesList(listId) {
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      return { success: true, data: docSnap.data().assemblyRegistries };
+      const data = docSnap.data();
+      return {
+        success: true,
+        data: data.assemblyRegistries,
+        createdAt: data.createdAt,
+      };
     } else {
       return { success: false, error: "List not found" };
     }
@@ -295,7 +300,7 @@ export async function updateRegistryStatus(
       updates[`assemblyRegistries.${registryId}.email`] = "";
       updates[`assemblyRegistries.${registryId}.phone`] = "";
       updates[`assemblyRegistries.${registryId}.powerUrl`] = "";
-      updates[`assemblyRegistries.${registryId}.role`] = "";
+      updates[`.${registryId}.role`] = "";
       updates[`assemblyRegistries.${registryId}.userDocument`] = "";
     }
 

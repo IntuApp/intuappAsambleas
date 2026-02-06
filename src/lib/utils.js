@@ -55,3 +55,14 @@ export const getTypeName = (entity) => {
 
   return null;
 };
+
+export const getIconTypeAssembly = (assembly) => {
+  const type = (assembly?.typeName || assembly?.type || "").toLowerCase();
+
+  if (type.includes("1")) return ICON_PATHS.sindicato;
+  if (type.includes("2")) return ICON_PATHS.conjunto;
+  if (type.includes("3")) return ICON_PATHS.empresa;
+  if (type.includes("4")) return ICON_PATHS.cooperativa;
+
+  return null;
+};

@@ -13,8 +13,17 @@ import {
 } from "@/lib/entities";
 import { validateExcelData } from "@/lib/excelValidation";
 import ExcelPreviewModal from "@/components/modals/ExcelPreviewModal";
+import CustomButton from "../basics/CustomButton";
+import CustomText from "../basics/CustomText";
+import { ICON_PATHS } from "@/app/constans/iconPaths";
+import CustomIcon from "../basics/CustomIcon";
 
-const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
+const EntityDatabaseManager = ({
+  entityData,
+  registries,
+  registriesCreatedAt,
+  onRefresh,
+}) => {
   // Pagination & Search
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -174,8 +183,9 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
           Base de Datos de Asambleísta
         </h2>
         <div className="flex gap-4">
-          <Button
+          <CustomButton
             variant="secondary"
+            className="px-3 py-2 flex items-center gap-2"
             size="S"
             onClick={() => {
               if (registries.length > 0) {
@@ -189,10 +199,12 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
                 );
               }
             }}
-            icon={Edit2}
           >
-            Editar Base de Datos
-          </Button>
+            <CustomIcon path={ICON_PATHS.pencil} size={20} />
+            <CustomText variant="labelL" className="font-bold">
+              Editar Base de Datos
+            </CustomText>
+          </CustomButton>
           <div className="relative">
             <input
               type="file"
@@ -200,14 +212,15 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
               onChange={handleFileUpload}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             />
-            <Button
+            <CustomButton
               variant="primary"
-              size="S"
-              icon={CloudUpload}
-              className="flex items-center gap-2 bg-[#94A2FF] !text-[#000000] hover:bg-[#7a8ce0] !font-bold px-6 py-3 font-semibold shadow-md transition"
+              className="px-3 py-2 flex items-center gap-2"
             >
-              Actualizar Base de Datos
-            </Button>
+              <CustomIcon path={ICON_PATHS.cloudUpload} size={20} />
+              <CustomText variant="labelL" className="font-bold">
+                Actualizar Base de Datos
+              </CustomText>
+            </CustomButton>
           </div>
         </div>
       </div>
@@ -215,7 +228,31 @@ const EntityDatabaseManager = ({ entityData, registries, onRefresh }) => {
       <p className="text-sm text-gray-500 mb-6">
         La siguiente base de datos fue cargada el{" "}
         <span className="bg-[#ABE7E5] text-[#0E3C42] px-2 py-0.5 rounded text-xs font-bold">
-          20/Jul/2025 {/* Hardcoded placeholder per request/source */}
+          {registriesCreatedAt
+            ? (() => {
+                const date = registriesCreatedAt.toDate
+                  ? registriesCreatedAt.toDate()
+                  : new Date(registriesCreatedAt);
+                const day = date.getDate().toString().padStart(2, "0");
+                const months = [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "May",
+                  "Jun",
+                  "Jul",
+                  "Ago",
+                  "Sep",
+                  "Oct",
+                  "Nov",
+                  "Dic",
+                ];
+                const month = months[date.getMonth()];
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+              })()
+            : "-"}
         </span>
       </p>
 

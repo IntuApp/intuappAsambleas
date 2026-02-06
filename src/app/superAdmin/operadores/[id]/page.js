@@ -585,7 +585,7 @@ const OperatorDetailPage = () => {
 
           <div className="border-t border-gray-200 pt-8 mt-8">
             <h2 className="text-xl font-bold text-[#0E3C42] mb-2">
-              2. Cargar Base de Datos de Asambleísta{" "}
+              2. Cargar Base de Datos de la Entidad{" "}
               <span className="text-red-500 font-normal text-lg">*</span>
             </h2>
             <p className="text-gray-500 mb-6">

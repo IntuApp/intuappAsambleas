@@ -1,4 +1,5 @@
 import { db } from "@/lib/firebase";
+import { deleteAllAssemblyUsers } from "@/lib/assemblyUser";
 import {
   collection,
   addDoc,
@@ -12,6 +13,7 @@ import {
   serverTimestamp,
   arrayUnion,
   arrayRemove,
+  deleteDoc,
 } from "firebase/firestore";
 
 // Create Assembly
@@ -148,7 +150,10 @@ export async function deleteAssembly(assemblyId) {
       }
     }
 
-    // 3. Delete Assembly
+    // 3. Delete all Assembly Users
+    await deleteAllAssemblyUsers(assemblyId);
+
+    // 4. Delete Assembly
     await deleteDoc(assemblyRef);
 
     return { success: true };
