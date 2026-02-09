@@ -71,13 +71,12 @@ import {
   createQuestion,
   updateQuestion,
   updateQuestionStatus,
-  deleteQuestion,
   QUESTION_TYPES,
   QUESTION_STATUS,
   resetAllQuestionsAnswers,
   finishAllLiveQuestions,
 } from "@/lib/questions";
-import QuestionCard from "@/components/dashboard/QuestionCard";
+import QuestionCard from "@/components/question/QuestionCard";
 import CustomModal from "@/components/basics/CustomModal";
 import Button from "@/components/basics/Button";
 import { toast } from "react-toastify";
@@ -86,7 +85,17 @@ import { QRCodeCanvas } from "qrcode.react";
 import Quorum from "@/components/dashboard/Quorum";
 import AssemblyStatsBoxes from "@/components/dashboard/AssemblyStatsBoxes";
 import AttendanceTable from "@/components/dashboard/AttendanceTable";
-import VoteBlockingSection from "@/components/dashboard/VoteBlockingSection";
+
+import VoteRestrictionSection from "@/components/assemblies/VoteRestrictionSection";
+import CustomText from "@/components/basics/CustomText";
+import CustomButton from "@/components/basics/CustomButton";
+import CustomIcon from "@/components/basics/CustomIcon";
+import CustomTypeAssembly from "@/components/basics/CustomTypeAssembly";
+import CustomStates from "@/components/basics/CustomStates";
+import ExportAssemblyModal from "@/components/modals/ExportAssemblyModal";
+import CustomCreateQuestion from "@/components/question/CustomCreateQuestion";
+import QuestionsSection from "@/components/sections/QuestionsSection";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
 const AssemblyDashboardPage = () => {
   const { entityId, assemblyId } = useParams();
@@ -99,6 +108,10 @@ const AssemblyDashboardPage = () => {
   // Derived state for list ID
   const activeRegistriesListId =
     assembly?.assemblyRegistriesListId || entity?.assemblyRegistriesListId;
+
+  const blockedVoters = new Set(
+    registries.filter((r) => r.voteBlocked).map((r) => r.id),
+  );
 
   // Stats
   const [quorum, setQuorum] = useState(0);
@@ -114,6 +127,7 @@ const AssemblyDashboardPage = () => {
   const [mainTab, setMainTab] = useState("Asambleistas"); // Asambleistas, Votaciones
   const [questions, setQuestions] = useState([]);
   const [showAddQuestion, setShowAddQuestion] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [newQuestion, setNewQuestion] = useState({
     title: "",
     type: QUESTION_TYPES.UNIQUE,
@@ -285,23 +299,6 @@ const AssemblyDashboardPage = () => {
 
     return () => unsub();
   }, [assembly?.questions, questions.length]);
-
-  const handleMoveOption = (index, direction) => {
-    const newOptions = [...newQuestion.options];
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-
-    if (targetIndex < 0 || targetIndex >= newOptions.length) return;
-
-    [newOptions[index], newOptions[targetIndex]] = [
-      newOptions[targetIndex],
-      newOptions[index],
-    ];
-
-    setNewQuestion({
-      ...newQuestion,
-      options: newOptions,
-    });
-  };
 
   const handleAddQuestion = async () => {
     if (!newQuestion.title) return toast.error("El título es requerido");
@@ -1125,358 +1122,292 @@ const AssemblyDashboardPage = () => {
   if (!assembly || !entity) return null;
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-[#F8F9FB] pb-12">
-      <div className="hidden">
-        <TopBar pageTitle={`Tablero Asamblea - ${assembly.name}`} />
-      </div>
-
-      {/* Header Section */}
-      <div className="py-6 mb-6">
-        <div className="mx-15">
-          <div className=" flex justify-between items-start mb-4">
-            <div className="w-full flex justify-between">
-              <h1 className="text-[32px] font-bold text-[#0E3C42] mb-1">
-                {assembly.name}
-              </h1>
-              <button
-                onClick={() =>
-                  router.push(
-                    `/operario/${entityId}/gestionar-asamblea?assemblyId=${assemblyId}`,
-                  )
-                }
-                className="bg-[#94A2FF] hover:bg-[#94A2FF] text-black px-5 py-4 rounded-full font-bold shadow-sm transition text-sm flex items-center gap-2"
-              >
-                <Edit2 size={16} />
+    <div className="max-w-[1128px] w-full h-full flex flex-col gap-8">
+      <ExportAssemblyModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onExportReport={exportGeneralReportToPDF}
+        onExportVotes={exportAllVotesToPDF}
+        onExportPowers={downloadAllPowers}
+        assemblyType={assembly.type}
+      />
+      <div className=" flex flex-col items-start gap-2">
+        <div className="w-full flex justify-between items-center">
+          <CustomText
+            variant="TitleL"
+            as="h3"
+            className="font-bold text-[#0E3C42]"
+          >
+            {assembly.name}
+          </CustomText>
+          {assembly.status === "finished" ? (
+            <CustomButton
+              variant="primary"
+              onClick={() => setIsExportModalOpen(true)}
+              className="px-5 py-3 flex items-center gap-2"
+            >
+              <CustomIcon path={ICON_PATHS.fileSave} size={24} />
+              <CustomText variant="labelL" className="font-bold text-[#0E3C42]">
+                Exportar
+              </CustomText>
+            </CustomButton>
+          ) : (
+            <CustomButton
+              variant="primary"
+              onClick={() =>
+                router.push(
+                  `/operario/${entityId}/gestionar-asamblea?assemblyId=${assemblyId}`,
+                )
+              }
+              className="px-5 py-3 flex items-center gap-2"
+            >
+              <CustomIcon path={ICON_PATHS.pencil} size={24} />
+              <CustomText variant="labelL" className="font-bold text-[#0E3C42]">
                 Editar configuración
-              </button>
-            </div>
+              </CustomText>
+            </CustomButton>
+          )}
+        </div>
+        <div className="w-full flex items-center gap-4">
+          <CustomText
+            variant="bodyX"
+            as="h5"
+            className="font-medium text-[#0E3C42]"
+          >
+            {entity.name}
+          </CustomText>
+          <div className="flex flex-row items-center gap-2 bg-[#FFFFFF] px-2 py-1 rounded-lg">
+            <CustomIcon path={ICON_PATHS.calendar} size={16} />
+            <CustomText variant="labelM" className="font-medium text-[#00093F]">
+              {assembly.date} - {assembly.hour}
+            </CustomText>
           </div>
-
-          <div className="flex items-center gap-6 text-sm text-gray-600">
-            <p className="text-gray-500 font-medium text-[20px]">
-              {entity.name}
-            </p>
-            <div className="flex items-center font-medium bg-[#FFF] px-3 py-1 rounded-full gap-2">
-              <Calendar size={18} className="text-[#0E3C42]" />
-              <span className="font-semibold">
-                {assembly.date} - {assembly.hour}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full">
-              <Video size={18} className="" />
-              <span className="font-bold text-xs uppercase">
-                {assembly.type}
-              </span>
-            </div>
-            <div>
-              <span
-                className={`px-3 py-1 rounded-full font-bold text-xs uppercase flex items-center gap-1 ${
-                  assembly.status === "finished"
-                    ? "bg-[#B8EAF0] text-[#0E3C42]"
-                    : "bg-red-100 text-red-500"
-                }`}
-              >
-                {assembly.status === "started" && (
-                  <span className="w-2 h-2 rounded-full bg-red-500 "></span>
-                )}
-                {assembly.status === "create" ? (
-                  <span className="rounded-full bg-[#FFEDDD] text-[#C53F00]">
-                    {" "}
-                    Agendada
-                  </span>
-                ) : assembly.status === "started" ? (
-                  <span className="rounded-full bg-[#FFEDDD] text-[#930002]">
-                    {" "}
-                    En vivo
-                  </span>
-                ) : assembly.status === "registries_finalized" ? (
-                  "Registros Cerrados"
-                ) : (
-                  "Finalizada"
-                )}
-              </span>
-            </div>
-          </div>
+          <CustomTypeAssembly type={assembly.type} />
+          <CustomStates
+            status={assembly.status}
+            className="px-3 py-1 rounded-full"
+          />
         </div>
       </div>
 
-      <div className="mx-15 flex flex-col gap-8">
-        {/* Access Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Email Convocation */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col justify-between h-full">
-            <div>
-              <h3 className="text-[17px] font-bold text-[#0E3C42] mb-1">
-                Convocatoria por correo
-              </h3>
-              <p className="text-[12px] text-gray-400 mb-4 leading-snug">
-                Proximamente...
-              </p>
-            </div>
-          </div>
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-row gap-8">
+          <div className="max-w-[365px] w-full flex flex-col gap-2 p-4 gap-4 bg-white rounded-2xl shadow-sm border border-gray-100">
+            <CustomText
+              variant="bodyL"
+              as="h6"
+              className="font-bold text-[#0E3C42]"
+            >
+              Acceso a Asambleistas
+            </CustomText>
+            <div className="relative flex items-center justify-between gap-2 border border-[#94A2FF] rounded-lg px-3 py-2 w-full">
+              <CustomText
+                variant="labelM"
+                className="font-medium text-[#3D3D44] truncate max-w-[200px]"
+              >
+                {publicUrl}
+              </CustomText>
 
-          {/* Asambleistas Access */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 h-full">
-            <h3 className="text-[17px] font-bold text-[#0E3C42] mb-1">
-              Acceso a Asamblistas
-            </h3>
-            <div className="flex gap-2 mb-4 mt-4">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  readOnly
-                  value={publicUrl}
-                  className="w-full border border-gray-200 bg-[#F9FAFB] rounded-lg pl-3 pr-8 py-2 text-xs text-[#3D3D44] outline-none"
-                />
-                <button
-                  onClick={() => copyToClipboard(publicUrl)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#0E3C42]"
-                >
-                  <Copy size={14} />
-                </button>
-              </div>
+              <CustomButton
+                onClick={() => copyToClipboard(publicUrl)}
+                className="shrink-0 bg-transparent border-none hover:bg-transparent hover:border-none"
+              >
+                <CustomIcon path={ICON_PATHS.copy} size={14} />
+              </CustomButton>
             </div>
-            <div className="flex gap-2">
-              <Button
+            <div className="flex items-center gap-2">
+              <CustomButton
                 variant="secondary"
                 onClick={() => setIsQrModalOpen(true)}
-                className="flex-1 border-2 border-[#0E3C42] rounded-3xl !py-2 font-bold text-[#0E3C42] hover:bg-gray-50 flex items-center justify-center gap-2 text-xs"
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-2"
               >
-                <div className="hidden">
-                  <QRCodeCanvas
-                    id="qr-gen"
-                    value={publicUrl}
-                    size={256}
-                    level={"H"}
-                  />
-                </div>
-                <QrCode size={14} /> Ver QR
-              </Button>
-              <Button
+                <CustomIcon path={ICON_PATHS.qr} size={16} />
+                <CustomText variant="labelM" className="font-bold">
+                  Ver QR
+                </CustomText>
+              </CustomButton>
+              <CustomButton
                 variant="primary"
-                onClick={downloadQR}
-                className="flex-1 bg-[#94A2FF] rounded-3xl !py-2 font-bold !text-[#0E3C42] flex items-center justify-center gap-2 text-xs"
-                icon={Download}
+                onClick={() => downloadPdf()}
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-2"
               >
-                Descargar QR
-              </Button>
+                <CustomIcon path={ICON_PATHS.download} size={16} />
+                <CustomText variant="labelM" className="font-bold">
+                  Descargar QR
+                </CustomText>
+              </CustomButton>
             </div>
           </div>
+          <div>
+            <div className="max-w-[365px] max-h-[208px] h-full w-full flex flex-col justify-between gap-2 p-4 gap-4 bg-white rounded-2xl shadow-sm border border-gray-100">
+              <CustomText
+                variant="bodyL"
+                as="h5"
+                className="text-[#0E3C42] max-w-[280px] font-bold"
+              >
+                Acceso al administrador o funcionario
+              </CustomText>
 
-          {/* Admin Access */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 h-full">
-            <h3 className="text-[17px] font-bold text-[#0E3C42] mb-1">
-              Acceso al administrador o funcionario
-            </h3>
-            <p className="text-[12px] text-gray-400 mb-4 leading-snug">
-              Aquí podrá ver la asistencia en tiempo real.
-            </p>
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  readOnly
-                  value={`${publicUrl}/funcionario`}
-                  className="w-full border border-gray-200 bg-[#F9FAFB] rounded-lg pl-3 pr-8 py-2 text-xs text-[#3D3D44] outline-none"
-                />
-                <button
-                  onClick={() => copyToClipboard(`${publicUrl}/funcionario`)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#0E3C42]"
+              <CustomText
+                variant="labelL"
+                className="text-[#0E3C42] font-medium"
+              >
+                Aquí podrá ver la asistencia en tiempo real.
+              </CustomText>
+              <div className="relative flex items-center justify-between gap-2 border border-[#94A2FF] rounded-lg px-3 py-2 w-full">
+                <CustomText
+                  variant="labelM"
+                  className="font-medium text-[#3D3D44] truncate max-w-[200px]"
                 >
-                  <Copy size={14} />
-                </button>
+                  {`${publicUrl}/funcionario`}
+                </CustomText>
+
+                <CustomButton
+                  onClick={() => copyToClipboard(`${publicUrl}/funcionario`)}
+                  className="shrink-0 bg-transparent border-none hover:bg-transparent hover:border-none"
+                >
+                  <CustomIcon path={ICON_PATHS.copy} size={14} />
+                </CustomButton>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Action Bar */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Button
-            variant="none"
-            className={`py-4 rounded-full font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-sm ${
-              assembly.status === "create"
-                ? "bg-[#ABE7E5] text-black hover:opacity-90 hover:bg-[#9DDDD9]"
-                : "bg-[#D3DAE0] text-[#838383] cursor-not-allowed opacity-80"
-            }`}
-            disabled={assembly.status !== "create"}
-            onClick={() => {
-              setModalConfig({
-                isOpen: true,
-                type: "confirm",
-                title: "¿Iniciar asamblea?",
-                description:
-                  "¿Estás seguro de que deseas iniciar la asamblea? Una vez iniciada, los asambleístas podrán ingresar y participar.",
-                confirmText: "Si, iniciar",
-                onConfirm: () => {
-                  setModalConfig({ ...modalConfig, isOpen: false });
-                  updateStatus("started");
-                },
-              });
-            }}
-          >
-            <Play
-              size={18}
-              fill={assembly.status === "create" ? "black" : "#838383"}
-              className={assembly.status === "create" ? "" : "opacity-30"}
-            />
-            {assembly.status === "create"
-              ? "Iniciar asamblea"
-              : "Asamblea iniciada"}
-          </Button>
-
-          <Button
-            variant="none"
-            className={`py-4 rounded-full font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-sm ${
-              assembly.status === "create" || assembly.status === "finished"
-                ? "bg-[#D3DAE0] text-[#838383] cursor-not-allowed opacity-80"
-                : assembly.status === "registries_finalized"
-                  ? "bg-[#FFEDDD] text-[#000000] hover:bg-[#FFE0C7]"
-                  : "bg-[#FFEDDD] text-[#000000] hover:bg-[#FFE0C7]"
-            }`}
-            disabled={
-              assembly.status === "finished" || assembly.status === "create"
-            }
-            onClick={() => {
-              if (assembly.status === "registries_finalized") {
+        {assembly.status != "finished" && (
+          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 p-5 bg-white rounded-2xl">
+            <CustomButton
+              className="w-full bg-[#DAF0DC] border border-[#DAF0DC]
+                        hover:bg-[#BFE6C4] hover:border-[#BFE6C4]
+                        transition-colors duration-200
+                        py-3 px-5 flex items-center justify-center gap-2
+                        disabled:hover:bg-[#DAF0DC]"
+              disabled={assembly.status !== "create"}
+              onClick={() => {
                 setModalConfig({
                   isOpen: true,
                   type: "confirm",
-                  title: "¿Reabrir registros?",
+                  title: "¿Iniciar asamblea?",
                   description:
-                    "¿Estás seguro de que deseas reabrir el registro de los asambleístas? Una vez reabierto, se podrá eliminar o agregar nuevos registros.",
-                  confirmText: "Si, reabrir",
+                    "¿Estás seguro de que deseas iniciar la asamblea? Una vez iniciada, los asambleístas podrán ingresar y participar.",
+                  confirmText: "Si, iniciar",
                   onConfirm: () => {
                     setModalConfig({ ...modalConfig, isOpen: false });
                     updateStatus("started");
                   },
                 });
-              } else {
+              }}
+            >
+              <CustomIcon path={ICON_PATHS.playArrow} size={20} />
+              <CustomText variant="labelL" className="font-bold">
+                {assembly.status === "create"
+                  ? "Iniciar asamblea"
+                  : "Asamblea iniciada"}
+              </CustomText>
+            </CustomButton>
+            <CustomButton
+              className="w-full bg-[#FFEDDD] border border-[#FFEDDD]
+                        hover:bg-[#FFD7BB] hover:border-[#FFD7BB]
+                        transition-colors duration-200
+                        py-3 px-5 flex items-center justify-center gap-2
+                        disabled:hover:bg-[#FFEDDD]"
+              disabled={
+                assembly.status === "finished" || assembly.status === "create"
+              }
+              onClick={() => {
+                if (assembly.status === "registries_finalized") {
+                  setModalConfig({
+                    isOpen: true,
+                    type: "confirm",
+                    title: "¿Reabrir registros?",
+                    description:
+                      "¿Estás seguro de que deseas reabrir el registro de los asambleístas? Una vez reabierto, se podrá eliminar o agregar nuevos registros.",
+                    confirmText: "Si, reabrir",
+                    onConfirm: () => {
+                      setModalConfig({ ...modalConfig, isOpen: false });
+                      updateStatus("started");
+                    },
+                  });
+                } else {
+                  setModalConfig({
+                    isOpen: true,
+                    type: "confirm",
+                    title: "¿Finalizar el registro?",
+                    description:
+                      "¿Estás seguro de que deseas finalizar el registro de los asambleístas? Una vez cerrado, no se podrá eliminar o agregar nuevos registros.",
+                    confirmText: "Si, finalizar",
+                    onConfirm: () => {
+                      setModalConfig({ ...modalConfig, isOpen: false });
+                      updateStatus("registries_finalized");
+                    },
+                  });
+                }
+              }}
+            >
+              {assembly.status === "registries_finalized" ? (
+                <CustomIcon path={ICON_PATHS.editSquare} size={20} />
+              ) : (
+                <CustomIcon path={ICON_PATHS.wavingHand} size={20} />
+              )}
+              <CustomText variant="labelL" className="font-bold">
+                {assembly.status === "registries_finalized"
+                  ? "Reabrir registros"
+                  : "Finalizar registros"}
+              </CustomText>
+            </CustomButton>
+            <CustomButton
+              className="w-full bg-[#FACCCD] border border-[#FACCCD]
+                        hover:bg-[#F7AEB0] hover:border-[#F7AEB0]
+                        transition-colors duration-200
+                        py-3 px-5 flex items-center justify-center gap-2
+                        disabled:hover:bg-[#FACCCD]"
+              disabled={assembly.status === "create"}
+              onClick={() => {
                 setModalConfig({
                   isOpen: true,
                   type: "confirm",
-                  title: "¿Finalizar el registro?",
+                  title: "¿Finalizar asamblea?",
                   description:
-                    "¿Estás seguro de que deseas finalizar el registro de los asambleístas? Una vez cerrado, no se podrá eliminar o agregar nuevos registros.",
+                    "¿Estás seguro de que deseas finalizar la asamblea? Una vez finalizada, no se podrá editar o iniciar nuevamente la asamblea.",
                   confirmText: "Si, finalizar",
                   onConfirm: () => {
                     setModalConfig({ ...modalConfig, isOpen: false });
-                    updateStatus("registries_finalized");
+                    updateStatus("finished");
                   },
                 });
-              }
-            }}
-          >
-            <Users
-              size={18}
-              className={
-                assembly.status === "create" || assembly.status === "finished"
-                  ? "opacity-30"
-                  : ""
-              }
-            />
-            {assembly.status === "registries_finalized"
-              ? "Reabrir registros"
-              : "Finalizar registros"}
-          </Button>
-
-          <Button
-            variant="none"
-            className={`py-4 rounded-full font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-sm ${
-              assembly.status === "create" || assembly.status === "finished"
-                ? "bg-[#D3DAE0] text-[#838383] cursor-not-allowed opacity-80"
-                : "bg-[#FACCCD] text-black hover:bg-[#F5BFBF]"
-            }`}
-            disabled={
-              assembly.status === "create" || assembly.status === "finished"
-            }
-            onClick={() => {
-              setModalConfig({
-                isOpen: true,
-                type: "confirm",
-                title: "¿Finalizar asamblea?",
-                description:
-                  "¿Estás seguro de que deseas finalizar la asamblea? Una vez finalizada, no se podrá editar o iniciar nuevamente la asamblea.",
-                confirmText: "Si, finalizar",
-                onConfirm: () => {
-                  setModalConfig({ ...modalConfig, isOpen: false });
-                  updateStatus("finished");
-                },
-              });
-            }}
-          >
-            <div
-              className={`w-2.5 h-2.5 rounded-full ${
-                assembly.status === "create" || assembly.status === "finished"
-                  ? "bg-[#838383] opacity-30"
-                  : "bg-black"
-              }`}
-            />
-            Finalizar asamblea
-          </Button>
-        </div>
-
-        {assembly.status === "finished" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 animate-in slide-in-from-top-4 duration-700">
-            <Button
-              variant="none"
-              className="py-4 rounded-xl border border-emerald-100 shadow-sm hover:shadow-md hover:bg-emerald-50 text-emerald-700 font-extrabold transition-all gap-3 bg-white text-sm"
-              onClick={exportGeneralReportToPDF}
+              }}
             >
-              <div className="bg-emerald-100 p-2 rounded-lg">
-                <Printer size={18} />
-              </div>
-              Exportar reporte
-            </Button>
-            <Button
-              variant="none"
-              className="py-4 rounded-xl border border-rose-100 shadow-sm hover:shadow-md hover:bg-rose-50 text-rose-700 font-extrabold transition-all gap-3 bg-white text-sm"
-              onClick={exportAllVotesToPDF}
-            >
-              <div className="bg-rose-100 p-2 rounded-lg">
-                <FileText size={18} />
-              </div>
-              Exportar votaciones
-            </Button>
-            {(assembly.type === "Virtual" || assembly.type === "Mixta") && (
-              <Button
-                variant="none"
-                className="py-4 rounded-xl border border-indigo-100 shadow-sm hover:shadow-md hover:bg-indigo-50 text-indigo-700 font-extrabold transition-all gap-3 bg-white text-sm"
-                onClick={downloadAllPowers}
-              >
-                <div className="bg-indigo-100 p-2 rounded-lg">
-                  <Download size={18} />
-                </div>
-                Exportar poderes
-              </Button>
-            )}
+              <CustomIcon path={ICON_PATHS.stop_circle} size={20} />
+              <CustomText variant="labelL" className="font-bold">
+                Finalizar asamblea
+              </CustomText>
+            </CustomButton>
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          {/* Quorum */}
-          <div className="col-span-1 md:col-span-6 bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 flex flex-col">
+        <div className="w-full flex flex-row gap-6">
+          <div className="max-w-[552px] w-full bg-[#FFFFFF] rounded-3xl p-6 gap-6 border border-[#F3F6F9] flex flex-col shadow-soft">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-[19px] font-bold text-[#0E3C42]">Quórum</h3>
-              <div className="w-5 h-5 rounded-full bg-[#0E3C42] text-white flex items-center justify-center text-xs font-bold shadow-sm">
-                !
-              </div>
+              <CustomText
+                variant="bodyX"
+                as="h5"
+                className="font-bold text-[#0E3C42]"
+              >
+                Quórum
+              </CustomText>
+              <CustomIcon path={ICON_PATHS.error} size={24} />
             </div>
             <div className="flex flex-col items-center justify-center flex-1 relative py-2">
               <Quorum percentage={quorum} />
-              <div className="flex w-full max-w-[280px] justify-between text-[11px] font-black text-gray-300 mt-2">
-                <span>0%</span>
-                <span>100%</span>
-              </div>
             </div>
           </div>
 
-          {/* Asambleístas Stats */}
-          <div className="col-span-1 md:col-span-6 bg-white rounded-[32px] p-6 shadow-sm border border-gray-100 flex flex-col gap-6">
-            <h3 className="text-[19px] font-bold text-[#0E3C42] mb-0">
+          <div className="max-w-[552px] w-full bg-[#FFFFFF] rounded-3xl p-6 gap-6 border border-[#F3F6F9] flex flex-col shadow-soft">
+            <CustomText
+              variant="bodyX"
+              as="h5"
+              className="font-bold text-[#0E3C42]"
+            >
               Asambleístas
-            </h3>
+            </CustomText>
             <AssemblyStatsBoxes
               registeredCount={registeredCount}
               totalCount={registries.length}
@@ -1485,27 +1416,23 @@ const AssemblyDashboardPage = () => {
           </div>
         </div>
 
-        <div className="flex bg-white rounded-4xl w-full mx-auto">
-          <button
+        <div className="w-full bg-[#FFFFFF] rounded-full p-2 border border-[#F3F6F9] flex flex-row gap-2">
+          <CustomButton
             onClick={() => setMainTab("Asambleistas")}
-            className={`flex-1 py-3 rounded-4xl font-bold text-sm transition ${
-              mainTab === "Asambleistas"
-                ? "bg-[#D5DAFF]  text-[#0E3C42] shadow-sm"
-                : "hover:text-gray-600"
-            }`}
+            className={`flex-1 py-3 ${mainTab === "Asambleistas" ? "bg-[#D5DAFF] border-none " : "bg-white border-none"}`}
           >
-            Gestionar asambleístas
-          </button>
-          <button
+            <CustomText variant="labelL" className="text-[#000000] font-bold">
+              Gestionar asambleístas
+            </CustomText>
+          </CustomButton>
+          <CustomButton
             onClick={() => setMainTab("Votaciones")}
-            className={`flex-1 py-3 rounded-4xl font-bold text-sm transition ${
-              mainTab === "Votaciones"
-                ? "bg-[#D5DAFF] shadow-sm"
-                : "hover:text-gray-600"
-            }`}
+            className={`flex-1 py-3 ${mainTab === "Votaciones" ? "bg-[#D5DAFF] border-none " : "bg-white border-none"}`}
           >
-            Gestionar votaciones
-          </button>
+            <CustomText variant="labelL" className="text-[#000000] font-bold">
+              Gestionar votaciones
+            </CustomText>
+          </CustomButton>
         </div>
         {mainTab === "Asambleistas" ? (
           <>
@@ -1521,228 +1448,37 @@ const AssemblyDashboardPage = () => {
                 else handleToggleDelete(item.id, true);
               }}
               onAddRegistry={handleAddRegistry}
+              assembyStatus={assembly.status}
             />
 
-            <VoteBlockingSection
+            <VoteRestrictionSection
+              isInAssemblyInfo={true}
               registries={registries}
-              onToggleBlock={handleToggleVoteBlock}
+              blockedVoters={blockedVoters}
+              onToggleVote={handleToggleVoteBlock}
+              assembyStatus={assembly.status}
             />
           </>
         ) : (
           /* VOTACIONES VIEW */
-          <div className="flex flex-col gap-6">
-            {/* HEADER VOTACIONES */}
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-[32px] font-bold text-[#0E3C42]">
-                Preguntas
-              </h3>
-
-              <Button
-                variant="primary"
-                className="!text-black font-bold"
-                onClick={() => setShowAddQuestion(true)}
-                icon={Plus}
-              >
-                Añadir pregunta
-              </Button>
-            </div>
-
-            {showAddQuestion && (
-              <div
-                id="add-question-form"
-                className="bg-white p-8 rounded-[24px] border border-gray-100 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300 mb-6 font-primary"
-              >
-                <div className="flex justify-between items-center mb-8">
-                  <h3 className="text-[22px] font-bold text-[#0E3C42]">
-                    {editingQuestionId ? "Editar pregunta" : "Crear pregunta"}
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
-                  <div className="lg:col-span-6">
-                    <label className="text-[14px] font-bold text-[#0E3C42] mb-2 block">
-                      Titulo de la pregunta{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Escribe aquí el nombre de la unidad"
-                      className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-[#8B9DFF] text-[14px]"
-                      value={newQuestion.title}
-                      onChange={(e) =>
-                        setNewQuestion({
-                          ...newQuestion,
-                          title: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="lg:col-span-3">
-                    <label className="text-[14px] font-bold text-[#0E3C42] mb-2 block">
-                      Tipo de encuesta <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-[#8B9DFF] text-[14px] bg-white"
-                      value={newQuestion.type}
-                      onChange={(e) =>
-                        setNewQuestion({ ...newQuestion, type: e.target.value })
-                      }
-                    >
-                      <option value={QUESTION_TYPES.UNIQUE}>
-                        Selección única
-                      </option>
-                      <option value={QUESTION_TYPES.MULTIPLE}>
-                        Selección múltiple
-                      </option>
-                      <option value={QUESTION_TYPES.YES_NO}>Sí / No</option>
-                      <option value={QUESTION_TYPES.OPEN}>Abierta</option>
-                    </select>
-                  </div>
-                  {newQuestion.type === QUESTION_TYPES.MULTIPLE && (
-                    <div className="lg:col-span-3">
-                      <label className="text-[14px] font-bold text-[#0E3C42] mb-2 block">
-                        Minimo de votos <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-[#8B9DFF] text-[14px] bg-white"
-                        value={newQuestion.minimumVotes}
-                        onChange={(e) =>
-                          setNewQuestion({
-                            ...newQuestion,
-                            minimumVotes: parseInt(e.target.value),
-                          })
-                        }
-                      >
-                        {Array.from(
-                          { length: newQuestion.options.length },
-                          (_, i) => i + 1,
-                        ).map((v) => (
-                          <option key={v} value={v}>
-                            {v}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </div>
-
-                {(newQuestion.type === QUESTION_TYPES.UNIQUE ||
-                  newQuestion.type === QUESTION_TYPES.MULTIPLE) && (
-                  <div className="mb-10">
-                    <div className="flex flex-col gap-4">
-                      {newQuestion.options.map((opt, idx) => (
-                        <div key={idx} className="flex items-center gap-3">
-                          <div className="flex flex-col items-center">
-                            <button
-                              type="button"
-                              onClick={() => handleMoveOption(idx, "up")}
-                              disabled={idx === 0}
-                              className="text-gray-400 hover:text-[#8B9FFD] disabled:opacity-20 transition-colors"
-                            >
-                              <ChevronUp size={16} />
-                            </button>
-                            <GripVertical className="text-gray-300" size={20} />
-                            <button
-                              type="button"
-                              onClick={() => handleMoveOption(idx, "down")}
-                              disabled={idx === newQuestion.options.length - 1}
-                              className="text-gray-400 hover:text-[#8B9FFD] disabled:opacity-20 transition-colors"
-                            >
-                              <ChevronDown size={16} />
-                            </button>
-                          </div>
-                          <div className="flex-1">
-                            <input
-                              type="text"
-                              placeholder={`Escriba aquí la opción`}
-                              className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-[#8B9DFF] text-[14px]"
-                              value={opt}
-                              onChange={(e) => {
-                                const opts = [...newQuestion.options];
-                                opts[idx] = e.target.value;
-                                setNewQuestion({
-                                  ...newQuestion,
-                                  options: opts,
-                                });
-                              }}
-                            />
-                          </div>
-                          <button
-                            onClick={() => {
-                              const opts = newQuestion.options.filter(
-                                (_, i) => i !== idx,
-                              );
-                              setNewQuestion({
-                                ...newQuestion,
-                                options: opts,
-                                minimumVotes: Math.min(
-                                  newQuestion.minimumVotes,
-                                  opts.length,
-                                ),
-                              });
-                            }}
-                            className="w-10 h-10 bg-[#6A7EFF] text-white rounded-lg flex items-center justify-center hover:bg-[#5b6ef0] transition shadow-md"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() =>
-                        setNewQuestion({
-                          ...newQuestion,
-                          options: [...newQuestion.options, ""],
-                        })
-                      }
-                      className="mt-6 text-[#4059FF] font-bold text-[14px] flex items-center gap-2 hover:opacity-80 transition"
-                    >
-                      <Plus size={18} /> Añadir opción
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setShowAddQuestion(false);
-                      setEditingQuestionId(null);
-                    }}
-                    icon={Trash2}
-                  >
-                    Borrar
-                  </Button>
-                  <Button
-                    variant="primary"
-                    className="!text-black font-bold"
-                    onClick={handleAddQuestion}
-                    icon={Check}
-                  >
-                    {editingQuestionId ? "Actualizar" : "Guardar"}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <div className="flex flex-col gap-6">
-              {questions.map((q) => (
-                <QuestionCard
-                  key={q.id}
-                  q={q}
-                  registries={registries}
-                  isAdmin={true}
-                  onEdit={handleEditQuestion}
-                  onDelete={deleteQuestion}
-                  onToggleStatus={toggleQuestionStatus}
-                  onCancel={(id) =>
-                    updateQuestionStatus(id, QUESTION_STATUS.CANCELED)
-                  }
-                  onViewVoters={setViewingVotersFor}
-                />
-              ))}
-            </div>
-          </div>
+          <QuestionsSection
+            assembyStatus={assembly.status}
+            questions={questions}
+            registries={registries}
+            showAddQuestion={showAddQuestion}
+            setShowAddQuestion={setShowAddQuestion}
+            newQuestion={newQuestion}
+            setNewQuestion={setNewQuestion}
+            editingQuestionId={editingQuestionId}
+            setEditingQuestionId={setEditingQuestionId}
+            QUESTION_TYPES={QUESTION_TYPES}
+            handleAddQuestion={handleAddQuestion}
+            handleEditQuestion={handleEditQuestion}
+            toggleQuestionStatus={toggleQuestionStatus}
+            updateQuestionStatus={updateQuestionStatus}
+            QUESTION_STATUS={QUESTION_STATUS}
+            setViewingVotersFor={setViewingVotersFor}
+          />
         )}
       </div>
 

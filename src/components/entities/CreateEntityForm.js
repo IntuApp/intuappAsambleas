@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
 import { Download, Upload, FileSpreadsheet, Trash2, Check } from "lucide-react";
 
-import CustomInput from "@/components/basics/CustomInput";
+import CustomInput from "@/components/basics/inputs/CustomInput";
 import { ExcelEditor } from "@/components/basics/ExcelEditor";
 
 import {
@@ -18,10 +18,10 @@ import {
 import { getEntityTypes } from "@/lib/masterData";
 import { colombiaCities } from "@/lib/colombiaCities";
 import CustomText from "../basics/CustomText";
-import CustomSelect from "../basics/CustomSelect";
+import CustomSelect from "../basics/inputs/CustomSelect";
 import CustomButton from "../basics/CustomButton";
 import CustomIcon from "../basics/CustomIcon";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import SuccessModal from "../modals/SuccessModal";
 import EntityBasicDataStep from "./EntityBasicDataStep";

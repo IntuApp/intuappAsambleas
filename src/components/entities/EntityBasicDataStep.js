@@ -1,7 +1,7 @@
-import CustomInput from "@/components/basics/CustomInput";
+import CustomInput from "@/components/basics/inputs/CustomInput";
 import { colombiaCities } from "@/lib/colombiaCities";
 import CustomText from "../basics/CustomText";
-import CustomSelect from "../basics/CustomSelect";
+import CustomSelect from "../basics/inputs/CustomSelect";
 
 export default function EntityBasicDataStep({
   entityForm,
@@ -9,7 +9,7 @@ export default function EntityBasicDataStep({
   entityTypes,
 }) {
   return (
-    <div className="max-w-[1128px] max-h-[517px] w-full h-full bg-[#FFFFFF] border border-[#F3F6F9] rounded-3xl p-6 flex flex-col gap-5" >
+    <div className="max-w-[1128px] max-h-[517px] w-full h-full bg-[#FFFFFF] border border-[#F3F6F9] rounded-3xl p-6 flex flex-col gap-5">
       <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">
         1. Datos de la Entidad
       </CustomText>

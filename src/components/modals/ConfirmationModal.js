@@ -37,13 +37,15 @@ export default function ConfirmationModal({
           </CustomText>
 
           <div>
-            <CustomText variant="bodyM">
-              ¿Deseas crear la entidad{" "}
-              <strong className="font-bold">
-                {typeName} {entityForm.name}
-              </strong>
-              ?
-            </CustomText>
+            {entityForm && (
+              <CustomText variant="bodyM">
+                ¿Deseas crear la entidad{" "}
+                <strong className="font-bold">
+                  {typeName} {entityForm.name}
+                </strong>
+                ?
+              </CustomText>
+            )}
             <CustomText variant="bodyM" className="text-[#333333] font-normal">
               {message}
             </CustomText>

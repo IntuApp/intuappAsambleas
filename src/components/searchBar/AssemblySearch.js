@@ -1,7 +1,7 @@
 "use client";
 import CustomIcon from "../basics/CustomIcon";
-import CustomInput from "../basics/CustomInput";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import CustomInput from "../basics/inputs/CustomInput";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
 export default function AssemblySearchBar({
   searchTerm,

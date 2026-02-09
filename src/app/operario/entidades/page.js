@@ -13,7 +13,7 @@ import { Plus } from "lucide-react";
 import CustomText from "@/components/basics/CustomText";
 import CustomButton from "@/components/basics/CustomButton";
 import CustomIcon from "@/components/basics/CustomIcon";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
 export default function OperarioEntidadesPage() {
   const { user } = useUser();
@@ -105,7 +105,9 @@ export default function OperarioEntidadesPage() {
           onClick={() => router.push("/operario/crear-entidad")}
         >
           <CustomIcon path={ICON_PATHS.add} size={24} />
-          <CustomText variant="labelL" className="font-bold">Crear Entidad</CustomText>
+          <CustomText variant="labelL" className="font-bold">
+            Crear Entidad
+          </CustomText>
         </CustomButton>
       </div>
 

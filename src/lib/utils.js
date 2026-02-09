@@ -1,4 +1,4 @@
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
 export const formatName = (name) => {
   if (!name) return "...";

@@ -5,7 +5,7 @@ import EntityCard from "./EntityCard";
 import CustomIcon from "../basics/CustomIcon";
 import CustomButton from "../basics/CustomButton";
 import CustomText from "../basics/CustomText";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 import { formatDate, getIconPath, getTypeName } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 6;

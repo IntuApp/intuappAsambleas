@@ -1,10 +1,10 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import CustomText from "../basics/CustomText";
-import CustomButton from "../basics/CustomButton";
-import CustomIcon from "../basics/CustomIcon";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import CustomText from "./CustomText";
+import CustomButton from "./CustomButton";
+import CustomIcon from "./CustomIcon";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
 export default function SectionCard({
   title,
@@ -40,7 +40,6 @@ export default function SectionCard({
 
       <div
         className={`space-y-3 overflow-y-auto scrollbar-hide ${contentClassName}`}
-
       >
         {children}
       </div>
@@ -54,7 +53,11 @@ export default function SectionCard({
             <CustomText variant="labelM" className="font-medium text-[#4059FF]">
               {viewAllText}
             </CustomText>
-            <CustomIcon path={ICON_PATHS.arrowOutward} size={16} className="text-[#4059FF]"/>
+            <CustomIcon
+              path={ICON_PATHS.arrowOutward}
+              size={16}
+              className="text-[#4059FF]"
+            />
           </Link>
         </div>
       )}

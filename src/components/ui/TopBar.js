@@ -6,7 +6,7 @@ import { CircleUserRound } from "lucide-react";
 import Breadcrumbs from "./Breadcrumbs";
 import CustomText from "../basics/CustomText";
 import CustomIcon from "../basics/CustomIcon";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
 export default function TopBar({ pageTitle = null, overrides = {} }) {
   const { user } = useUser();
@@ -44,7 +44,11 @@ export default function TopBar({ pageTitle = null, overrides = {} }) {
           </CustomText>
 
           <div className="bg-[#ABE7E5] rounded-3xl p-1">
-            <CustomIcon path={ICON_PATHS.accountCircle} size={18} color="#1C6168"/>
+            <CustomIcon
+              path={ICON_PATHS.accountCircle}
+              size={18}
+              color="#1C6168"
+            />
           </div>
         </div>
       </div>

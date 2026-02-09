@@ -5,7 +5,7 @@ import CustomText from "@/components/basics/CustomText";
 import { Save, X } from "lucide-react";
 import EntityBasicDataStep from "@/components/entities/EntityBasicDataStep";
 import CustomIcon from "../basics/CustomIcon";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
 export default function EntityEditModal({
   isOpen,

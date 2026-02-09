@@ -1,5 +1,5 @@
 import React from "react";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 import CustomIcon from "@/components/basics/CustomIcon";
 import CustomText from "../basics/CustomText";
 

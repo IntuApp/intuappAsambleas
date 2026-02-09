@@ -6,7 +6,7 @@ import { Building2, CalendarClock, QrCode, Settings } from "lucide-react";
 
 import WelcomeSection from "@/components/dashboard/WelcomeSection";
 import StatCard from "@/components/dashboard/StatCard";
-import SectionCard from "@/components/dashboard/SectionCard";
+import SectionCard from "@/components/basics/SectionCard";
 import ListItem from "@/components/dashboard/ListItem";
 import HelpFullBanner from "@/components/dashboard/HelpFullBanner";
 import Button from "@/components/basics/Button";
@@ -17,7 +17,7 @@ import { getAllAssemblies } from "@/lib/assembly";
 import CustomButton from "@/components/basics/CustomButton";
 import CustomText from "@/components/basics/CustomText";
 import CustomIcon from "@/components/basics/CustomIcon";
-import { ICON_PATHS } from "../constans/iconPaths";
+import { ICON_PATHS } from "../../constans/iconPaths";
 
 export default function OperarioPage() {
   const { user } = useUser();

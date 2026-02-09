@@ -3,7 +3,7 @@ import { Check } from "lucide-react";
 import CustomText from "../basics/CustomText";
 import CustomButton from "../basics/CustomButton";
 import CustomIcon from "../basics/CustomIcon";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
 export default function SuccessModal({
   isOpen,

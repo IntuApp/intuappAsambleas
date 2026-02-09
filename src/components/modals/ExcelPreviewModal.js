@@ -14,6 +14,14 @@ const ExcelPreviewModal = ({
 }) => {
   if (!isOpen) return null;
 
+  console.log("data", data);
+  console.log("headers", headers);
+  console.log("fileName", fileName);
+  console.log("setData", setData);
+  console.log("onAccept", onAccept);
+  console.log("onClose", onClose);
+  
+
   // Use provided headers or fallback to keys of first row
   const safeHeaders =
     headers && headers.length > 0
@@ -55,12 +63,6 @@ const ExcelPreviewModal = ({
     setData([...data, newRow]);
   };
 
-  const handleDeleteRow = (index) => {
-    if (!setData) return;
-    const newData = [...data];
-    newData.splice(index, 1);
-    setData(newData);
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -81,12 +83,7 @@ const ExcelPreviewModal = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition"
-          >
-            <X size={20} />
-          </button>
+         
         </div>
 
         {/* Table Content */}
@@ -96,7 +93,6 @@ const ExcelPreviewModal = ({
               <table className="w-full text-sm text-left border-collapse">
                 <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200 sticky top-0 z-10 shadow-sm">
                   <tr>
-                    <th className="px-4 py-4 w-12 text-center bg-gray-50">#</th>
                     {safeHeaders.map((header, index) => (
                       <th
                         key={index}
@@ -114,9 +110,7 @@ const ExcelPreviewModal = ({
                       key={rowIndex}
                       className="hover:bg-gray-50 transition group"
                     >
-                      <td className="px-4 py-3 text-center text-gray-400 text-xs">
-                        {rowIndex + 1}
-                      </td>
+                     
                       {safeHeaders.map((header, colIndex) => (
                         <td
                           key={colIndex}
@@ -137,15 +131,6 @@ const ExcelPreviewModal = ({
                           />
                         </td>
                       ))}
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => handleDeleteRow(rowIndex)}
-                          className="text-gray-400 hover:text-red-500 transition p-1 rounded-md hover:bg-red-50"
-                          title="Eliminar fila"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>

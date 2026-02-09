@@ -31,7 +31,6 @@ const mapRegistryRow = (row) => {
   };
 
   return {
-    item: findValue(["Item", "Item :", "No.", "ID"]),
     tipo: findValue([
       "Tipo",
       "Tipo Si es apartamento , casa, local, parqueadero, deposito",
@@ -85,9 +84,6 @@ const mapRegistryRow = (row) => {
       "NIT",
       "CC",
     ]),
-    voteBlocked: row.voteBlocked !== undefined ? row.voteBlocked : false,
-    registerInAssembly:
-      row.registerInAssembly !== undefined ? row.registerInAssembly : false,
   };
 };
 
@@ -227,6 +223,7 @@ export async function updateAssemblyRegistriesList(listId, newData) {
 
     await updateDoc(docRef, {
       assemblyRegistries: newRegistries,
+      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
 

@@ -12,14 +12,14 @@ import {
 
 import WelcomeSection from "@/components/dashboard/WelcomeSection";
 import StatCard from "@/components/dashboard/StatCard";
-import SectionCard from "@/components/dashboard/SectionCard";
+import SectionCard from "@/components/basics/SectionCard";
 import ListItem from "@/components/dashboard/ListItem";
 
 import { getOperatorsCount, getEntitiesCount } from "@/lib/stats";
 import { getOperators } from "@/lib/operators";
 import { getEntitiesByOperator, getEntityById } from "@/lib/entities";
 import { getAllAssemblies } from "@/lib/assembly";
-import { ICON_PATHS } from "../constans/iconPaths";
+import { ICON_PATHS } from "../../constans/iconPaths";
 
 const SuperAdminPage = () => {
   const { user } = useUser();

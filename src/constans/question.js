@@ -1,0 +1,13 @@
+export const QUESTION_STATUS = {
+  CREATED: "CREATED",
+  LIVE: "LIVE",
+  CANCELED: "CANCELED",
+  FINISHED: "FINISHED",
+};
+
+export const QUESTION_TYPES = {
+  MULTIPLE: "MULTIPLE",
+  UNIQUE: "UNIQUE",
+  YES_NO: "YES_NO",
+  OPEN: "OPEN",
+};

@@ -2,9 +2,9 @@
 import React from "react";
 import CustomButton from "../basics/CustomButton";
 import CustomText from "../basics/CustomText";
-import CustomInput from "../basics/CustomInput";
+import CustomInput from "../basics/inputs/CustomInput";
 import CustomIcon from "../basics/CustomIcon";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
 export default function EditColumnModal({
   isOpen,
@@ -64,7 +64,11 @@ export default function EditColumnModal({
             onClick={onSave}
             className="rounded-full px-8 py-4 flex-1 flex items-center justify-center gap-1 "
           >
-            <CustomIcon path={ICON_PATHS.check} className="w-5 h-5" color="#000000"/>
+            <CustomIcon
+              path={ICON_PATHS.check}
+              className="w-5 h-5"
+              color="#000000"
+            />
             <CustomText variant="labelM" className="text-[#000000] font-bold">
               Guardar cambios
             </CustomText>

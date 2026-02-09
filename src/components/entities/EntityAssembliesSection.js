@@ -12,8 +12,9 @@ import CustomStates from "../basics/CustomStates";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import SuccessModal from "@/components/modals/SuccessModal";
 
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 import { deleteAssembly } from "@/lib/assembly";
+import CustomTypeAssembly from "../basics/CustomTypeAssembly";
 
 const EntityAssembliesSection = ({ entityId, assemblies }) => {
   const router = useRouter();
@@ -167,9 +168,17 @@ const EntityAssembliesSection = ({ entityId, assemblies }) => {
                     <td className="py-4 px-6">{assembly.name}</td>
                     <td className="py-4 px-6">{assembly.date || "-"}</td>
                     <td className="py-4 px-6">{assembly.hour || "-"}</td>
-                    <td className="py-4 px-6 text-center">{assembly.type}</td>
                     <td className="py-4 px-6 text-center">
-                      <CustomStates status={assembly.status} />
+                      <CustomTypeAssembly
+                        type={assembly.type}
+                        className="justify-center bg-transparent border border-[#DBE2E8]"
+                      />
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <CustomStates
+                        status={assembly.status}
+                        className="px-3 py-1 rounded-full"
+                      />
                     </td>
                     <td className="py-4 px-6 flex justify-center gap-2">
                       <CustomButton

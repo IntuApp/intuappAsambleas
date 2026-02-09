@@ -10,7 +10,7 @@ import { ExcelEditor } from "@/components/basics/ExcelEditor";
 import CustomText from "../basics/CustomText";
 import CustomButton from "../basics/CustomButton";
 import CustomIcon from "../basics/CustomIcon";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 import { useEffect } from "react";
 
 export default function EntityExcelUploadStep({

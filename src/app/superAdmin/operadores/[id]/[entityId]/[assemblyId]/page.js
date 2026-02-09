@@ -75,7 +75,7 @@ import {
   resetAllQuestionsAnswers,
   finishAllLiveQuestions,
 } from "@/lib/questions";
-import QuestionCard from "@/components/dashboard/QuestionCard";
+import QuestionCard from "@/components/question/QuestionCard";
 import CustomModal from "@/components/basics/CustomModal";
 import Button from "@/components/basics/Button";
 import { toast } from "react-toastify";
@@ -1078,7 +1078,8 @@ const AssemblyDashboardPage = () => {
             <div className="w-full flex justify-between">
               <h1 className="text-[32px] font-bold text-[#0E3C42] mb-1">
                 {assembly.name}
-              </h1>.
+              </h1>
+              .
               <button
                 onClick={() =>
                   router.push(

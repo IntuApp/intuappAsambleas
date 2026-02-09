@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 
 import { usePageTitle } from "@/context/PageTitleContext";
 import CustomIcon from "../basics/CustomIcon";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 import CustomText from "../basics/CustomText";
 
 export default function Breadcrumbs({ overrides = {}, pageTitle = null }) {
@@ -51,9 +51,15 @@ export default function Breadcrumbs({ overrides = {}, pageTitle = null }) {
 
             return (
               <span key={pathAccumulator} className="flex items-center gap-2">
-                <CustomIcon path={ICON_PATHS.arrowRight} size={12} color="#3D3D44"/>
+                <CustomIcon
+                  path={ICON_PATHS.arrowRight}
+                  size={12}
+                  color="#3D3D44"
+                />
                 {isLast ? (
-                  <CustomText variant="labelL" className="font-medium">{label}</CustomText>
+                  <CustomText variant="labelL" className="font-medium">
+                    {label}
+                  </CustomText>
                 ) : (
                   <Link
                     href={`/${segments[0]}${pathAccumulator}`}
@@ -70,7 +76,11 @@ export default function Breadcrumbs({ overrides = {}, pageTitle = null }) {
       {extraSegments &&
         extraSegments.map((seg, idx) => (
           <span key={`extra-${idx}`} className="flex items-center gap-2">
-            <CustomIcon path={ICON_PATHS.arrowRight} size={12} color="#3D3D44"/>
+            <CustomIcon
+              path={ICON_PATHS.arrowRight}
+              size={12}
+              color="#3D3D44"
+            />
             {seg.href ? (
               <Link href={seg.href} className="hover:text-gray-900">
                 {seg.label}

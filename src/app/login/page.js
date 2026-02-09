@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { login, useAuth, resetPassword } from "@/lib/auth";
 
-import CustomInput from "@/components/basics/CustomInput";
+import CustomInput from "@/components/basics/inputs/CustomInput";
 import CustomButton from "@/components/basics/CustomButton";
 import CustomTitle from "@/components/basics/CustomTitle";
 import CustomText from "@/components/basics/CustomText";

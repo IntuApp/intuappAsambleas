@@ -15,7 +15,7 @@ import { validateExcelData } from "@/lib/excelValidation";
 import ExcelPreviewModal from "@/components/modals/ExcelPreviewModal";
 import CustomButton from "../basics/CustomButton";
 import CustomText from "../basics/CustomText";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 import CustomIcon from "../basics/CustomIcon";
 
 const EntityDatabaseManager = ({
@@ -26,7 +26,7 @@ const EntityDatabaseManager = ({
 }) => {
   // Pagination & Search
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(30);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Excel Upload State
@@ -78,6 +78,12 @@ const EntityDatabaseManager = ({
         e.target.value = "";
         return;
       }
+
+      console.log("data", registries);
+      console.log("data", excelData);
+      console.log("data", headers);
+      console.log("data", data);
+      console.log("data", file);
 
       setExcelHeaders(headers);
       setExcelData(data);
@@ -155,6 +161,24 @@ const EntityDatabaseManager = ({
         toast.error("Error al eliminar el registro");
       }
     }
+  };
+
+  const getVisiblePages = () => {
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (currentPage <= 3) {
+      return [1, 2, 3];
+    }
+
+    if (currentPage >= totalPages - 2) {
+      return [totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    return [currentPage - 1, currentPage, currentPage + 1];
   };
 
   // --- Filtering & Pagination ---
@@ -290,7 +314,6 @@ const EntityDatabaseManager = ({
               <th className="py-3 px-4 font-bold">Coeficiente</th>
               <th className="py-3 px-4 font-bold">Votos</th>
               <th className="py-3 px-4 font-bold">Documento</th>
-              <th className="py-3 px-4 font-bold">Acción</th>
             </tr>
           </thead>
           <tbody>
@@ -318,15 +341,6 @@ const EntityDatabaseManager = ({
                   <td className="py-4 px-4 text-gray-700">
                     {reg.documento || reg.Documento || "-"}
                   </td>
-                  <td className="py-4 px-4 text-center">
-                    <button
-                      className="text-gray-400 hover:text-red-500 transition"
-                      onClick={() => handleDeleteRegistry(reg)}
-                      title="Eliminar registro"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
                 </tr>
               ))
             ) : (
@@ -340,40 +354,75 @@ const EntityDatabaseManager = ({
         </table>
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-end mt-4">
-          <div className="flex items-center gap-2 text-sm">
-            <button
-              onClick={() => paginate(currentPage - 1)}
+      <div className="w-full flex justify-end">
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2 py-8">
+            {/* Anterior */}
+            <CustomButton
               disabled={currentPage === 1}
-              className="px-3 py-1 rounded hover:bg-gray-100 disabled:opacity-50"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="px-4 py-2 bg-white border border-[#F3F6F9] rounded-full hover:bg-[#ABE7E5] transition"
             >
-              &lt; Anterior
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => paginate(i + 1)}
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                  currentPage === i + 1
-                    ? "bg-[#ABE7E5] text-[#0E3C42]"
-                    : "hover:bg-gray-100 text-gray-600"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => paginate(currentPage + 1)}
+              <CustomText variant="labelL" className="font-bold">
+                Anterior
+              </CustomText>
+            </CustomButton>
+
+            {/* Páginas */}
+            {getVisiblePages().map((page) => {
+              const isActive = page === currentPage;
+
+              return (
+                <CustomButton
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-4 py-2 rounded-full border transition ${
+                    isActive
+                      ? "bg-[#ABE7E5] border-[#ABE7E5]"
+                      : "bg-[#F3F6F9] border-[#F3F6F9] hover:bg-[#ABE7E5]"
+                  }`}
+                >
+                  <CustomText
+                    variant="labelL"
+                    className={`font-bold ${
+                      isActive ? "text-[#0E3C42]" : "text-[#000000]"
+                    }`}
+                  >
+                    {page}
+                  </CustomText>
+                </CustomButton>
+              );
+            })}
+
+            {/* Ellipsis */}
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <span className="px-2 text-gray-500 font-bold">…</span>
+            )}
+
+            {/* Siguiente */}
+            <CustomButton
               disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded hover:bg-gray-100 disabled:opacity-50"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="px-4 py-2 bg-white border border-[#F3F6F9] rounded-full hover:bg-[#ABE7E5] transition"
             >
-              Siguiente &gt;
-            </button>
+              <CustomText variant="labelL" className="font-bold">
+                Siguiente
+              </CustomText>
+            </CustomButton>
+
+            {/* Última */}
+            <CustomButton
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-white border border-[#F3F6F9] rounded-full hover:bg-[#ABE7E5] transition"
+            >
+              <CustomText variant="labelL" className="font-bold">
+                Última
+              </CustomText>
+            </CustomButton>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Modal */}
       <ExcelPreviewModal

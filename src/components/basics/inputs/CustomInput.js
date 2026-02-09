@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import PropTypes from "prop-types";
-import CustomText from "./CustomText";
+import CustomText from "../CustomText";
 
 /**
  * CustomInput - campo de texto reutilizable con label y estilos personalizados.

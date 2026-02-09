@@ -11,6 +11,10 @@ import {
   Check,
 } from "lucide-react";
 import Button from "../basics/Button";
+import CustomButton from "../basics/CustomButton";
+import CustomText from "../basics/CustomText";
+import CustomIcon from "../basics/CustomIcon";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
 const AttendanceTable = ({
   registries,
@@ -23,6 +27,7 @@ const AttendanceTable = ({
   showActions = true,
   mode = "operator",
   onAddRegistry,
+  assembyStatus,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
@@ -144,15 +149,16 @@ const AttendanceTable = ({
           </select>
 
           {activeTab === "Pendientes" && mode !== "funcionario" && (
-            <Button
+            <CustomButton
               variant="primary"
               onClick={() => setIsModalOpen(true)}
-              className=" !text-black font-bold h-[48px] px-4 flex items-center justify-center gap-2 hover:bg-[#8B9FFD] transition-colors text-sm flex-1 md:flex-none"
-              icon={Plus}
+              className="flex items-center gap-2 py-2 px-4"
             >
-              <span className="hidden sm:inline">Añadir asambleísta</span>
-              <span className="sm:hidden">Añadir</span>
-            </Button>
+              <CustomIcon path={ICON_PATHS.add} size={16} />
+              <CustomText variant="labelL" className="font-bold">
+                Añadir asambleísta
+              </CustomText>
+            </CustomButton>
           )}
         </div>
       </div>
@@ -168,7 +174,7 @@ const AttendanceTable = ({
                 <>
                   <th className="py-4 px-6">Coeficiente</th>
                   <th className="py-4 px-6">Documento</th>
-                  {activeTab !== "Pendientes" && (
+                  {activeTab === "Registrados" && (
                     <th className="py-4 px-6 text-center">Poder</th>
                   )}
                 </>
@@ -176,8 +182,11 @@ const AttendanceTable = ({
               {mode === "funcionario" ? (
                 <th className="py-4 px-6 text-center">Voto Bloqueado</th>
               ) : (
-                activeTab !== "Pendientes" &&
-                showActions && <th className="py-4 px-6 text-center">Acción</th>
+                activeTab === "Registrados" &&
+                showActions &&
+                assembyStatus !== "finished" && (
+                  <th className="py-4 px-6 text-center">Acción</th>
+                )
               )}
             </tr>
           </thead>

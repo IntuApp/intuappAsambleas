@@ -10,7 +10,7 @@ import {
 import Button from "@/components/basics/Button";
 import CustomText from "../basics/CustomText";
 import CustomIcon from "../basics/CustomIcon";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 import CustomButton from "../basics/CustomButton";
 import { getIconPath } from "@/lib/utils";
 

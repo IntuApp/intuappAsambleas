@@ -24,7 +24,7 @@ import EntityEditModal from "@/components/entities/EntityEditModal";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import SuccessModal from "@/components/modals/SuccessModal";
 
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 import { getIconPath, getTypeName } from "@/lib/utils";
 import { toast } from "react-toastify";
 import { usePageTitle } from "@/context/PageTitleContext";
@@ -160,65 +160,74 @@ const EntityDetailPage = () => {
             onSubmit={handleSaveEntity}
           />
 
-          <div className="flex items-center justify-between">
-            <CustomText variant="TitleL" className="font-bold text-[#0E3C42]">
-              {entityData.name}
-            </CustomText>
-
-            <CustomButton
-              variant="primary"
-              onClick={() => setShowDeleteModal(true)}
-              className="px-5 py-3 flex items-center gap-1"
-            >
-              <CustomIcon path={ICON_PATHS.delete} size={20} />
-              <CustomText variant="bodyM" className="font-bold">
-                Eliminar Entidad
-              </CustomText>
-            </CustomButton>
-          </div>
-
-          <div className="bg-white rounded-3xl border p-8">
-            <div className="flex justify-between mb-6">
-              <CustomText variant="bodyX" className="font-bold">
-                Información General
-              </CustomText>
-
-              <CustomButton
-                variant="primary"
-                onClick={() => setIsEditModalOpen(true)}
-                className="flex items-center gap-1 px-4 py-2"
-              >
-                <CustomIcon path={ICON_PATHS.pencil} size={20} />
-                <CustomText variant="labelL" className="font-bold">
-                  Editar información
+          {!isEditModalOpen && (
+            <div className="flex flex-col gap-8">
+              <div className="flex items-center justify-between">
+                <CustomText
+                  variant="TitleL"
+                  className="font-bold text-[#0E3C42]"
+                >
+                  {entityData.name}
                 </CustomText>
-              </CustomButton>
-            </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
-              <Info label="NIT" value={entityData.nit} />
-              <Info
-                label="Tipo entidad"
-                value={getTypeName(entityData)}
-                icon={<CustomIcon path={getIconPath(entityData)} size={14} />}
+                <CustomButton
+                  variant="primary"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="px-5 py-3 flex items-center gap-1"
+                >
+                  <CustomIcon path={ICON_PATHS.delete} size={20} />
+                  <CustomText variant="bodyM" className="font-bold">
+                    Eliminar Entidad
+                  </CustomText>
+                </CustomButton>
+              </div>
+
+              <div className="bg-white rounded-3xl border p-8">
+                <div className="flex justify-between mb-6">
+                  <CustomText variant="bodyX" className="font-bold">
+                    Información General
+                  </CustomText>
+
+                  <CustomButton
+                    variant="primary"
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="flex items-center gap-1 px-4 py-2"
+                  >
+                    <CustomIcon path={ICON_PATHS.pencil} size={20} />
+                    <CustomText variant="labelL" className="font-bold">
+                      Editar información
+                    </CustomText>
+                  </CustomButton>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-8">
+                  <Info label="NIT" value={entityData.nit} />
+                  <Info
+                    label="Tipo entidad"
+                    value={getTypeName(entityData)}
+                    icon={
+                      <CustomIcon path={getIconPath(entityData)} size={14} />
+                    }
+                  />
+                  <Info label="Asambleístas" value={registries.length} />
+                  <Info label="Ciudad" value={entityData.city} />
+                  <Info label="Dirección" value={entityData.address} />
+                </div>
+              </div>
+
+              <EntityAssembliesSection
+                entityId={entityId}
+                assemblies={assemblies}
               />
-              <Info label="Asambleístas" value={registries.length} />
-              <Info label="Ciudad" value={entityData.city} />
-              <Info label="Dirección" value={entityData.address} />
+
+              <EntityDatabaseManager
+                entityData={entityData}
+                registries={registries}
+                registriesCreatedAt={registriesCreatedAt}
+                onRefresh={fetchEntityData}
+              />
             </div>
-          </div>
-
-          <EntityAssembliesSection
-            entityId={entityId}
-            assemblies={assemblies}
-          />
-
-          <EntityDatabaseManager
-            entityData={entityData}
-            registries={registries}
-            registriesCreatedAt={registriesCreatedAt}
-            onRefresh={fetchEntityData}
-          />
+          )}
         </div>
       </div>
 

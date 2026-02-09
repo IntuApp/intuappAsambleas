@@ -20,7 +20,7 @@ import {
   ChevronDown,
   MessageCircle,
 } from "lucide-react";
-import QuestionCard from "../dashboard/QuestionCard";
+import QuestionCard from "../question/QuestionCard";
 
 const QUESTION_TYPES = {
   MULTIPLE: "MULTIPLE",

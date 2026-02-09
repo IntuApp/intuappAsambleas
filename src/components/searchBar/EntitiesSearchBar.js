@@ -1,10 +1,10 @@
 "use client";
 import React, { useMemo, useState } from "react";
 import CustomIcon from "../basics/CustomIcon";
-import CustomInput from "../basics/CustomInput";
+import CustomInput from "../basics/inputs/CustomInput";
 import CustomButton from "../basics/CustomButton";
 import CustomText from "../basics/CustomText";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
 export default function EntitiesSearchBar({
   entities,

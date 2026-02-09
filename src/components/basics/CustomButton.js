@@ -19,6 +19,30 @@ const variantButton = {
     hover:bg-[#ABE7E5]
     hover:border-[#0E3C42]
   `,
+  success: `
+    border-2 border-[#DAF0DC]
+    bg-[#DAF0DC]
+    text-[#000000]
+
+    hover:bg-[#BFE6C4]
+    hover:border-[#BFE6C4]
+  `,
+  warning: `
+    border-2 border-[#FFEDDD]
+    bg-[#FFEDDD]
+    text-[#000000]
+
+    hover:bg-[#FFD7BB]
+    hover:border-[#FFD7BB]
+  `,
+  error: `
+    border-2 border-[#FACCCD]
+    bg-[#FACCCD]
+    text-[#000000]
+
+    hover:bg-[#F7AEB0]
+    hover:border-[#F7AEB0]
+  `,
 };
 
 const disabledStyles = `
@@ -54,7 +78,13 @@ export default function CustomButton({
 }
 
 CustomButton.propTypes = {
-  variant: PropTypes.oneOf(["primary", "secondary"]),
+  variant: PropTypes.oneOf([
+    "primary",  
+    "secondary",
+    "success",
+    "warning",
+    "error",
+  ]),
   children: PropTypes.node.isRequired,
   onClick: PropTypes.func,
   className: PropTypes.string,

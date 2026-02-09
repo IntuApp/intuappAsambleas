@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { register } from "@/lib/auth";
 import { getRoles } from "@/lib/userDetails";
-import CustomInput from "@/components/basics/CustomInput";
+import CustomInput from "@/components/basics/inputs/CustomInput";
 import CustomButton from "@/components/basics/CustomButton";
 import CustomTitle from "@/components/basics/CustomTitle";
 
@@ -51,7 +51,7 @@ export default function RegisterPage() {
       } else {
         toast.error(
           "Error al registrar usuario: " +
-            (result.message || "Error desconocido")
+            (result.message || "Error desconocido"),
         );
       }
     } catch (error) {

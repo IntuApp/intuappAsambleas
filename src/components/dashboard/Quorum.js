@@ -1,7 +1,8 @@
 import React from "react";
+import CustomText from "../basics/CustomText";
 
 const Quorum = ({ percentage }) => {
-  const size = 260; // Standard size from Operario
+  const size = 300; // Standard size from Operario
   const strokeWidth = 20; // Standard thickness
   const radius = (size - strokeWidth) / 2;
   const circumference = Math.PI * radius; // Half circle
@@ -36,13 +37,25 @@ const Quorum = ({ percentage }) => {
           style={{ transition: "stroke-dasharray 1.2s ease-in-out" }}
         />
       </svg>
-      <div className="absolute -bottom-1 text-center">
-        <span className="text-[30px] font-black text-[#0E3C42] block leading-none">
+      <div className="absolute bottom-4 text-center">
+        <CustomText
+          variant="TitleX"
+          as="h1"
+          className="text-[#0E3C42] font-bold"
+        >
           {percentage.toFixed(2)}%
-        </span>
-        <p className="text-[14px] font-bold text-gray-400 mt-2">
+        </CustomText>
+        <CustomText variant="labelL" className="font-medium text-[#1F1F23]">
           Asambleístas registrados
-        </p>
+        </CustomText>
+      </div>
+      <div className={`flex w-[310px] justify-between ml-2`}>
+        <CustomText variant="labelM" className="font-bold text-[#333333]">
+          0%
+        </CustomText>
+        <CustomText variant="labelM" className="font-bold text-[#333333]">
+          100%
+        </CustomText>
       </div>
     </div>
   );

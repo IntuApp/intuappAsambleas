@@ -1,43 +1,53 @@
 import React from "react";
+import CustomIcon from "../basics/CustomIcon";
+import { ICON_PATHS } from "@/constans/iconPaths";
+import CustomText from "../basics/CustomText";
 
 const AssemblyStatsBoxes = ({ registeredCount, totalCount, blockedCount }) => {
   return (
-    <div className="flex flex-wrap gap-4 flex-1">
-      {/* Box 1: Registered */}
-      <div className="flex-1 bg-[#F9FBFF] border border-[#F0F4FF] rounded-[24px] p-5 flex flex-col justify-between shadow-sm min-h-[160px]">
-        <div className="w-10 h-10 rounded-xl bg-[#E0E7FF] flex items-center justify-center mb-3">
-          <img
-            src="/logos/users/iconAssambleistaRegistrado.png"
-            alt="Registrados"
-            className="w-6 h-6 object-contain"
+    <div className="flex gap-4 flex-1">
+      <div className="max-w-[240px] w-full rounded-[16px] border border-[#F3F6F9] shadow-sm p-5 gap-5 flex flex-col justify-center">
+        <div className="bg-[#EEF0FF] w-[48px] h-[48px] rounded-lg flex items-center justify-center">
+          <CustomIcon
+            path={ICON_PATHS.inPerson}
+            size={32}
+            className="bg-[#EEF0FF] text-[#6A7EFF] rounded-full "
           />
         </div>
         <div>
-          <h4 className="text-[28px] font-black text-[#0E3C42] leading-none mb-1">
+          <CustomText
+            variant="TitleL"
+            as="h1"
+            className="text-[#1F1F23] font-bold"
+          >
             {registeredCount} / {totalCount}
-          </h4>
-          <p className="text-[12px] font-bold text-gray-400">
+          </CustomText>
+          <CustomText variant="labelL" className="text-[#1F1F23] font-medium">
             asambleístas registrados
-          </p>
+          </CustomText>
         </div>
       </div>
 
       {/* Box 2: Blocked */}
-      <div className="flex-1 bg-white border border-gray-50 rounded-[24px] p-5 flex flex-col justify-between relative shadow-sm min-h-[160px]">
-        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center mb-2">
-          <img
-            src="/logos/users/iconAssambleistaRestringido.png"
-            alt="Restringido"
-            className="w-6 h-6 object-contain"
+      <div className="max-w-[240px] w-full rounded-[16px] border border-[#F3F6F9] shadow-sm p-5 gap-5 flex flex-col justify-center">
+        <div className="bg-[#EEF0FF] w-[48px] h-[48px] rounded-lg flex items-center justify-center">
+          <CustomIcon
+            path={ICON_PATHS.personCancel}
+            size={32}
+            className="bg-[#EEF0FF] text-[#6A7EFF] rounded-full "
           />
         </div>
         <div>
-          <h4 className="text-[28px] font-black text-[#0E3C42] leading-none mb-1">
+          <CustomText
+            variant="TitleL"
+            as="h1"
+            className="text-[#1F1F23] font-bold"
+          >
             {blockedCount}
-          </h4>
-          <p className="text-[12px] font-bold text-gray-400">
+          </CustomText>
+          <CustomText variant="labelL" className="text-[#1F1F23] font-medium">
             con restricción de voto
-          </p>
+          </CustomText>
         </div>
       </div>
     </div>

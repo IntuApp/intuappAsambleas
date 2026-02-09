@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import CustomButton from "./CustomButton";
 import CustomIcon from "./CustomIcon";
-import { ICON_PATHS } from "@/app/constans/iconPaths";
+import { ICON_PATHS } from "@/constans/iconPaths";
 import CustomText from "./CustomText";
 import EditColumnModal from "../modals/EditColumnModal";
 

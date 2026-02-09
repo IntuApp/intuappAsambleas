@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { register } from "@/lib/auth";
 import Loader from "@/components/basics/Loader";
 import { createOperator } from "@/lib/operators";
-import CustomInput from "@/components/basics/CustomInput";
+import CustomInput from "@/components/basics/inputs/CustomInput";
 import { toast } from "react-toastify";
 
 const CrearOperadorPage = () => {
@@ -55,7 +55,7 @@ const CrearOperadorPage = () => {
       !formDataOperator.password
     ) {
       toast.error(
-        "Por favor complete los campos obligatorios: Nombre del Operador, Ciudad, Correo y Contraseña"
+        "Por favor complete los campos obligatorios: Nombre del Operador, Ciudad, Correo y Contraseña",
       );
       setLoading(false);
       return;
