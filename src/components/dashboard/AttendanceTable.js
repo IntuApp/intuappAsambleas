@@ -60,6 +60,12 @@ const AttendanceTable = ({
         String(item.documento || "")
           .toLowerCase()
           .includes(search) ||
+        String(item.mainDocument || "")
+          .toLowerCase()
+          .includes(search) ||
+        String(item.userDocument || "")
+          .toLowerCase()
+          .includes(search) ||
         String(item.grupo || "")
           .toLowerCase()
           .includes(search)
@@ -212,7 +218,10 @@ const AttendanceTable = ({
                       {item.coeficiente || "0"}%
                     </td>
                     <td className="py-4 px-6 text-gray-500 font-medium">
-                      {item.userDocument || item.documento || "-"}
+                      {item.mainDocument ||
+                        item.userDocument ||
+                        item.documento ||
+                        "-"}
                     </td>
                     {activeTab !== "Pendientes" && (
                       <td className="py-4 px-6 text-center">

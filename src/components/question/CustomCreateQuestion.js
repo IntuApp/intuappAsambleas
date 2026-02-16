@@ -65,11 +65,11 @@ export default function CustomCreateQuestion({
             label="Mínimo de votos"
             variant="labelM"
             classLabel="text-[#333333] font-bold"
-            value={newQuestion.minimumVotes}
+            value={newQuestion.minSelections}
             onChange={(e) =>
               setNewQuestion({
                 ...newQuestion,
-                minimumVotes: parseInt(e.target.value),
+                minSelections: parseInt(e.target.value),
               })
             }
           >
@@ -120,8 +120,8 @@ export default function CustomCreateQuestion({
                     setNewQuestion({
                       ...newQuestion,
                       options: opts,
-                      minimumVotes: Math.min(
-                        newQuestion.minimumVotes,
+                      minSelections: Math.min(
+                        newQuestion.minSelections,
                         opts.length,
                       ),
                     });

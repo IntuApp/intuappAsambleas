@@ -73,10 +73,7 @@ export async function createEntityAdmin(adminData) {
   }
 }
 
-export async function createEntity(
-  entityData,
-  operatorId,
-) {
+export async function createEntity(entityData, operatorId) {
   try {
     const entityRef = await addDoc(collection(db, "entity"), {
       ...entityData,
@@ -256,6 +253,23 @@ export async function updateRegistryStatus(
   }
 }
 
+export async function updateRegistryVotingPreference(
+  listId,
+  registryId,
+  preference,
+) {
+  try {
+    const docRef = doc(db, "assemblyRegistriesList", listId);
+    await updateDoc(docRef, {
+      [`assemblyRegistries.${registryId}.votingPreference`]: preference,
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating voting preference:", error);
+    return { success: false, error };
+  }
+}
+
 export async function resetAssemblyRegistries(listId) {
   try {
     const docRef = doc(db, "assemblyRegistriesList", listId);
@@ -398,8 +412,7 @@ export async function cloneAndResetAssemblyRegistriesList(originalListId) {
 const mapRegistryRow = (row) => {
   const findValue = (possibleKeys) => {
     for (const key of possibleKeys) {
-      if (row[key] !== undefined && row[key] !== null)
-        return String(row[key]);
+      if (row[key] !== undefined && row[key] !== null) return String(row[key]);
     }
 
     const rowKeys = Object.keys(row);

@@ -12,9 +12,11 @@ import {
   arrayRemove,
   serverTimestamp,
   collection,
+  query,
+  where,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getEntityById, updateRegistryStatus } from "@/lib/entities";
+import { getEntityById } from "@/lib/entities";
 
 import Loader from "@/components/basics/Loader";
 
@@ -75,6 +77,18 @@ export default function AssemblyAccessPage() {
   const [isInMeeting, setIsInMeeting] = useState(false);
   const [userVotingPreference, setUserVotingPreference] = useState(null);
   const [addNewProperties, setAddNewProperties] = useState(false);
+  const [votes, setVotes] = useState([]);
+  const [allRegistrations, setAllRegistrations] = useState([]);
+
+  const registeredOwnerIds = useMemo(() => {
+    const ids = new Set();
+    allRegistrations.forEach((reg) => {
+      (reg.representedProperties || []).forEach((prop) => {
+        if (prop.ownerId) ids.add(prop.ownerId);
+      });
+    });
+    return ids;
+  }, [allRegistrations]);
 
   // New Registration Wizard State Machine
   // 0: Search/Login
@@ -153,12 +167,27 @@ export default function AssemblyAccessPage() {
   useEffect(() => {
     let unsubDetails = () => {};
     let unsubQuestions = () => {};
+    let unsubRegs = () => {};
 
     const assemblyRef = doc(db, "assembly", id);
     const unsubAssembly = onSnapshot(assemblyRef, async (docSnap) => {
       if (docSnap.exists()) {
         const assemblyData = { id: docSnap.id, ...docSnap.data() };
         setAssembly(assemblyData);
+
+        // Subscriptions related to assembly data
+        if (assemblyData.registrationRecordId) {
+          const regRef = doc(
+            db,
+            "assemblyRegistrations",
+            assemblyData.registrationRecordId,
+          );
+          unsubRegs = onSnapshot(regRef, (regSnap) => {
+            if (regSnap.exists()) {
+              setAllRegistrations(regSnap.data().registrations || []);
+            }
+          });
+        }
 
         // If assembly is back to create mode (restarted), kick users out
         if (assemblyData.status === "create" && currentUser) {
@@ -195,35 +224,75 @@ export default function AssemblyAccessPage() {
         }
 
         // Questions
-        if (assemblyData.questions && assemblyData.questions.length > 0) {
-          const qRef = collection(db, "question");
-          unsubQuestions = onSnapshot(qRef, (qSnap) => {
-            const qList = qSnap.docs
-              .map((d) => ({ id: d.id, ...d.data() }))
-              .filter(
-                (q) =>
-                  assemblyData.questions.includes(q.id) &&
-                  !q.isDeleted &&
-                  (q.status === QUESTION_STATUS.LIVE ||
-                    q.status === QUESTION_STATUS.FINISHED),
-              );
+        const qRef = doc(db, "assemblyQuestions", id);
+        unsubQuestions = onSnapshot(qRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const qList = (data.questions || []).filter(
+              (q) =>
+                !q.isDeleted &&
+                (q.status === QUESTION_STATUS.LIVE ||
+                  q.status === QUESTION_STATUS.FINISHED),
+            );
             setQuestions(qList);
-          });
-        }
+          } else {
+            setQuestions([]);
+          }
+        });
       } else {
         toast.error("Asamblea no encontrada");
       }
       setLoading(false);
     });
 
+    // Votes Subscription
+    const vRef = doc(db, "assemblyVotes", id);
+    const unsubVotes = onSnapshot(vRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setVotes(data.votes || []);
+      } else {
+        setVotes([]);
+      }
+    });
+
     return () => {
       unsubAssembly();
       unsubDetails();
       unsubQuestions();
+      unsubVotes();
+      unsubRegs();
     };
-  }, [id]);
+  }, [id, currentUser]);
+
+  // Load User Voting Preference
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.votingPreference) {
+        setUserVotingPreference(currentUser.votingPreference);
+      } else {
+        setUserVotingPreference(null);
+      }
+    }
+  }, [currentUser]);
 
   /* --- HANDLERS --- */
+
+  const persistVotingPreference = async (pref) => {
+    setUserVotingPreference(pref);
+    if (currentUser?.id) {
+      try {
+        const userRef = doc(db, "usersAssemblyActive", currentUser.id);
+        await updateDoc(userRef, { votingPreference: pref });
+
+        // Update local state
+        setCurrentUser((prev) => ({ ...prev, votingPreference: pref }));
+      } catch (error) {
+        console.error("Error saving voting preference:", error);
+        toast.error("Error guardando preferencia de voto");
+      }
+    }
+  };
 
   const handleAccess = async (document) => {
     if (assembly.status === "create") {
@@ -286,12 +355,10 @@ export default function AssemblyAccessPage() {
       }
 
       // 3b. Check if properties are ALREADY CLAIMED by someone else
-      // If ANY property associated with this document is already claimed (registerInAssembly === true)
-      // and the current user trying to register is NOT the one who claimed it (checked by step 1),
-      // we block them.
-      const alreadyRegisteredProps = found.filter(
-        (r) => r.registerInAssembly === true,
+      const alreadyRegisteredProps = found.filter((r) =>
+        registeredOwnerIds.has(r.id),
       );
+
       if (alreadyRegisteredProps.length > 0) {
         setLoading(false);
         return toast.error(
@@ -300,8 +367,9 @@ export default function AssemblyAccessPage() {
       }
 
       // 3c. Prepare Verification Queue (Unclaimed valid properties)
+      // Exclude those already registered
       const availableToRegister = found.filter(
-        (r) => !r.registerInAssembly && !r.isDeleted,
+        (r) => !registeredOwnerIds.has(r.id) && !r.isDeleted,
       );
 
       // Double check for database_document: must have items
@@ -512,10 +580,16 @@ export default function AssemblyAccessPage() {
 
   // derived for manual add
   const availableTypes = useMemo(() => {
-    const availableRegs = registries.filter((r) => !r.registerInAssembly);
+    // Should filter out those already in assembly.assemblyRegistrations?
+    // User requested to remove Modification of List.
+    // READ logic for "available" currently uses "registerInAssembly" from list.
+    // If we stop writing that, we must check assemblyRegistrations
+    const availableRegs = registries.filter(
+      (r) => !registeredOwnerIds.has(r.id),
+    );
     const types = new Set(availableRegs.map((r) => r.tipo || "Otro"));
     return Array.from(types).sort(alphanumericSort);
-  }, [registries]);
+  }, [registries, registeredOwnerIds]);
 
   const hasMultipleTypes = useMemo(
     () => availableTypes.length > 1,
@@ -535,8 +609,9 @@ export default function AssemblyAccessPage() {
   const availableGroups = useMemo(() => {
     const typeToUse = addPropType || currentSingleType;
     if (!typeToUse) return [];
+
     const availableRegs = registries.filter(
-      (r) => !r.registerInAssembly && (r.tipo || "Otro") === typeToUse,
+      (r) => !registeredOwnerIds.has(r.id) && (r.tipo || "Otro") === typeToUse,
     );
 
     const groupsSet = new Set(
@@ -554,14 +629,15 @@ export default function AssemblyAccessPage() {
     }
 
     return sortedGroups;
-  }, [addPropType, currentSingleType, registries]);
+  }, [addPropType, currentSingleType, registries, registeredOwnerIds]);
 
   const filteredProperties = useMemo(() => {
     const typeToUse = addPropType || currentSingleType;
     if (!typeToUse) return [];
+
     return registries
       .filter((r) => {
-        if (r.registerInAssembly) return false;
+        if (registeredOwnerIds.has(r.id)) return false;
         const rType = r.tipo || "Otro";
         if (rType !== typeToUse) return false;
 
@@ -575,7 +651,13 @@ export default function AssemblyAccessPage() {
         return true;
       })
       .sort((a, b) => alphanumericSort(a.propiedad, b.propiedad));
-  }, [addPropType, addPropGroup, currentSingleType, registries]);
+  }, [
+    addPropType,
+    addPropGroup,
+    currentSingleType,
+    registries,
+    registeredOwnerIds,
+  ]);
 
   // FINAL SUBMIT (Step 6)
   const handleFinalSubmit = async () => {
@@ -616,6 +698,11 @@ export default function AssemblyAccessPage() {
         registries: finalRegistries,
         registryId: mainRegistry?.id,
         userDocument: regDocument,
+        document: regDocument, // Added for consistency with lib/assemblyUser
+        firstName: userInfo.firstName,
+        lastName: userInfo.lastName,
+        email: userInfo.email,
+        phone: userInfo.phone,
       };
 
       const res = await createAssemblyUser(userData);
@@ -669,19 +756,6 @@ export default function AssemblyAccessPage() {
         }
         // --- FIN LOGICA DE REGISTRO ---
 
-        if (activeRegistriesListId) {
-          await Promise.all(
-            finalRegistries.map((r) =>
-              updateRegistryStatus(activeRegistriesListId, r.registryId, true, {
-                ...userData,
-
-                powerUrl: r.powerUrl,
-                role: r.role,
-              }),
-            ),
-          );
-        }
-
         const fullUser = { ...userData, id: res.id };
         setCurrentUser(fullUser);
         // localStorage.setItem(`assemblyUser_${id}`, JSON.stringify(fullUser));
@@ -713,6 +787,8 @@ export default function AssemblyAccessPage() {
     const userRegistryIds = (currentUser.registries || []).map(
       (r) => r.registryId,
     );
+
+    userRegistryIds.push(currentUser.registryId);
     if (
       currentUser.registryId &&
       !userRegistryIds.includes(currentUser.registryId)
@@ -731,30 +807,26 @@ export default function AssemblyAccessPage() {
         entity={entity}
         registries={registries}
         questions={questions}
+        votes={votes}
         userVotingPreference={userVotingPreference}
-        onSetVotingPreference={setUserVotingPreference}
+        onSetVotingPreference={persistVotingPreference}
         onLogout={() => {
           localStorage.removeItem(`assemblyUser_${id}`);
           setCurrentUser(null);
           setRegStep(0);
         }}
-        onJoinMeeting={() => {
-          if (assembly?.meetLink)
-            window.open(
-              assembly.meetLink.includes("http")
-                ? assembly.meetLink
-                : `https://${assembly.meetLink}`,
-              "_blank",
-            );
-          else toast.info("Link no disponible");
-        }}
+        onJoinMeeting={() => setIsInMeeting(true)}
+        allRegistrations={allRegistrations}
         renderQuestion={(q, extraProps = {}) => (
           <QuestionItem
+            key={q.id}
             q={q}
             userRegistries={myRegistries}
             assembly={assembly}
+            userVotes={votes}
             userVotingPreference={userVotingPreference}
-            onSetVotingPreference={setUserVotingPreference}
+            onSetVotingPreference={persistVotingPreference}
+            currentUser={currentUser}
             {...extraProps}
           />
         )}

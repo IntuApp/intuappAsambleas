@@ -1,6 +1,8 @@
 import React from "react";
 import { Check, ArrowRight } from "lucide-react";
 import Button from "@/components/basics/Button";
+import CustomButton from "./CustomButton";
+import CustomText from "./CustomText";
 
 const CustomModal = ({
   isOpen,
@@ -29,48 +31,50 @@ const CustomModal = ({
             </div>
           )}
 
-          <h3 className="text-[32px] font-bold text-[#0E3C42] mb-4 leading-tight tracking-tight">
+          <CustomText variant="TitleL" className="text-[#0E3C42]">
             {title}
-          </h3>
+          </CustomText>
 
           <div className="w-full border-t border-dashed border-gray-100 my-4"></div>
 
-          <p className="text-gray-400 text-[15px] font-medium leading-relaxed mb-10 max-w-sm">
+          <CustomText variant="bodyM" className="mb-10 max-w-sm">
             {description}
-          </p>
+          </CustomText>
 
           <div className="w-full flex flex-col md:flex-row gap-3">
             {type === "confirm" ? (
               <>
-                <Button
+                <CustomButton
                   variant="secondary"
                   size="L"
-                  className="flex-1"
+                  className="flex-1 py-3 px-5"
                   onClick={onClose}
                 >
-                  {cancelText || "Cancelar"}
-                </Button>
-                <Button
-                  variant={confirmButtonVariant}
+                  <CustomText variant="labelL" className="font-bold">
+                    {cancelText || "Cancelar"}
+                  </CustomText>
+                </CustomButton>
+                <CustomButton
+                  variant="primary"
                   size="L"
-                  className="flex-1 text-black"
+                  className="flex-1 py-3 px-5"
                   onClick={onConfirm}
                 >
-                  {confirmText}
-                </Button>
+                  <CustomText variant="labelL" className="font-bold">
+                    {confirmText}
+                  </CustomText>
+                </CustomButton>
               </>
             ) : (
-              <Button
+              <CustomButton
                 variant="primary"
-                size="L"
-                className="w-full text-black"
+                className="w-full text-black py-3"
                 onClick={onConfirm}
               >
-                <div className="flex items-center justify-center gap-3">
+                <CustomText variant="labelL" className="font-bold">
                   {confirmText || "Aceptar"}
-                  <ArrowRight size={22} strokeWidth={2.5} />
-                </div>
-              </Button>
+                </CustomText>
+              </CustomButton>
             )}
           </div>
         </div>

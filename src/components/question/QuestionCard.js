@@ -19,6 +19,7 @@ import CustomQuestionStatus from "./CustomQuestionStatus";
 const QuestionCard = ({
   q,
   registries = [],
+  votes = [],
   isAdmin = false,
   onEdit,
   onToggleStatus,
@@ -29,24 +30,34 @@ const QuestionCard = ({
   const parseCoef = (val) =>
     parseFloat(String(val || 0).replace(",", ".")) || 0;
 
+  // Question Votes
+  const questionVotes = votes.filter((v) => v.questionId === q.id);
+
   // Total Coefficient of ALL properties (Registered + Not Registered)
   const totalCoef = registries.reduce(
     (acc, r) => acc + parseCoef(r.coeficiente),
     0,
   );
 
-  const answers = q.answers || {};
-  const votersIds = Object.keys(answers);
-  const totalVotedCoef = votersIds.reduce((acc, regId) => {
-    const reg = registries.find((r) => r.id === regId);
-    return acc + parseCoef(reg?.coeficiente);
+  const totalVotedCoef = questionVotes.reduce((acc, v) => {
+    // Try to use stored votingPower, fallback to registry
+    let power = v.votingPower;
+    if (power === undefined) {
+      const reg = registries.find((r) => r.id === v.propertyOwnerId);
+      power = reg?.coeficiente;
+    }
+    return acc + parseCoef(power);
   }, 0);
-  const totalVotesCount = votersIds.length;
+
+  const totalVotesCount = questionVotes.length;
 
   // Quorum: Based on TOTAL Coefficient (Voted Coef / Total Coef)
   const quorumVoting = totalCoef > 0 ? (totalVotedCoef / totalCoef) * 100 : 0;
 
-  const shouldShowResults = isAdmin || q.status === QUESTION_STATUS.FINISHED;
+  const shouldShowResults =
+    isAdmin ||
+    q.status === QUESTION_STATUS.FINISHED ||
+    q.status === QUESTION_STATUS.LIVE;
 
   return (
     <div className="bg-[#FFFFFF] p-8 flex flex-col gap-6 rounded-3xl">
@@ -112,26 +123,20 @@ const QuestionCard = ({
             q.options?.map((opt, i) => {
               const isCreated = q.status === QUESTION_STATUS.CREATED;
 
-              const votesForOpt = Object.entries(answers).filter(([_, a]) => {
-                if (
-                  (q.type === QUESTION_TYPES.UNIQUE ||
-                    q.type === QUESTION_TYPES.YES_NO) &&
-                  a.option === opt
-                )
-                  return true;
-                if (
-                  q.type === QUESTION_TYPES.MULTIPLE &&
-                  Array.isArray(a.options) &&
-                  a.options.includes(opt)
-                )
-                  return true;
-                return false;
-              });
+              const votesForOpt = questionVotes.filter(
+                (v) => v.selectedOptions && v.selectedOptions.includes(opt),
+              );
 
               const votesForOptCount = votesForOpt.length;
-              const votesForOptCoef = votesForOpt.reduce((acc, [regId, _]) => {
-                const reg = registries.find((r) => r.id === regId);
-                return acc + parseCoef(reg?.coeficiente);
+              const votesForOptCoef = votesForOpt.reduce((acc, v) => {
+                let power = v.votingPower;
+                if (power === undefined) {
+                  const reg = registries.find(
+                    (r) => r.id === v.propertyOwnerId,
+                  );
+                  power = reg?.coeficiente;
+                }
+                return acc + parseCoef(power);
               }, 0);
 
               const displayPercentage = votesForOptCoef.toFixed(2);
@@ -178,15 +183,15 @@ const QuestionCard = ({
                 Respuestas de texto:
               </p>
               <div className="flex flex-col gap-3">
-                {Object.values(answers).map((a, idx) => (
+                {questionVotes.map((v, idx) => (
                   <div
                     key={idx}
                     className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-sm text-[#0E3C42] font-medium leading-relaxed"
                   >
-                    &ldquo;{a.answerText || a.option}&rdquo;
+                    &ldquo;{v.selectedOptions?.[0] || ""}&rdquo;
                   </div>
                 ))}
-                {Object.keys(answers).length === 0 && (
+                {questionVotes.length === 0 && (
                   <p className="text-sm text-gray-400 italic font-medium px-2">
                     No hay respuestas aún
                   </p>
@@ -240,7 +245,11 @@ const QuestionCard = ({
               onClick={() => onToggleStatus?.(q.id, q.status)}
               className="py-2 px-4 flex items-center gap-1"
               variant={
-                q.status === QUESTION_STATUS.CREATED ? "success" : q.status === QUESTION_STATUS.LIVE ? "warning" : "success"
+                q.status === QUESTION_STATUS.CREATED
+                  ? "success"
+                  : q.status === QUESTION_STATUS.LIVE
+                    ? "warning"
+                    : "success"
               }
             >
               <CustomIcon

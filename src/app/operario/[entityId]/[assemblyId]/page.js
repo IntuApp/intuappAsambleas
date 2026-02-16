@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -118,6 +118,31 @@ const AssemblyDashboardPage = () => {
   const [quorum, setQuorum] = useState(0);
   const [registeredCount, setRegisteredCount] = useState(0);
   const [blockedCount, setBlockedCount] = useState(0);
+  const [allRegistrations, setAllRegistrations] = useState([]);
+
+  const registeredPropertiesMap = useMemo(() => {
+    const map = new Map();
+    allRegistrations.forEach((reg) => {
+      (reg.representedProperties || []).forEach((prop) => {
+        if (prop.ownerId) {
+          map.set(prop.ownerId, {
+            ...prop,
+            mainDocument: reg.mainDocument,
+            firstName: reg.firstName,
+            lastName: reg.lastName,
+            email: reg.email,
+            phone: reg.phone,
+          });
+        }
+      });
+    });
+    return map;
+  }, [allRegistrations]);
+
+  const registeredOwnerIds = useMemo(
+    () => new Set(registeredPropertiesMap.keys()),
+    [registeredPropertiesMap],
+  );
 
   // UI State
   const [publicUrl, setPublicUrl] = useState("");
@@ -137,6 +162,22 @@ const AssemblyDashboardPage = () => {
   });
   const [editingQuestionId, setEditingQuestionId] = useState(null);
   const [viewingVotersFor, setViewingVotersFor] = useState(null);
+  const [votes, setVotes] = useState([]);
+
+  // Fetch Votes
+  useEffect(() => {
+    if (!assemblyId) return;
+    const vRef = doc(db, "assemblyVotes", assemblyId);
+    const unsub = onSnapshot(vRef, (snap) => {
+      if (snap.exists()) {
+        setVotes(snap.data().votes || []);
+      } else {
+        setVotes([]);
+      }
+    });
+    return () => unsub();
+  }, [assemblyId]);
+
   const [modalSearchTerm, setModalSearchTerm] = useState("");
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
@@ -154,11 +195,26 @@ const AssemblyDashboardPage = () => {
     }
 
     const assemblyRef = doc(db, "assembly", assemblyId);
+    let unsubRegs = () => {};
+
     const unsub = onSnapshot(assemblyRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = { id: docSnap.id, ...docSnap.data() };
         setAssembly(data);
         setSegmentTitle(assemblyId, data.name);
+
+        if (data.registrationRecordId) {
+          const regRef = doc(
+            db,
+            "assemblyRegistrations",
+            data.registrationRecordId,
+          );
+          unsubRegs = onSnapshot(regRef, (regSnap) => {
+            if (regSnap.exists()) {
+              setAllRegistrations(regSnap.data().registrations || []);
+            }
+          });
+        }
 
         // Auto-update status if time passed
         if (data.status === "create" && data.date && data.hour) {
@@ -184,7 +240,10 @@ const AssemblyDashboardPage = () => {
       setLoading(false);
     });
 
-    return () => unsub();
+    return () => {
+      unsub();
+      unsubRegs();
+    };
   }, [assemblyId, setSegmentTitle]);
 
   useEffect(() => {
@@ -244,28 +303,6 @@ const AssemblyDashboardPage = () => {
                 ...data,
               }));
               setRegistries(regs);
-
-              const registeredRegs = regs.filter(
-                (r) => r.registerInAssembly === true,
-              );
-              const totalC = regs.reduce(
-                (acc, item) =>
-                  acc +
-                  parseFloat(String(item.coeficiente || 0).replace(",", ".")),
-                0,
-              );
-              const regC = registeredRegs.reduce(
-                (acc, item) =>
-                  acc +
-                  parseFloat(String(item.coeficiente || 0).replace(",", ".")),
-                0,
-              );
-
-              setRegisteredCount(registeredRegs.length);
-              setBlockedCount(
-                regs.filter((r) => r.voteBlocked === true).length,
-              );
-              setQuorum(totalC > 0 ? (regC / totalC) * 100 : 0);
             }
           });
         }
@@ -281,25 +318,42 @@ const AssemblyDashboardPage = () => {
     setSegmentTitle,
   ]);
 
+  // Update Stats based on allRegistrations and registries
   useEffect(() => {
-    if (!assembly?.questions || assembly.questions.length === 0) {
-      // Use setTimeout to avoid synchronous state update during render/effect cycle
-      setTimeout(() => {
-        if (questions.length > 0) setQuestions([]);
-      }, 0);
-      return;
-    }
+    if (registries.length === 0) return;
 
-    const qRef = collection(db, "question");
-    const unsub = onSnapshot(qRef, (qSnap) => {
-      const qList = qSnap.docs
-        .map((d) => ({ id: d.id, ...d.data() }))
-        .filter((q) => assembly.questions.includes(q.id) && !q.isDeleted);
-      setQuestions(qList);
+    const totalC = registries.reduce(
+      (acc, item) =>
+        acc + parseFloat(String(item.coeficiente || 0).replace(",", ".")),
+      0,
+    );
+    const regC = registries
+      .filter((r) => registeredOwnerIds.has(r.id))
+      .reduce(
+        (acc, item) =>
+          acc + parseFloat(String(item.coeficiente || 0).replace(",", ".")),
+        0,
+      );
+
+    setRegisteredCount(registeredOwnerIds.size);
+    setBlockedCount(registries.filter((r) => r.voteBlocked === true).length);
+    setQuorum(totalC > 0 ? (regC / totalC) * 100 : 0);
+  }, [registries, registeredOwnerIds]);
+
+  useEffect(() => {
+    const qRef = doc(db, "assemblyQuestions", assemblyId);
+    const unsub = onSnapshot(qRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const qList = (data.questions || []).filter((q) => !q.isDeleted);
+        setQuestions(qList);
+      } else {
+        setQuestions([]);
+      }
     });
 
     return () => unsub();
-  }, [assembly?.questions, questions.length]);
+  }, [assemblyId]);
 
   const handleAddQuestion = async () => {
     if (!newQuestion.title) return toast.error("El título es requerido");
@@ -315,7 +369,11 @@ const AssemblyDashboardPage = () => {
     }
 
     if (editingQuestionId) {
-      const res = await updateQuestion(editingQuestionId, questionToSave);
+      const res = await updateQuestion(
+        assemblyId,
+        editingQuestionId,
+        questionToSave,
+      );
       if (res.success) {
         toast.success("Pregunta actualizada");
         setShowAddQuestion(false);
@@ -372,7 +430,7 @@ const AssemblyDashboardPage = () => {
     else if (currentStatus === QUESTION_STATUS.FINISHED)
       nextStatus = QUESTION_STATUS.LIVE;
 
-    const res = await updateQuestionStatus(qId, nextStatus);
+    const res = await updateQuestionStatus(assemblyId, qId, nextStatus);
     if (res.success) {
       toast.success(`Pregunta actualizada a ${nextStatus}`);
     }
@@ -399,9 +457,7 @@ const AssemblyDashboardPage = () => {
       }
 
       // Reset questions
-      if (assembly?.questions && assembly.questions.length > 0) {
-        await resetAllQuestionsAnswers(assembly.questions);
-      }
+      // await resetAllQuestionsAnswers(assemblyId); // TODO: Re-enable when implemented
 
       // Delete all active assembly users
       await deleteAllAssemblyUsers(assemblyId);
@@ -458,10 +514,11 @@ const AssemblyDashboardPage = () => {
   const updateStatus = async (newStatus, skipSuccessModal = false) => {
     try {
       if (newStatus === "finished") {
-        if (assembly?.questions && assembly.questions.length > 0) {
-          await finishAllLiveQuestions(assembly.questions);
+        if (questions && questions.length > 0) {
+          await finishAllLiveQuestions(assemblyId);
         }
       }
+
       const res = await updateAssembly(assemblyId, { status: newStatus });
       if (res.success) {
         if (!skipSuccessModal) {
@@ -1586,18 +1643,23 @@ const AssemblyDashboardPage = () => {
         {mainTab === "Asambleistas" ? (
           <>
             <AttendanceTable
-              registries={registries}
+              registries={registries.map((r) => {
+                const regInfo = registeredPropertiesMap.get(r.id);
+                return regInfo
+                  ? { ...r, ...regInfo, registerInAssembly: true }
+                  : { ...r, registerInAssembly: false };
+              })}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              assemblyType={assembly.type}
               onAction={(item, type) => {
                 if (type === "delete") handleToggleDelete(item.id, false);
                 else handleToggleDelete(item.id, true);
               }}
-              onAddRegistry={handleAddRegistry}
+              assemblyType={assembly.type}
               assembyStatus={assembly.status}
+              onAddRegistry={handleAddRegistry}
             />
 
             <VoteRestrictionSection
@@ -1614,6 +1676,7 @@ const AssemblyDashboardPage = () => {
             assembyStatus={assembly.status}
             questions={questions}
             registries={registries}
+            votes={votes}
             showAddQuestion={showAddQuestion}
             setShowAddQuestion={setShowAddQuestion}
             newQuestion={newQuestion}
@@ -1722,7 +1785,10 @@ const AssemblyDashboardPage = () => {
                   Total de asambleístas que votaron:
                 </span>
                 <span className="bg-[#ABE7E5] text-[#0E3C42] px-3 py-0.5 rounded-full text-xs font-black">
-                  {Object.keys(viewingVotersFor.answers || {}).length}
+                  {
+                    votes.filter((v) => v.questionId === viewingVotersFor.id)
+                      .length
+                  }
                 </span>
               </div>
             </div>
@@ -1740,25 +1806,37 @@ const AssemblyDashboardPage = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-50 text-[13px] font-bold text-[#838383]">
-                  {Object.entries(viewingVotersFor.answers || {})
-                    .filter(([regId, answer]) => {
-                      const reg = registries.find((r) => r.id === regId);
+                  {votes
+                    .filter(
+                      (v) =>
+                        v.questionId === viewingVotersFor.id &&
+                        v.selectedOptions,
+                    ) // Basic filter for question match
+                    .map((v) => {
+                      const reg = registries.find(
+                        (r) => r.id === v.propertyOwnerId,
+                      );
+                      // Adapt answer for usage in filters/rendering
+                      let answerText = "";
+                      if (v.selectedOptions && v.selectedOptions.length > 0) {
+                        answerText = v.selectedOptions.join(", ");
+                      }
+
+                      return { v, reg, answerText };
+                    })
+                    .filter(({ reg, answerText }) => {
                       const search = modalSearchTerm.toLowerCase();
                       if (!search) return true;
                       return (
                         reg?.propiedad?.toLowerCase().includes(search) ||
                         reg?.documento?.toLowerCase().includes(search) ||
                         reg?.grupo?.toLowerCase().includes(search) ||
-                        answer.option?.toLowerCase().includes(search) ||
-                        answer.options?.some((o) =>
-                          o.toLowerCase().includes(search),
-                        )
+                        answerText.toLowerCase().includes(search)
                       );
                     })
-                    .map(([regId, answer]) => {
-                      const reg = registries.find((r) => r.id === regId);
+                    .map(({ v, reg, answerText }) => {
                       return (
-                        <tr key={regId} className="hover:bg-gray-50 transition">
+                        <tr key={v.id} className="hover:bg-gray-50 transition">
                           <td className="py-4 px-6 text-center">
                             {reg?.tipo || "—"}
                           </td>
@@ -1775,9 +1853,7 @@ const AssemblyDashboardPage = () => {
                             {reg?.documento || "—"}
                           </td>
                           <td className="py-4 px-6 text-center text-[#8B9FFD]">
-                            {answer.option ||
-                              answer.options?.join(", ") ||
-                              (answer.answerText ? "Resp. Abierta" : "—")}
+                            {answerText || "—"}
                           </td>
                         </tr>
                       );

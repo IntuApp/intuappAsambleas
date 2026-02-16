@@ -12,6 +12,7 @@ import QuestionCard from "../question/QuestionCard";
 export default function QuestionsSection({
   questions,
   registries,
+  votes,
   showAddQuestion,
   setShowAddQuestion,
   newQuestion,
@@ -74,6 +75,7 @@ export default function QuestionsSection({
               key={q.id}
               q={q}
               registries={registries}
+              votes={votes}
               isAdmin={true}
               onEdit={handleEditQuestion}
               onToggleStatus={toggleQuestionStatus}

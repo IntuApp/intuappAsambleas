@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -114,6 +114,31 @@ const AssemblyDashboardPage = () => {
   const [quorum, setQuorum] = useState(0);
   const [registeredCount, setRegisteredCount] = useState(0);
   const [blockedCount, setBlockedCount] = useState(0);
+  const [allRegistrations, setAllRegistrations] = useState([]);
+
+  const registeredPropertiesMap = useMemo(() => {
+    const map = new Map();
+    allRegistrations.forEach((reg) => {
+      (reg.representedProperties || []).forEach((prop) => {
+        if (prop.ownerId) {
+          map.set(prop.ownerId, {
+            ...prop,
+            mainDocument: reg.mainDocument,
+            firstName: reg.firstName,
+            lastName: reg.lastName,
+            email: reg.email,
+            phone: reg.phone,
+          });
+        }
+      });
+    });
+    return map;
+  }, [allRegistrations]);
+
+  const registeredOwnerIds = useMemo(
+    () => new Set(registeredPropertiesMap.keys()),
+    [registeredPropertiesMap],
+  );
 
   // UI State
   const [publicUrl, setPublicUrl] = useState("");
@@ -133,6 +158,22 @@ const AssemblyDashboardPage = () => {
   });
   const [editingQuestionId, setEditingQuestionId] = useState(null);
   const [viewingVotersFor, setViewingVotersFor] = useState(null);
+  const [votes, setVotes] = useState([]);
+
+  // Fetch Votes
+  useEffect(() => {
+    if (!assemblyId) return;
+    const vRef = doc(db, "assemblyVotes", assemblyId);
+    const unsub = onSnapshot(vRef, (snap) => {
+      if (snap.exists()) {
+        setVotes(snap.data().votes || []);
+      } else {
+        setVotes([]);
+      }
+    });
+    return () => unsub();
+  }, [assemblyId]);
+
   const [modalSearchTerm, setModalSearchTerm] = useState("");
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
@@ -150,11 +191,26 @@ const AssemblyDashboardPage = () => {
     }
 
     const assemblyRef = doc(db, "assembly", assemblyId);
+    let unsubRegs = () => {};
+
     const unsub = onSnapshot(assemblyRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = { id: docSnap.id, ...docSnap.data() };
         setAssembly(data);
         setSegmentTitle(assemblyId, data.name);
+
+        if (data.registrationRecordId) {
+          const regRef = doc(
+            db,
+            "assemblyRegistrations",
+            data.registrationRecordId,
+          );
+          unsubRegs = onSnapshot(regRef, (regSnap) => {
+            if (regSnap.exists()) {
+              setAllRegistrations(regSnap.data().registrations || []);
+            }
+          });
+        }
 
         // Auto-update status if time passed
         if (data.status === "create" && data.date && data.hour) {
@@ -180,7 +236,10 @@ const AssemblyDashboardPage = () => {
       setLoading(false);
     });
 
-    return () => unsub();
+    return () => {
+      unsub();
+      unsubRegs();
+    };
   }, [assemblyId, setSegmentTitle]);
 
   useEffect(() => {
@@ -240,28 +299,6 @@ const AssemblyDashboardPage = () => {
                 ...data,
               }));
               setRegistries(regs);
-
-              const registeredRegs = regs.filter(
-                (r) => r.registerInAssembly === true,
-              );
-              const totalC = regs.reduce(
-                (acc, item) =>
-                  acc +
-                  parseFloat(String(item.coeficiente || 0).replace(",", ".")),
-                0,
-              );
-              const regC = registeredRegs.reduce(
-                (acc, item) =>
-                  acc +
-                  parseFloat(String(item.coeficiente || 0).replace(",", ".")),
-                0,
-              );
-
-              setRegisteredCount(registeredRegs.length);
-              setBlockedCount(
-                regs.filter((r) => r.voteBlocked === true).length,
-              );
-              setQuorum(totalC > 0 ? (regC / totalC) * 100 : 0);
             }
           });
         }
@@ -277,25 +314,42 @@ const AssemblyDashboardPage = () => {
     setSegmentTitle,
   ]);
 
+  // Update Stats based on allRegistrations and registries
   useEffect(() => {
-    if (!assembly?.questions || assembly.questions.length === 0) {
-      // Use setTimeout to avoid synchronous state update during render/effect cycle
-      setTimeout(() => {
-        if (questions.length > 0) setQuestions([]);
-      }, 0);
-      return;
-    }
+    if (registries.length === 0) return;
 
-    const qRef = collection(db, "question");
-    const unsub = onSnapshot(qRef, (qSnap) => {
-      const qList = qSnap.docs
-        .map((d) => ({ id: d.id, ...d.data() }))
-        .filter((q) => assembly.questions.includes(q.id) && !q.isDeleted);
-      setQuestions(qList);
+    const totalC = registries.reduce(
+      (acc, item) =>
+        acc + parseFloat(String(item.coeficiente || 0).replace(",", ".")),
+      0,
+    );
+    const regC = registries
+      .filter((r) => registeredOwnerIds.has(r.id))
+      .reduce(
+        (acc, item) =>
+          acc + parseFloat(String(item.coeficiente || 0).replace(",", ".")),
+        0,
+      );
+
+    setRegisteredCount(registeredOwnerIds.size);
+    setBlockedCount(registries.filter((r) => r.voteBlocked === true).length);
+    setQuorum(totalC > 0 ? (regC / totalC) * 100 : 0);
+  }, [registries, registeredOwnerIds]);
+
+  useEffect(() => {
+    const qRef = doc(db, "assemblyQuestions", assemblyId);
+    const unsub = onSnapshot(qRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const qList = (data.questions || []).filter((q) => !q.isDeleted);
+        setQuestions(qList);
+      } else {
+        setQuestions([]);
+      }
     });
 
     return () => unsub();
-  }, [assembly?.questions, questions.length]);
+  }, [assemblyId]);
 
   const handleAddQuestion = async () => {
     if (!newQuestion.title) return toast.error("El título es requerido");
@@ -311,7 +365,11 @@ const AssemblyDashboardPage = () => {
     }
 
     if (editingQuestionId) {
-      const res = await updateQuestion(editingQuestionId, questionToSave);
+      const res = await updateQuestion(
+        assemblyId,
+        editingQuestionId,
+        questionToSave,
+      );
       if (res.success) {
         toast.success("Pregunta actualizada");
         setShowAddQuestion(false);
@@ -368,7 +426,7 @@ const AssemblyDashboardPage = () => {
     else if (currentStatus === QUESTION_STATUS.FINISHED)
       nextStatus = QUESTION_STATUS.LIVE;
 
-    const res = await updateQuestionStatus(qId, nextStatus);
+    const res = await updateQuestionStatus(assemblyId, qId, nextStatus);
     if (res.success) {
       toast.success(`Pregunta actualizada a ${nextStatus}`);
     }
@@ -395,9 +453,7 @@ const AssemblyDashboardPage = () => {
       }
 
       // Reset questions
-      if (assembly?.questions && assembly.questions.length > 0) {
-        await resetAllQuestionsAnswers(assembly.questions);
-      }
+      // await resetAllQuestionsAnswers(assemblyId);
 
       // Delete all active assembly users
       await deleteAllAssemblyUsers(assemblyId);
@@ -434,10 +490,11 @@ const AssemblyDashboardPage = () => {
   const updateStatus = async (newStatus, skipSuccessModal = false) => {
     try {
       if (newStatus === "finished") {
-        if (assembly?.questions && assembly.questions.length > 0) {
-          await finishAllLiveQuestions(assembly.questions);
+        if (questions && questions.length > 0) {
+          await finishAllLiveQuestions(assemblyId);
         }
       }
+
       const res = await updateAssembly(assemblyId, { status: newStatus });
       if (res.success) {
         if (!skipSuccessModal) {
@@ -625,8 +682,10 @@ const AssemblyDashboardPage = () => {
     generalData.push(headers);
 
     // Filter AND Sort registries
-    // ACTIVE USERS ONLY: filter by registerInAssembly === true
-    const activeRegistries = registries.filter((r) => r.registerInAssembly);
+    // Use registeredPropertiesMap to identify who is registered
+    const activeRegistries = registries.filter((r) =>
+      registeredPropertiesMap.has(r.id),
+    );
 
     const sortedRegistries = [...activeRegistries].sort((a, b) => {
       const valA = a.propiedad || "";
@@ -671,17 +730,31 @@ const AssemblyDashboardPage = () => {
       const unit = reg.propiedad || "";
       const coef = reg.coeficiente || "0";
 
-      const fullName =
-        reg.firstName || reg.lastName
-          ? `${reg.firstName || ""} ${reg.lastName || ""}`.trim()
-          : "";
+      const registeredInfo = registeredPropertiesMap.get(reg.id);
 
-      const docVal = reg.userDocument || reg.documento || "";
-      const contactVal = reg.email || reg.phone || reg.phoneNumber || "";
+      const fullName = registeredInfo
+        ? `${registeredInfo.firstName || ""} ${registeredInfo.lastName || ""}`.trim()
+        : `${reg.firstName || ""} ${reg.lastName || ""}`.trim();
+
+      const docVal =
+        (registeredInfo ? registeredInfo.mainDocument : null) ||
+        reg.documento ||
+        "";
+      const contactVal =
+        (registeredInfo
+          ? registeredInfo.email || registeredInfo.phone
+          : null) ||
+        reg.email ||
+        reg.phone ||
+        "";
 
       let apoderadoVal = "";
-      if (reg.registerInAssembly) {
-        if (reg.role === "proxy") apoderadoVal = "Poder";
+      if (registeredInfo) {
+        if (
+          registeredInfo.role === "proxy" ||
+          registeredInfo.role === "Apoderado"
+        )
+          apoderadoVal = "Poder";
         else apoderadoVal = "Propietario";
       }
 
@@ -709,16 +782,15 @@ const AssemblyDashboardPage = () => {
         qData.push([]);
 
         // Stats
-        const answers = q.answers || {};
-        const votersIds = Object.keys(answers);
-        const totalVotes = votersIds.length;
+        const questionVotesList = votes.filter((v) => v.questionId === q.id);
+        const totalVotes = questionVotesList.length;
 
         const totalCoef = registries.reduce(
           (acc, r) => acc + parseCoef(r.coeficiente),
           0,
         );
-        const votedCoef = votersIds.reduce((acc, regId) => {
-          const r = registries.find((x) => x.id === regId);
+        const votedCoef = questionVotesList.reduce((acc, v) => {
+          const r = registries.find((x) => x.id === v.propertyOwnerId);
           return acc + parseCoef(r?.coeficiente);
         }, 0);
 
@@ -726,16 +798,13 @@ const AssemblyDashboardPage = () => {
         qData.push(["opcion", "votos", "porcentaje"]);
 
         (q.options || []).forEach((opt) => {
-          const votesForOpt = Object.entries(answers).filter(([_, ans]) => {
-            if (ans.option === opt) return true;
-            if (Array.isArray(ans.options) && ans.options.includes(opt))
-              return true;
-            return false;
+          const votesForOpt = questionVotesList.filter((v) => {
+            return v.selectedOptions && v.selectedOptions.includes(opt);
           });
 
           const count = votesForOpt.length;
-          const optCoef = votesForOpt.reduce((acc, [regId]) => {
-            const r = registries.find((x) => x.id === regId);
+          const optCoef = votesForOpt.reduce((acc, v) => {
+            const r = registries.find((x) => x.id === v.propertyOwnerId);
             return acc + parseCoef(r?.coeficiente);
           }, 0);
 
@@ -748,8 +817,9 @@ const AssemblyDashboardPage = () => {
         if (q.type === QUESTION_TYPES.OPEN) {
           qData.push([]);
           qData.push(["Respuestas de texto:"]);
-          Object.values(answers).forEach((a) => {
-            if (a.answerText) qData.push([a.answerText]);
+          questionVotesList.forEach((v) => {
+            const txt = v.selectedOptions?.[0];
+            if (txt) qData.push([txt]);
           });
         }
 
@@ -765,11 +835,10 @@ const AssemblyDashboardPage = () => {
           "Respuesta",
         ]);
 
-        const voterIds = Object.keys(answers);
-        const votersData = voterIds
-          .map((regId) => {
-            const reg = registries.find((r) => r.id === regId);
-            return { regId, reg, answer: answers[regId] };
+        const votersData = questionVotesList
+          .map((ans) => {
+            const reg = registries.find((r) => r.id === ans.propertyOwnerId);
+            return { reg, answer: ans };
           })
           .sort((a, b) => {
             const pA = a.reg?.propiedad || "";
@@ -781,23 +850,23 @@ const AssemblyDashboardPage = () => {
           if (!reg) return;
 
           let voteTime = "";
-          if (answer.votedAt) {
-            // Use Date from votedAt
-            voteTime = new Date(answer.votedAt).toLocaleString("es-CO");
+          if (answer.createdAt) {
+            voteTime = new Date(answer.createdAt).toLocaleString("es-CO");
           }
 
           let answerText = "";
-          if (answer.option) answerText = answer.option;
-          else if (Array.isArray(answer.options))
-            answerText = answer.options.join(", ");
-          else if (answer.answerText) answerText = answer.answerText;
+          if (q.type === QUESTION_TYPES.OPEN) {
+            answerText = answer.selectedOptions?.[0] || "";
+          } else {
+            answerText = answer.selectedOptions?.join(", ") || "";
+          }
 
           const unit = reg.propiedad || "";
           const fullName =
-            reg.firstName || reg.lastName
-              ? `${reg.firstName || ""} ${reg.lastName || ""}`.trim()
-              : "";
-          const docVal = reg.userDocument || "";
+            `${answer.firstName || ""} ${answer.lastName || ""}`.trim() ||
+            `${reg.firstName || ""} ${reg.lastName || ""}`.trim() ||
+            "";
+          const docVal = answer.userDocument || reg.documento || "";
 
           qData.push([voteTime, unit, fullName, docVal, answerText]);
         });
@@ -980,26 +1049,29 @@ const AssemblyDashboardPage = () => {
 
           ${questions
             .map((q) => {
-              const answers = q.answers || {};
-              const voterIds = Object.keys(answers);
+              const questionVotesList = votes.filter(
+                (v) => v.questionId === q.id,
+              );
 
-              if (voterIds.length === 0) return "";
+              if (questionVotesList.length === 0) return "";
 
-              const votesData = voterIds
-                .map((regId) => {
-                  const reg = registries.find((r) => r.id === regId);
-                  const ans = answers[regId];
+              const votesData = questionVotesList
+                .map((ans) => {
+                  const reg = registries.find(
+                    (r) => r.id === ans.propertyOwnerId,
+                  );
                   if (!reg) return null;
 
                   let respuesta = "";
-                  if (ans.option) respuesta = ans.option;
-                  else if (Array.isArray(ans.options))
-                    respuesta = ans.options.join(", ");
-                  else if (ans.answerText) respuesta = ans.answerText;
+                  if (q.type === QUESTION_TYPES.OPEN) {
+                    respuesta = ans.selectedOptions?.[0] || "-";
+                  } else {
+                    respuesta = ans.selectedOptions?.join(", ") || "-";
+                  }
 
                   return {
-                    votedAt: ans.votedAt
-                      ? new Date(ans.votedAt).toLocaleString("es-CO", {
+                    votedAt: ans.createdAt
+                      ? new Date(ans.createdAt).toLocaleString("es-CO", {
                           month: "numeric",
                           day: "numeric",
                           year: "numeric",
@@ -1011,9 +1083,10 @@ const AssemblyDashboardPage = () => {
                     propiedad: reg.propiedad || "-",
                     coeficiente: parseCoef(reg.coeficiente).toFixed(4),
                     nombre:
+                      `${ans.firstName || ""} ${ans.lastName || ""}`.trim() ||
                       `${reg.firstName || ""} ${reg.lastName || ""}`.trim() ||
                       "-",
-                    apoderado: reg.role === "proxy",
+                    apoderado: ans.role === "proxy" || ans.role === "Apoderado",
                     respuesta: respuesta,
                   };
                 })
@@ -1434,18 +1507,23 @@ const AssemblyDashboardPage = () => {
         {mainTab === "Asambleistas" ? (
           <>
             <AttendanceTable
-              registries={registries}
+              registries={registries.map((r) => {
+                const regInfo = registeredPropertiesMap.get(r.id);
+                return regInfo
+                  ? { ...r, ...regInfo, registerInAssembly: true }
+                  : { ...r, registerInAssembly: false };
+              })}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              assemblyType={assembly.type}
               onAction={(item, type) => {
                 if (type === "delete") handleToggleDelete(item.id, false);
                 else handleToggleDelete(item.id, true);
               }}
+              assemblyType={entity?.type}
+              assembyStatus={assembly?.status}
               onAddRegistry={handleAddRegistry}
-              assembyStatus={assembly.status}
             />
 
             <VoteRestrictionSection
@@ -1462,6 +1540,7 @@ const AssemblyDashboardPage = () => {
             assembyStatus={assembly.status}
             questions={questions}
             registries={registries}
+            votes={votes}
             showAddQuestion={showAddQuestion}
             setShowAddQuestion={setShowAddQuestion}
             newQuestion={newQuestion}
@@ -1570,7 +1649,10 @@ const AssemblyDashboardPage = () => {
                   Total de asambleístas que votaron:
                 </span>
                 <span className="bg-[#ABE7E5] text-[#0E3C42] px-3 py-0.5 rounded-full text-xs font-black">
-                  {Object.keys(viewingVotersFor.answers || {}).length}
+                  {
+                    votes.filter((v) => v.questionId === viewingVotersFor.id)
+                      .length
+                  }
                 </span>
               </div>
             </div>
@@ -1588,25 +1670,39 @@ const AssemblyDashboardPage = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-50 text-[13px] font-bold text-[#838383]">
-                  {Object.entries(viewingVotersFor.answers || {})
-                    .filter(([regId, answer]) => {
-                      const reg = registries.find((r) => r.id === regId);
+                  {votes
+                    .filter(
+                      (v) =>
+                        v.questionId === viewingVotersFor.id &&
+                        v.selectedOptions,
+                    ) // Basic filter for question match
+                    .map((v) => {
+                      const reg = registries.find(
+                        (r) => r.id === v.propertyOwnerId,
+                      );
+                      // Adapt answer for usage in filters/rendering
+                      let answerText = "";
+                      if (v.selectedOptions && v.selectedOptions.length > 0) {
+                        answerText = v.selectedOptions.join(", ");
+                      }
+
+                      return { v, reg, answerText };
+                    })
+                    .filter(({ reg, answerText }) => {
+                      const regInfo = registeredPropertiesMap.get(reg?.id);
                       const search = modalSearchTerm.toLowerCase();
                       if (!search) return true;
                       return (
                         reg?.propiedad?.toLowerCase().includes(search) ||
                         reg?.documento?.toLowerCase().includes(search) ||
+                        regInfo?.mainDocument?.toLowerCase().includes(search) ||
                         reg?.grupo?.toLowerCase().includes(search) ||
-                        answer.option?.toLowerCase().includes(search) ||
-                        answer.options?.some((o) =>
-                          o.toLowerCase().includes(search),
-                        )
+                        answerText.toLowerCase().includes(search)
                       );
                     })
-                    .map(([regId, answer]) => {
-                      const reg = registries.find((r) => r.id === regId);
+                    .map(({ v, reg, answerText }) => {
                       return (
-                        <tr key={regId} className="hover:bg-gray-50 transition">
+                        <tr key={v.id} className="hover:bg-gray-50 transition">
                           <td className="py-4 px-6 text-center">
                             {reg?.tipo || "—"}
                           </td>
@@ -1620,12 +1716,13 @@ const AssemblyDashboardPage = () => {
                             {reg?.coeficiente || "0"}
                           </td>
                           <td className="py-4 px-6 text-center">
-                            {reg?.documento || "—"}
+                            {registeredPropertiesMap.get(reg?.id)
+                              ?.mainDocument ||
+                              reg?.documento ||
+                              "—"}
                           </td>
                           <td className="py-4 px-6 text-center text-[#8B9FFD]">
-                            {answer.option ||
-                              answer.options?.join(", ") ||
-                              (answer.answerText ? "Resp. Abierta" : "—")}
+                            {answerText || "—"}
                           </td>
                         </tr>
                       );

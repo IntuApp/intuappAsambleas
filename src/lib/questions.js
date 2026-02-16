@@ -7,7 +7,14 @@ import {
   serverTimestamp,
   arrayUnion,
   getDoc,
+  setDoc,
+  query,
+  where,
+  getDocs,
+  writeBatch,
+  deleteDoc,
 } from "firebase/firestore";
+import { v4 as uuidv4 } from "uuid";
 
 export const QUESTION_TYPES = {
   MULTIPLE: "MULTIPLE",
@@ -24,25 +31,39 @@ export const QUESTION_STATUS = {
 };
 
 /**
- * Creates a new question and links it to an assembly
+ * Creates a new question within the assembly's question document
  */
 export async function createQuestion(assemblyId, questionData) {
   try {
-    const questionRef = await addDoc(collection(db, "question"), {
+    const newQuestionId = uuidv4();
+    const newQuestion = {
+      id: newQuestionId,
       ...questionData,
-      status: QUESTION_STATUS.CREATED,
-      isDeleted: false,
-      answers: {}, // Map of registryId -> answer data
-      createdAt: serverTimestamp(),
-    });
+      status: QUESTION_STATUS.CREATED, // CREATED, LIVE, FINISHED, CANCELED
+      createdAt: new Date().toISOString(),
+    };
 
-    // Link to assembly
-    const assemblyRef = doc(db, "assembly", assemblyId);
-    await updateDoc(assemblyRef, {
-      questions: arrayUnion(questionRef.id),
-    });
+    // Ensure minSelections is null if not multiple
+    if (newQuestion.type !== QUESTION_TYPES.MULTIPLE) {
+      newQuestion.minSelections = null;
+    }
 
-    return { success: true, id: questionRef.id };
+    const assemblyQuestionsRef = doc(db, "assemblyQuestions", assemblyId);
+
+    // Check if doc exists, if not create it
+    const docSnap = await getDoc(assemblyQuestionsRef);
+    if (!docSnap.exists()) {
+      await setDoc(assemblyQuestionsRef, {
+        assemblyId,
+        questions: [newQuestion],
+      });
+    } else {
+      await updateDoc(assemblyQuestionsRef, {
+        questions: arrayUnion(newQuestion),
+      });
+    }
+
+    return { success: true, id: newQuestionId };
   } catch (error) {
     console.error("Error creating question:", error);
     return { success: false, error };
@@ -50,12 +71,29 @@ export async function createQuestion(assemblyId, questionData) {
 }
 
 /**
- * Updates an existing question
+ * Updates an existing question in the array
+ * Note: Firestore array updates are tricky. We might need to read, modify, write.
+ * Or usage of arrayRemove/arrayUnion if we replace the whole object.
+ * For simplicity and atomicity, we'll read-modify-write here or assume the passed object is complete.
  */
-export async function updateQuestion(questionId, questionData) {
+export async function updateQuestion(assemblyId, questionId, updatedData) {
   try {
-    const questionRef = doc(db, "question", questionId);
-    await updateDoc(questionRef, questionData);
+    const assemblyQuestionsRef = doc(db, "assemblyQuestions", assemblyId);
+    const docSnap = await getDoc(assemblyQuestionsRef);
+
+    if (!docSnap.exists())
+      return { success: false, error: "No questions found" };
+
+    const data = docSnap.data();
+    const questions = data.questions || [];
+    const index = questions.findIndex((q) => q.id === questionId);
+
+    if (index === -1) return { success: false, error: "Question not found" };
+
+    const updatedQuestion = { ...questions[index], ...updatedData };
+    questions[index] = updatedQuestion;
+
+    await updateDoc(assemblyQuestionsRef, { questions });
     return { success: true };
   } catch (error) {
     console.error("Error updating question:", error);
@@ -66,59 +104,110 @@ export async function updateQuestion(questionId, questionData) {
 /**
  * Updates question status
  */
-export async function updateQuestionStatus(questionId, status) {
-  try {
-    const questionRef = doc(db, "question", questionId);
-    await updateDoc(questionRef, { status });
-    return { success: true };
-  } catch (error) {
-    console.error("Error updating question status:", error);
-    return { success: false, error };
-  }
+export async function updateQuestionStatus(assemblyId, questionId, status) {
+  return updateQuestion(assemblyId, questionId, { status });
 }
 
 /**
  * Submits a vote for a question
- * registryId: unique identifier for the voter
- * answerData: the chosen option(s) or text
+ * Validates blocking and min selections
+ * Uses "assemblyVotes" collection (Single Doc per Assembly) pattern.
  */
-export async function submitVote(questionId, registryId, answerData) {
+export async function submitVote({
+  assemblyId,
+  questionId,
+  propertyOwnerId,
+  registrationId,
+  selectedOptions,
+  votingPower,
+  property, // Passed for validation (votingBlocked)
+  question, // Passed for validation (minSelections, type)
+}) {
   try {
-    const questionRef = doc(db, "question", questionId);
+    // 1. Validation: Blocked
+    if (property.votingBlocked) {
+      throw new Error("Esta propiedad está bloqueada para votar");
+    }
 
-    // We update the answers map. RegistryId is the key to ensure uniqueness.
-    await updateDoc(questionRef, {
-      [`answers.${registryId}`]: {
-        ...answerData,
-        votedAt: new Date().toISOString(),
+    // 2. Validation: Min Selections
+    if (question.type === QUESTION_TYPES.MULTIPLE && question.minSelections) {
+      if (selectedOptions.length < question.minSelections) {
+        throw new Error(
+          `Debe seleccionar al menos ${question.minSelections} opciones`,
+        );
+      }
+    }
+
+    // 3. Create Vote Object
+    const voteObject = {
+      assemblyId,
+      questionId,
+      propertyOwnerId,
+      registrationId,
+      selectedOptions,
+      votingPower,
+      createdAt: new Date().toISOString(), // Use string format for arrayUnion compatibility
+    };
+
+    // 4. Update Assembly Votes Document
+    const votesRef = doc(db, "assemblyVotes", assemblyId);
+
+    // Check if doc exists (optimization: try update, catch fail -> set)
+    // Or just set with merge on a field? arrayUnion works with updateDoc.
+    // We need to ensure the doc exists.
+    // Simplest: setDoc with merge: true? arrayUnion requires updateDoc usually or setDoc with merge.
+    // However, arrayUnion on a non-existent doc with setDoc might work or not.
+    // Safest: setDoc with merge: true for creation, then update or just setDoc.
+
+    // To minimize reads, we can try update, if fails, set.
+    // But standard pattern: ensure doc exists.
+    // Let's assume it might not exist if it's the first vote.
+
+    await setDoc(
+      votesRef,
+      {
+        votes: arrayUnion(voteObject),
       },
-    });
+      { merge: true },
+    );
 
     return { success: true };
   } catch (error) {
     console.error("Error submitting vote:", error);
-    return { success: false, error };
+    return { success: false, error: error.message };
   }
 }
 
 /**
- * Submits multiple votes for a question in a single operation
- * votes: Array of { registryId, answer }
+ * Submits votes in batch (Block Voting)
+ * votes: Array of validated vote objects prepared by the caller.
+ * Uses "assemblyVotes" collection (Single Doc per Assembly).
  */
-export async function submitBatchVotes(questionId, votes) {
+export async function submitBatchVotes(assemblyId, questionId, votesToSubmit) {
   try {
-    const questionRef = doc(db, "question", questionId);
-    const updates = {};
-    const timestamp = new Date().toISOString();
+    const votesWithTimestamp = votesToSubmit.map((v) => ({
+      assemblyId,
+      questionId,
+      propertyOwnerId: v.propertyOwnerId,
+      registrationId: v.registrationId,
+      selectedOptions: v.selectedOptions,
+      votingPower: v.votingPower,
+      createdAt: new Date().toISOString(),
+    }));
 
-    votes.forEach((v) => {
-      updates[`answers.${v.registryId}`] = {
-        ...v.answer,
-        votedAt: timestamp,
-      };
-    });
+    const votesRef = doc(db, "assemblyVotes", assemblyId);
+    // Use arrayUnion with spread... but arrayUnion takes varargs, not array.
+    // Does Firestore JS SDK support array? arrayUnion(...votesWithTimestamp)
+    // There is a limit on arguments (varargs).
+    // If votesWithTimestamp is large (e.g. 50 items), it's fine.
 
-    await updateDoc(questionRef, updates);
+    await setDoc(
+      votesRef,
+      {
+        votes: arrayUnion(...votesWithTimestamp),
+      },
+      { merge: true },
+    );
 
     return { success: true };
   } catch (error) {
@@ -127,48 +216,77 @@ export async function submitBatchVotes(questionId, votes) {
   }
 }
 
-export async function deleteQuestion(questionId) {
-  try {
-    const questionRef = doc(db, "question", questionId);
-    await updateDoc(questionRef, { isDeleted: true });
-    return { success: true };
-  } catch (error) {
-    return { success: false, error };
-  }
+// Helper to delete (logically or remove from array)
+export async function deleteQuestion(assemblyId, questionId) {
+  // Use updateQuestion to set isDeleted: true
+  return updateQuestion(assemblyId, questionId, { isDeleted: true });
 }
 
-export async function resetAllQuestionsAnswers(questionIds) {
+/**
+ * Finishes all live questions for an assembly
+ * (Updated for new schema)
+ */
+export async function finishAllLiveQuestions(assemblyId) {
   try {
-    const batchPromises = questionIds.map((id) => {
-      const qRef = doc(db, "question", id);
-      return updateDoc(qRef, {
-        answers: {},
-        status: QUESTION_STATUS.CREATED,
-      });
-    });
-    await Promise.all(batchPromises);
-    return { success: true };
-  } catch (error) {
-    console.error("Error resetting questions:", error);
-    return { success: false, error };
-  }
-}
+    const assemblyQuestionsRef = doc(db, "assemblyQuestions", assemblyId);
+    const docSnap = await getDoc(assemblyQuestionsRef);
 
-export async function finishAllLiveQuestions(questionIds) {
-  try {
-    const batchPromises = questionIds.map(async (id) => {
-      const qRef = doc(db, "question", id);
-      const qSnap = await getDoc(qRef);
-      if (qSnap.exists() && qSnap.data().status === QUESTION_STATUS.LIVE) {
-        return updateDoc(qRef, {
-          status: QUESTION_STATUS.FINISHED,
-        });
+    if (!docSnap.exists()) return { success: true };
+
+    const data = docSnap.data();
+    const questions = data.questions || [];
+    let changed = false;
+
+    const updatedQuestions = questions.map((q) => {
+      if (q.status === QUESTION_STATUS.LIVE) {
+        changed = true;
+        return { ...q, status: QUESTION_STATUS.FINISHED };
       }
+      return q;
     });
-    await Promise.all(batchPromises);
+
+    if (changed) {
+      await updateDoc(assemblyQuestionsRef, { questions: updatedQuestions });
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Error finishing questions:", error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Resets all questions (clears votes) for an assembly.
+ * Deletes all vote documents for the given assembly.
+ */
+/**
+ * Resets all questions (clears votes) for an assembly.
+ * Deletes the assemblyVotes document for the given assembly.
+ */
+export async function resetAllQuestionsAnswers(assemblyId) {
+  try {
+    // 1. Delete the "assemblyVotes" doc
+    const votesRef = doc(db, "assemblyVotes", assemblyId);
+    await deleteDoc(votesRef);
+
+    // 2. Also reset question status to CREATED
+    const assemblyQuestionsRef = doc(db, "assemblyQuestions", assemblyId);
+    const docSnap = await getDoc(assemblyQuestionsRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const questions = data.questions || [];
+      const updatedQuestions = questions.map((q) => ({
+        ...q,
+        status: QUESTION_STATUS.CREATED,
+      }));
+      await updateDoc(assemblyQuestionsRef, { questions: updatedQuestions });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error resetting questions:", error);
     return { success: false, error };
   }
 }

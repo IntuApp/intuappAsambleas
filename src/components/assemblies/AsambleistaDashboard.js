@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { db } from "@/lib/firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 import {
@@ -23,6 +23,12 @@ import {
   MessageCircle,
 } from "lucide-react";
 import QuestionCard from "../question/QuestionCard";
+import CustomButton from "../basics/CustomButton";
+import CustomText from "../basics/CustomText";
+import CustomIcon from "../basics/CustomIcon";
+import { ICON_PATHS } from "@/constans/iconPaths";
+import CustomTypeAssembly from "../basics/CustomTypeAssembly";
+import CustomTypePropertie from "../assemblyMember/CustomTypePropertie";
 
 const QUESTION_TYPES = {
   MULTIPLE: "MULTIPLE",
@@ -61,6 +67,8 @@ export default function AsambleistaDashboard({
   onJoinMeeting,
   onLogout,
   questions = [],
+  votes = [],
+  allRegistrations = [],
   renderQuestion,
   userVotingPreference,
   onSetVotingPreference,
@@ -68,61 +76,47 @@ export default function AsambleistaDashboard({
   const [activeTab, setActiveTab] = useState("inicio");
   const [resultSubTab, setResultSubTab] = useState("global"); // 'global' | 'mine'
   const [openFaq, setOpenFaq] = useState(null);
-  const [registrationData, setRegistrationData] = useState(null);
 
-  useEffect(() => {
-    if (assembly?.registrationRecordId && user?.document) {
-      const unsub = onSnapshot(
-        doc(db, "assemblyRegistrations", assembly.registrationRecordId),
-        (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            const myReg = data.registrations?.find(
-              (r) => r.mainDocument === user.document,
-            );
-            if (myReg) {
-              setRegistrationData(myReg);
-            }
-          }
-        },
-      );
-      return () => unsub();
-    }
-  }, [assembly?.registrationRecordId, user?.document]);
-
-  // Sort questions: Newest first (assuming ID or some timestamp, but array usually comes sorted or we reverse)
-  // User wants newest first.
-  const sortedQuestions = [...questions].reverse();
   console.log(user);
 
-  // Helper to get total votes
-  const getQuestionStats = (q) => {
-    const totalVotes = Object.keys(q.answers || {}).length;
-    // Group by answer
-    const counts = {};
-    Object.values(q.answers || {}).forEach((ans) => {
-      // ans is { option: "..." } or { options: [...] } or { answerText: "..." }
-      if (ans.option) {
-        counts[ans.option] = (counts[ans.option] || 0) + 1;
-      } else if (ans.options) {
-        ans.options.forEach((o) => (counts[o] = (counts[o] || 0) + 1));
-      }
-      // Open text not easily charted
-    });
-    return { totalVotes, counts };
-  };
+  // Filter votes for current user
+  const userVotes = votes.filter((v) =>
+    user?.myRegistries?.some((r) => r.id === v.propertyOwnerId),
+  );
 
-  // Calculate Stats
-  const registeredCount = registries.filter((r) => r.registerInAssembly).length;
+  const registrationData = useMemo(() => {
+    return allRegistrations.find((r) => r.mainDocument === user?.userDocument);
+  }, [allRegistrations, user?.userDocument]);
+
+  // Sort questions: Newest first
+  const sortedQuestions = [...questions].reverse();
+
+  // Calculate Stats from allRegistrations
+  const registeredOwnerIds = useMemo(() => {
+    const ids = new Set();
+    allRegistrations.forEach((reg) => {
+      (reg.representedProperties || []).forEach((prop) => {
+        if (prop.ownerId) ids.add(prop.ownerId);
+      });
+    });
+    return ids;
+  }, [allRegistrations]);
+
+  const registeredCount = registeredOwnerIds.size;
   const totalCount = registries.length;
-  // Coefficient sum
+
   const totalCoeff = registries.reduce(
-    (acc, curr) => acc + parseFloat(curr.coeficiente || 0),
+    (acc, curr) =>
+      acc + parseFloat(String(curr.coeficiente || 0).replace(",", ".")),
     0,
   );
   const registeredCoeff = registries
-    .filter((r) => r.registerInAssembly)
-    .reduce((acc, curr) => acc + parseFloat(curr.coeficiente || 0), 0);
+    .filter((r) => registeredOwnerIds.has(r.id))
+    .reduce(
+      (acc, curr) =>
+        acc + parseFloat(String(curr.coeficiente || 0).replace(",", ".")),
+      0,
+    );
 
   const quorumPercentage =
     totalCoeff > 0 ? (registeredCoeff / totalCoeff) * 100 : 0;
@@ -132,12 +126,12 @@ export default function AsambleistaDashboard({
       {/* Sidebar */}
       <aside className="w-24 bg-white border-r border-gray-100 flex flex-col items-center py-8 z-20 fixed h-full left-0 top-0 overflow-y-auto hidden md:flex">
         <div className="mb-12">
-          <div className="w-12 h-12 bg-[#8B9DFF] rounded-xl flex items-center justify-center text-white font-black text-xl">
-            A
+          <div className="">
+            <img src="/logos/logo-header.png" alt="Logo" />
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 w-full px-2 flex-1">
+        <div className="flex flex-col gap-4 w-full px-2 flex-1 ">
           <NavItem
             id="inicio"
             icon={Home}
@@ -199,98 +193,134 @@ export default function AsambleistaDashboard({
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-24 p-6 md:p-12 relative overflow-y-auto">
+      <main className="flex-1 md:ml-32 md:mr-16 p-6 md:p-12 md:gap-6 flex flex-col relative overflow-y-auto">
         {/* Top Header */}
-        <div className="flex justify-between items-center mb-12">
-          <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center text-gray-400">
-            <Home size={18} />
+        <div className="flex justify-between items-center">
+          <div className="bg-white rounded-full p-2 flex items-center gap-2">
+            <CustomIcon
+              path={ICON_PATHS.home}
+              className="text-[#000000]"
+              size={20}
+            />
+            {activeTab !== "inicio" && (
+              <CustomText
+                variant="labelM"
+                className="text-black font-bold pt-0.5"
+              >
+                {">"}
+              </CustomText>
+            )}
+            {activeTab === "resultados" && (
+              <CustomText variant="labelM" className="text-black">
+                Resultados
+              </CustomText>
+            )}
+            {activeTab === "perfil" && (
+              <CustomText variant="labelM" className="text-black ">
+                Perfil
+              </CustomText>
+            )}
+            {activeTab === "ayuda" && (
+              <CustomText variant="labelM" className="text-black ">
+                Ayuda
+              </CustomText>
+            )}
           </div>
 
-          <button
-            onClick={onLogout}
-            className="bg-[#0E3C42] text-white pl-4 pr-1 py-1 rounded-full flex items-center gap-3 shadow-lg hover:shadow-xl transition-all"
-          >
-            <span className="text-sm font-bold tracking-widest font-mono">
-              {user?.document || "User"}
-            </span>
-            <div className="w-8 h-8 rounded-full bg-[#1a5c63] flex items-center justify-center">
-              <User size={14} />
+          <div className="bg-[#0E3C42] border-[#1D7D89] border flex items-center justify-between gap-2 py-1 pl-2 pr-1 rounded-full">
+            <CustomText variant="labelM" className="text-white font-bold">
+              {user?.userDocument || "User"}
+            </CustomText>
+            <div className="w-8 h-8 rounded-full bg-[#ABE7E5] flex items-center justify-center">
+              <CustomIcon
+                path={ICON_PATHS.person}
+                className="text-[#1C6168]"
+                size={24}
+              />
             </div>
-          </button>
+          </div>
         </div>
 
         {activeTab === "inicio" && (
-          <div className="animate-in fade-in duration-500">
+          <div className="flex flex-col gap-6">
             {/* Welcome */}
-            <h1 className="text-4xl font-extrabold text-[#0E3C42] mb-10">
+            <CustomText variant="Title" className="text-[#0E3C42]">
               Hola, {user?.firstName || "Asambleísta"}!
-            </h1>
+            </CustomText>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Assembly Info Card */}
-              <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 flex flex-col justify-between min-h-[220px] relative overflow-hidden group">
-                <div className="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-indigo-50 to-transparent opacity-50 rounded-r-[32px]"></div>
-
-                <div className="z-10">
-                  <h2 className="text-2xl font-bold text-[#0E3C42] mb-1">
-                    {assembly.name}
-                  </h2>
-                  <p className="text-gray-500 font-medium mb-6">
-                    {entity?.name}
-                  </p>
-
-                  <div className="flex items-center gap-4 text-sm text-gray-500 font-semibold">
-                    <span>
-                      {assembly.date} - {assembly.hour}
-                    </span>
-                  </div>
+              <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 flex flex-col justify-evenly max-h-[200px] relative">
+                <div className="absolute flex justify-end right-0 top-0 w-1/2 h-full to-transparent rounded-r-[32px]">
+                  <img src="logos/decorations/figureTwo.png" alt="" />
                 </div>
 
-                <div className="mt-8 z-10">
-                  <span className="bg-[#E0E7FF] text-[#6366F1] px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center w-max gap-2">
-                    <Video size={14} /> {assembly.type}
-                  </span>
+                <div className="z-10 flex flex-col items-start gap-0.5">
+                  <CustomText
+                    variant="bodyX"
+                    className="text-[#0E3C42] font-bold"
+                  >
+                    Asamblea {assembly.name}
+                  </CustomText>
+                  <CustomText
+                    variant="labelL"
+                    className="text-[#3D3D44] font-regular"
+                  >
+                    {entity?.name}
+                  </CustomText>
+
+                  <CustomText
+                    variant="labelL"
+                    className="text-[#3D3D44] font-regular"
+                  >
+                    {assembly.date} - {assembly.hour}
+                  </CustomText>
+                </div>
+                <div className="flex justify-start">
+                  <CustomTypeAssembly
+                    type={assembly.type}
+                    className="py-2 px-4 z-10"
+                  />
                 </div>
               </div>
 
               {/* Join Call Card & Questions */}
-              <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 flex flex-col justify-between min-h-[220px] max-h-[600px] overflow-y-auto">
-                {questions && questions.length > 0 ? (
-                  <div className="flex flex-col gap-6 w-full mb-6">
-                    <h3 className="font-bold text-[#0E3C42] flex items-center gap-2">
-                      <HelpCircle size={20} /> Votaciones
-                    </h3>
-                    {sortedQuestions.map((q) => (
-                      <div key={q.id}>{renderQuestion(q)}</div>
-                    ))}
+              <div className="shadow-sm border border-gray-100 flex flex-col justify-between max-h-[220px] overflow-y-auto">
+                <div className="flex items-center gap-4 bg-white rounded-3xl p-8">
+                  <div className="bg-[#EEF0FF] p-1 rounded-md">
+                    <CustomIcon
+                      path={ICON_PATHS.vote}
+                      className="text-[#6A7EFF]"
+                      size={40}
+                    />
                   </div>
-                ) : (
-                  <div className="bg-indigo-50 rounded-2xl p-4 flex items-start gap-4 mb-6">
-                    <div className="bg-[#8B9DFF] p-2 rounded-lg text-white shrink-0">
-                      <Users size={20} />
-                    </div>
-                    <p className="text-sm text-[#0E3C42] font-medium leading-relaxed">
-                      Las preguntas aparecerán aquí, una por una, cuando el
-                      operador las active. O únete a la transmisión en vivo para
-                      participar verbalmente.
-                    </p>
-                  </div>
-                )}
+                  <CustomText
+                    variant="labelL"
+                    className="text-[#0E3C42] font-medium leading-relaxed"
+                  >
+                    Las preguntas aparecerán aquí, una por una, cuando el
+                    operador las active.
+                  </CustomText>
+                </div>
 
                 {/* Join Button */}
                 {assembly.type !== "Presencial" && (
-                  <div className="mt-auto pt-4 border-t border-gray-100">
-                    <button
+                  <div className="mt-auto pt-4 border-gray-100">
+                    <CustomButton
                       onClick={onJoinMeeting}
                       disabled={assembly.status !== "started"}
-                      className={`w-full font-bold py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-3 ${
-                        assembly.status === "started"
-                          ? "bg-[#8B9DFF] hover:bg-[#7a8ce0] text-white shadow-indigo-100"
-                          : "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
-                      }`}
+                      variant="primary"
+                      className="w-full flex items-center justify-center gap-3 py-3"
                     >
-                      <Video size={20} /> Unirse a la videollamada / Votar
-                    </button>
+                      <CustomIcon
+                        path={ICON_PATHS.videoCam}
+                        className="text-[#000000]"
+                        size={24}
+                      />
+                      <CustomText variant="labelL" className="font-bold">
+                        Unirse a la videollamada
+                      </CustomText>
+                    </CustomButton>
                     {assembly.status !== "started" && (
                       <p className="text-center text-xs text-gray-400 font-bold mt-2">
                         {assembly.status === "finished"
@@ -302,48 +332,73 @@ export default function AsambleistaDashboard({
                 )}
               </div>
             </div>
+            <div className="flex flex-col gap-3">
+              <CustomText variant="bodyX" className="font-bold text-[#0E3C42]">
+                Asistencia
+              </CustomText>
 
-            <h3 className="text-xl font-bold text-[#0E3C42] mb-6">
-              Asistencia
-            </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Quorum Card */}
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex items-center justify-between">
+                  <div className="flex flex-col gap-1 w-full">
+                    <div className="flex items-center justify-between gap-2">
+                      <CustomText
+                        variant="bodyX"
+                        className="text-[#1F1F23] font-medium"
+                      >
+                        Quórum
+                      </CustomText>
+                      <div className="bg-[#EEF0FF] p-2 rounded-md">
+                        <CustomIcon
+                          path={ICON_PATHS.donutSmall}
+                          className="text-[#6A7EFF] "
+                          size={24}
+                        />
+                      </div>
+                    </div>
+                    <CustomText
+                      variant="TitleL"
+                      className="text-[#1F1F23] font-bold"
+                    >
+                      {quorumPercentage.toFixed(2)}%
+                    </CustomText>
+                    <CustomText
+                      variant="bodyL"
+                      className="text-[#3D3D44] font-regular"
+                    >
+                      porcentaje de registrados
+                    </CustomText>
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Quorum Card */}
-              <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 flex items-center justify-between">
-                <div>
-                  <h4 className="text-lg font-bold text-[#0E3C42] mb-1">
-                    Quórum
-                  </h4>
-                  <p className="text-4xl font-extrabold text-[#0E3C42] mb-1">
-                    {quorumPercentage.toFixed(2)}%
-                  </p>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wide">
-                    porcentaje de registrados
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-[#8B9DFF]">
-                  <BarChart2 size={24} />
-                </div>
-              </div>
-
-              {/* Attendance Card */}
-              <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 flex items-center justify-between">
-                <div>
-                  <h4 className="text-lg font-bold text-[#0E3C42] mb-1">
-                    Asistencia
-                  </h4>
-                  <p className="text-4xl font-extrabold text-[#0E3C42] mb-1">
-                    {registeredCount}{" "}
-                    <span className="text-xl text-gray-300">
-                      / {totalCount}
-                    </span>
-                  </p>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wide">
-                    asambleístas registrados
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-[#8B9DFF]">
-                  <Users size={24} />
+                {/* Attendance Card */}
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex items-center justify-between">
+                  <div className="flex flex-col gap-1 w-full">
+                    <div className="flex items-center justify-between gap-2">
+                      <CustomText
+                        variant="bodyX"
+                        className="text-[#1F1F23] font-medium"
+                      >
+                        Asistencia
+                      </CustomText>
+                      <div className="bg-[#EEF0FF] p-2 rounded-md">
+                        <CustomIcon
+                          path={ICON_PATHS.inPerson}
+                          className="text-[#6A7EFF] "
+                          size={24}
+                        />
+                      </div>
+                    </div>
+                    <CustomText variant="TitleL" className="text-[#1F1F23]">
+                      {registeredCount} / {totalCount}
+                    </CustomText>
+                    <CustomText
+                      variant="bodyL"
+                      className="text-[#3D3D44] font-regular"
+                    >
+                      asambleístas registrados
+                    </CustomText>
+                  </div>
                 </div>
               </div>
             </div>
@@ -351,41 +406,47 @@ export default function AsambleistaDashboard({
         )}
 
         {activeTab === "resultados" && (
-          <div className="animate-in fade-in duration-500">
-            <div className="flex bg-gray-100 p-1.5 rounded-2xl w-full max-w-2xl mx-auto mb-8">
-              <button
+          <div className="flex flex-col gap-6">
+            <div className="w-full bg-[#FFFFFF] rounded-full p-2 border border-[#F3F6F9] flex flex-row gap-2">
+              <CustomButton
                 onClick={() => setResultSubTab("global")}
-                className={`flex-1 py-3 rounded-xl font-bold text-sm transition ${
-                  resultSubTab === "global"
-                    ? "bg-white text-[#0E3C42] shadow-sm"
-                    : "text-gray-400 hover:text-gray-600"
-                }`}
+                className={`flex-1 py-3 ${resultSubTab === "global" ? "bg-[#D5DAFF] border-none " : "bg-white border-none"}`}
               >
-                Resultados Globales
-              </button>
-              <button
+                <CustomText
+                  variant="labelL"
+                  className="text-[#000000] font-bold"
+                >
+                  Gestionar asambleístas
+                </CustomText>
+              </CustomButton>
+              <CustomButton
                 onClick={() => setResultSubTab("mine")}
-                className={`flex-1 py-3 rounded-xl font-bold text-sm transition ${
-                  resultSubTab === "mine"
-                    ? "bg-white text-[#0E3C42] shadow-sm"
-                    : "text-gray-400 hover:text-gray-600"
-                }`}
+                className={`flex-1 py-3 ${resultSubTab === "mine" ? "bg-[#D5DAFF] border-none " : "bg-white border-none"}`}
               >
-                Gestionar votaciones
-              </button>
+                <CustomText
+                  variant="labelL"
+                  className="text-[#000000] font-bold"
+                >
+                  Gestionar votaciones
+                </CustomText>
+              </CustomButton>
             </div>
 
             {resultSubTab === "global" && (
               <div className="flex flex-col gap-6">
-                <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-2xl font-black text-[#0E3C42]">
-                    Resultados de la votación
-                  </h2>
-                  {assembly.status === "finished" && (
-                    <span className="bg-indigo-50 text-[#8B9DFF] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-100">
-                      Asamblea Finalizada
-                    </span>
-                  )}
+                <div className="flex flex-col gap-1">
+                  <CustomText
+                    variant="bodyX"
+                    className="text-[#0E3C42] font-bold"
+                  >
+                    Asamblea {assembly.name}
+                  </CustomText>
+                  <CustomText
+                    variant="labelL"
+                    className="text-[#0E3C42] font-regular"
+                  >
+                    Estos son los resultados de las votaciones de esta asamblea.
+                  </CustomText>
                 </div>
 
                 {/* Show finished questions even if assembly not finished */}
@@ -432,29 +493,40 @@ export default function AsambleistaDashboard({
 
                   if (questionsToShow.length === 0) return null;
 
-                  return questionsToShow.map((q) => (
-                    <QuestionCard
-                      key={q.id}
-                      q={q}
-                      registries={registries}
-                      isAdmin={false}
-                    />
-                  ));
+                  return questionsToShow
+                    .filter((q) => q.status === "FINISHED")
+                    .map((q) => (
+                      <QuestionCard
+                        key={q.id}
+                        q={q}
+                        registries={registries}
+                        isAdmin={false}
+                        votes={votes}
+                      />
+                    ));
                 })()}
               </div>
             )}
 
             {resultSubTab === "mine" && (
               <div className="flex flex-col gap-6">
-                <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm">
-                  <h3 className="text-xl font-bold text-[#0E3C42] mb-1">
-                    Preferencia de Votación
-                  </h3>
-                  <p className="text-sm text-gray-500 mb-6 font-medium">
-                    {assembly?.votingMode
-                      ? "El modo de votación ha sido fijado por el administrador para esta asamblea."
-                      : "Selecciona cómo quieres responder las votaciones de esta asamblea. Podrás cambiarlo en cualquier momento si no has votado."}
-                  </p>
+                <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col gap-4">
+                  <div>
+                    <CustomText
+                      variant="bodyX"
+                      className="text-[#0E3C42] font-bold"
+                    >
+                      Preferencia de Votación
+                    </CustomText>
+                    <CustomText
+                      variant="labelL"
+                      className="text-[#0E3C42] font-regular"
+                    >
+                      {assembly?.votingMode
+                        ? "El modo de votación ha sido fijado por el administrador para esta asamblea."
+                        : "Selecciona cómo quieres responder las votaciones de esta asamblea. Podrás cambiarlo en cualquier momento si no has votado."}
+                    </CustomText>
+                  </div>
 
                   <div
                     className={`flex items-center gap-8 ${
@@ -477,7 +549,7 @@ export default function AsambleistaDashboard({
                       >
                         {(userVotingPreference === "individual" ||
                           assembly?.votingMode === "individual") && (
-                          <Check size={16} className="text-white" />
+                          <Check size={16} className="text-black" />
                         )}
                       </div>
                       <div>
@@ -490,9 +562,6 @@ export default function AsambleistaDashboard({
                           }`}
                         >
                           Votar individual
-                        </span>
-                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
-                          Pregunta por propiedad
                         </span>
                       </div>
                     </div>
@@ -511,7 +580,7 @@ export default function AsambleistaDashboard({
                       >
                         {(userVotingPreference === "block" ||
                           assembly?.votingMode === "block") && (
-                          <Check size={16} className="text-white" />
+                          <Check size={16} className="text-black" />
                         )}
                       </div>
                       <div>
@@ -524,9 +593,6 @@ export default function AsambleistaDashboard({
                           }`}
                         >
                           Votar en bloque
-                        </span>
-                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
-                          Un solo voto para todas
                         </span>
                       </div>
                     </div>
@@ -541,12 +607,51 @@ export default function AsambleistaDashboard({
                     registrationData?.representedProperties ||
                     user.myRegistries ||
                     [];
+
                   const votesByProperty = propertiesToUse
-                    .map((r) => ({
-                      registry: r,
-                      answer: q.answers?.[r.ownerId || r.id],
-                    }))
-                    .filter((item) => item.answer);
+                    .map((r) => {
+                      const propId = r.id || r.ownerId;
+                      const foundVote = userVotes.find(
+                        (v) =>
+                          v.questionId === q.id && v.propertyOwnerId === propId,
+                      );
+                      // Reconstruct answer format for grouping logic: it used to be { option: string } etc.
+                      // Now it's selectedOptions: [] in vote doc.
+                      if (!foundVote) return null;
+
+                      let answer = null;
+                      if (q.type === QUESTION_TYPES.OPEN) {
+                        // selectedOptions might contain the text if updated correctly or I need to check how I save OPEN questions
+                        // In QuestionItem.js submitBlockVote for OPEN, I did { answerText: ... }
+                        // But submitBatchVotes sends selectedOptions.
+                        // Wait, submitBatchVotes in src/lib/questions.js writes user payload directly if used in old way.
+                        // But QuestionItem.js calls submitBatchVotes(id, votes).
+                        // And I will update QuestionItem.js to format votes correctly for new submitBatchVotes.
+                        // New submitBatchVotes expects `selectedOptions` array.
+                        // For OPEN question, where do we store the text?
+                        // The user requested: "selectedOptions: string[]".
+                        // For OPEN, maybe we store the text as the single element of the array?
+                        // Or "vote" doc needs a text field?
+                        // The user example didn't mention open questions.
+                        // I'll assume selectedOptions[0] holds the text if OPEN.
+                        answer = { answerText: foundVote.selectedOptions?.[0] };
+                      } else if (
+                        q.type === QUESTION_TYPES.MULTIPLE ||
+                        q.type === QUESTION_TYPES.YES_NO ||
+                        q.type === QUESTION_TYPES.UNIQUE
+                      ) {
+                        answer = { options: foundVote.selectedOptions };
+                        if (
+                          foundVote.selectedOptions.length === 1 &&
+                          q.type !== QUESTION_TYPES.MULTIPLE
+                        ) {
+                          answer.option = foundVote.selectedOptions[0];
+                        }
+                      }
+
+                      return { registry: r, answer };
+                    })
+                    .filter((item) => item && item.answer);
 
                   // Group by the same answer object string representation
                   const groupedVotes = votesByProperty.reduce(
@@ -812,31 +917,41 @@ export default function AsambleistaDashboard({
         )}
 
         {activeTab === "perfil" && (
-          <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <div className="flex flex-col items-center justify-center gap-6">
             {/* PROFILE HEADER CARD */}
-            <div className="max-w-2xl mx-auto bg-white rounded-[40px] p-10 shadow-xl shadow-indigo-100/20 border border-gray-100 flex flex-col items-center text-center relative overflow-hidden mb-12">
-              {/* Decorative Background Blotches */}
-              <div className="absolute top-0 left-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 opacity-60"></div>
-              <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 opacity-60"></div>
-
-              <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center text-[#8B9DFF] mb-6 shadow-inner">
-                <User size={48} strokeWidth={1.5} />
+            <div className="max-w-[450px] mx-auto bg-white rounded-3xl p-10 shadow-xl shadow-indigo-100/20 border border-gray-100 flex flex-col items-start gap-2 text-start relative overflow-hidden">
+              <div className="flex items-start gap-2">
+                <div className="bg-[#EEF0FF] p-2 rounded-full">
+                  <CustomIcon
+                    path={ICON_PATHS.accountCircle}
+                    size={56}
+                    className="text-[#6A7EFF]"
+                  />
+                </div>
+                <div>
+                  <CustomText
+                    variant="TitleL"
+                    className="text-[#0E3C42] font-bold"
+                  >
+                    {user?.firstName} {user?.lastName}
+                  </CustomText>
+                  <CustomText
+                    variant="bodyX"
+                    className="text-[#0E3C42] font-regular"
+                  >
+                    Código de ingreso: {user?.document}
+                  </CustomText>
+                </div>
               </div>
 
-              <h2 className="text-3xl font-black text-[#0E3C42] mb-1">
-                {user?.firstName} {user?.lastName}
-              </h2>
-              <p className="text-gray-400 font-bold text-sm mb-10">
-                Código de ingreso: {user?.document}
-              </p>
-
               <div className="flex flex-wrap justify-center gap-4 w-full">
-                <button
+                <CustomButton
+                  variant="secondary"
                   onClick={onLogout}
-                  className="flex items-center gap-2 px-8 py-3.5 rounded-2xl border-2 border-gray-100 text-[#0E3C42] font-black text-sm hover:bg-gray-50 transition active:scale-95"
+                  className=" flex items-center gap-2 py-2 px-4"
                 >
-                  <LogOut size={18} /> Cerrar sesión
-                </button>
+                  <CustomIcon path={ICON_PATHS.exit} size={18} /> Cerrar sesión
+                </CustomButton>
                 {/* Certificado de participación - Hidden as requested */}
                 {/* 
                 <button className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-[#8B9DFF] text-white font-black text-sm shadow-lg shadow-indigo-100 hover:bg-[#7a8ce0] transition active:scale-95">
@@ -847,14 +962,14 @@ export default function AsambleistaDashboard({
             </div>
 
             {/* PROPERTIES SECTION */}
-            <div className="bg-white rounded-[40px] p-10 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-[40px] p-10 shadow-sm border w-full border-gray-100">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
-                <h3 className="text-2xl font-black text-[#0E3C42]">
+                <CustomText variant="bodyX" className="text-#0E3C42] font-bold">
                   Propiedades
-                </h3>
+                </CustomText>
 
-                <div className="relative min-w-[180px]">
-                  <select className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 outline-none font-bold text-[#0E3C42] text-sm appearance-none cursor-pointer">
+                <div className="relative w-full max-w-[151px]">
+                  <select className="w-full border rounded-2xl px-5 py-4 outline-none font-bold text-[#0E3C42] text-sm appearance-none cursor-pointer">
                     <option>Ordenar por</option>
                     <option>Nombre</option>
                     <option>Coeficiente</option>
@@ -866,11 +981,14 @@ export default function AsambleistaDashboard({
               </div>
 
               {/* COEFF BANNER */}
-              <div className="bg-gray-50 rounded-2xl p-4 flex justify-between items-center mb-10 border border-gray-100/50">
-                <span className="text-sm font-bold text-gray-400 uppercase tracking-widest pl-2">
+              <div className="bg-[#F3F6F9] rounded-2xl p-4 flex justify-between items-center mb-10 border border-gray-100/50">
+                <CustomText variant="bodyL" className="text-[#1F1F23] ">
                   Coeficiente total
-                </span>
-                <span className="text-2xl font-black text-[#0E3C42] pr-2">
+                </CustomText>
+                <CustomText
+                  variant="bodyX"
+                  className="text-[#1F1F23] font-black"
+                >
                   {(
                     registrationData?.representedProperties ||
                     user?.myRegistries ||
@@ -886,7 +1004,7 @@ export default function AsambleistaDashboard({
                     )
                     .toFixed(2)}
                   %
-                </span>
+                </CustomText>
               </div>
 
               {/* GRID */}
@@ -902,42 +1020,49 @@ export default function AsambleistaDashboard({
 
                   // Icon mapping
                   const type = (reg.tipo || "").toLowerCase();
-                  let Icon = Building2;
-                  if (type.includes("parqueadero") || type.includes("garaje"))
-                    Icon = Car;
-                  if (type.includes("local")) Icon = Store;
+                  <CustomTypePropertie type={type} />;
 
                   return (
                     <div
                       key={idx}
-                      className="p-6 rounded-3xl bg-white border border-gray-100 hover:border-[#8B9FFD] transition shadow-sm hover:shadow-md group"
+                      className="p-6 rounded-3xl bg-white border border-[#DBE2E8]"
                     >
                       <div className="flex items-start gap-5">
                         <div className="w-14 h-14 rounded-2xl bg-indigo-50/50 flex items-center justify-center text-[#8B9DFF] group-hover:bg-[#8B9DFF] group-hover:text-white transition-all duration-300 shadow-sm">
-                          <Icon size={24} />
+                          <CustomTypePropertie type={type} />
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-bold text-[#0E3C42] mb-2 leading-tight">
-                            {reg.tipo ? `${reg.tipo} - ` : ""}
-                            {reg.grupo ? `${reg.grupo} - ` : ""}
+                        <div className="flex-1 flex flex-col gap-2">
+                          <CustomText variant="bodyM" className="font-black">
+                            {reg.tipo
+                              ? reg.tipo === "-"
+                                ? ""
+                                : reg.tipo + " - "
+                              : ""}
+                            {reg.grupo
+                              ? reg.grupo === "-"
+                                ? ""
+                                : reg.grupo + " - "
+                              : ""}
                             {reg.propiedad}
-                          </h4>
-                          <div className="flex flex-wrap items-center gap-3">
-                            <span
-                              className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                          </CustomText>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <CustomText
+                              variant="bodyS"
+                              className={`font-medium px-2 py-0.5 rounded-full ${
                                 isProxy
-                                  ? "bg-purple-50 text-purple-600"
-                                  : "bg-teal-50 text-teal-600"
+                                  ? "text-[#00093F] bg-[#D5DAFF] "
+                                  : "text-[#0E3C42] bg-[#B8EAF0]"
                               }`}
                             >
                               {isProxy ? "Apoderado" : "Propietario"}
-                            </span>
-                            <span className="text-[10px] font-bold text-gray-400">
-                              Coef:{" "}
+                            </CustomText>
+
+                            <CustomText variant="bodyS">
+                              Coeficiente:{" "}
                               <strong className="text-gray-600">
-                                {reg.coeficiente}%
+                                {reg.coeficiente.slice(0, 4)}%
                               </strong>
-                            </span>
+                            </CustomText>
                           </div>
                         </div>
                       </div>
@@ -974,15 +1099,15 @@ export default function AsambleistaDashboard({
             </div>
           </div>
         )}
-        {activeTab !== "inicio" && (
-          <div className="pointer-events-none fixed inset-0 z-50">
-            {sortedQuestions.map((q) => (
+        <div className="pointer-events-none fixed inset-0 z-[60]">
+          {sortedQuestions
+            .filter((q) => q.status === QUESTION_STATUS.LIVE)
+            .map((q) => (
               <React.Fragment key={q.id}>
                 {renderQuestion(q, { forceModalOnly: true })}
               </React.Fragment>
             ))}
-          </div>
-        )}
+        </div>
       </main>
     </div>
   );
