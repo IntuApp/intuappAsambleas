@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { db } from "@/lib/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 import {
   Home,
   BarChart2,
@@ -66,10 +68,32 @@ export default function AsambleistaDashboard({
   const [activeTab, setActiveTab] = useState("inicio");
   const [resultSubTab, setResultSubTab] = useState("global"); // 'global' | 'mine'
   const [openFaq, setOpenFaq] = useState(null);
+  const [registrationData, setRegistrationData] = useState(null);
+
+  useEffect(() => {
+    if (assembly?.registrationRecordId && user?.document) {
+      const unsub = onSnapshot(
+        doc(db, "assemblyRegistrations", assembly.registrationRecordId),
+        (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const myReg = data.registrations?.find(
+              (r) => r.mainDocument === user.document,
+            );
+            if (myReg) {
+              setRegistrationData(myReg);
+            }
+          }
+        },
+      );
+      return () => unsub();
+    }
+  }, [assembly?.registrationRecordId, user?.document]);
 
   // Sort questions: Newest first (assuming ID or some timestamp, but array usually comes sorted or we reverse)
   // User wants newest first.
   const sortedQuestions = [...questions].reverse();
+  console.log(user);
 
   // Helper to get total votes
   const getQuestionStats = (q) => {
@@ -513,10 +537,14 @@ export default function AsambleistaDashboard({
                   Mis Respuestas
                 </h2>
                 {sortedQuestions.map((q) => {
-                  const votesByProperty = user.myRegistries
+                  const propertiesToUse =
+                    registrationData?.representedProperties ||
+                    user.myRegistries ||
+                    [];
+                  const votesByProperty = propertiesToUse
                     .map((r) => ({
                       registry: r,
-                      answer: q.answers?.[r.id],
+                      answer: q.answers?.[r.ownerId || r.id],
                     }))
                     .filter((item) => item.answer);
 
@@ -843,8 +871,12 @@ export default function AsambleistaDashboard({
                   Coeficiente total
                 </span>
                 <span className="text-2xl font-black text-[#0E3C42] pr-2">
-                  {user?.myRegistries
-                    ?.reduce(
+                  {(
+                    registrationData?.representedProperties ||
+                    user?.myRegistries ||
+                    []
+                  )
+                    .reduce(
                       (acc, r) =>
                         acc +
                         parseFloat(
@@ -859,14 +891,14 @@ export default function AsambleistaDashboard({
 
               {/* GRID */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                {user?.myRegistries?.map((reg, idx) => {
-                  // Find the specific role for this property
-                  const roleObj = user.registries?.find(
-                    (r) => r.registryId === reg.id,
-                  );
+                {(
+                  registrationData?.representedProperties ||
+                  user?.myRegistries ||
+                  []
+                ).map((reg, idx) => {
                   const isProxy =
-                    roleObj?.role?.toLowerCase() === "proxy" ||
-                    roleObj?.role?.toLowerCase() === "apoderado";
+                    reg?.role?.toLowerCase() === "proxy" ||
+                    reg?.role?.toLowerCase() === "apoderado";
 
                   // Icon mapping
                   const type = (reg.tipo || "").toLowerCase();

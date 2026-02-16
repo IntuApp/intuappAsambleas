@@ -10,6 +10,7 @@ import {
   toggleVoteBlock,
   toggleRegistryDeletion,
   addRegistryToList,
+  updateRegistryStatus,
 } from "@/lib/entities";
 import * as XLSX from "xlsx";
 
@@ -33,9 +34,11 @@ import {
   query,
   where,
   getDocs,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
 } from "firebase/firestore";
 import Loader from "@/components/basics/Loader";
-import TopBar from "@/components/ui/TopBar";
 import { usePageTitle } from "@/context/PageTitleContext";
 import {
   Calendar,
@@ -76,9 +79,7 @@ import {
   resetAllQuestionsAnswers,
   finishAllLiveQuestions,
 } from "@/lib/questions";
-import QuestionCard from "@/components/question/QuestionCard";
 import CustomModal from "@/components/basics/CustomModal";
-import Button from "@/components/basics/Button";
 import { toast } from "react-toastify";
 import { QRCodeCanvas } from "qrcode.react";
 
@@ -429,6 +430,26 @@ const AssemblyDashboardPage = () => {
         console.warn("Error cleaning up storage (powers):", err);
       }
 
+      // Limpiar assemblyRegistrations
+      try {
+        const assemblyRef = doc(db, "assembly", assemblyId);
+        await updateDoc(assemblyRef, {
+          assemblyRegistrations: [],
+        });
+        if (assembly.registrationRecordId) {
+          const regRecordRef = doc(
+            db,
+            "assemblyRegistrations",
+            assembly.registrationRecordId,
+          );
+          await updateDoc(regRecordRef, {
+            registrations: [],
+          });
+        }
+      } catch (err) {
+        console.warn("Error cleaning up registrations:", err);
+      }
+
       await updateStatus("create");
       setLoading(false);
     }
@@ -502,6 +523,49 @@ const AssemblyDashboardPage = () => {
       !currentBlocked,
     );
     if (res.success) {
+      // --- LOGICA PARA ACTUALIZAR BLOQUEO EN ASSEMBLYREGISTRATIONS ---
+      if (assembly && assembly.assemblyRegistrations) {
+        const regToUpdate = assembly.assemblyRegistrations.find((reg) =>
+          reg.representedProperties.some((p) => p.ownerId === registryId),
+        );
+
+        if (regToUpdate) {
+          const assemblyRef = doc(db, "assembly", assemblyId);
+          const updatedProps = regToUpdate.representedProperties.map((p) =>
+            p.ownerId === registryId
+              ? { ...p, votingBlocked: !currentBlocked }
+              : p,
+          );
+
+          const newReg = {
+            ...regToUpdate,
+            representedProperties: updatedProps,
+          };
+
+          // Actualizamos quitando el viejo y poniendo el nuevo (standard Firestore array update)
+          await updateDoc(assemblyRef, {
+            assemblyRegistrations: arrayRemove(regToUpdate),
+          });
+          await updateDoc(assemblyRef, {
+            assemblyRegistrations: arrayUnion(newReg),
+          });
+
+          if (assembly.registrationRecordId) {
+            const regRecordRef = doc(
+              db,
+              "assemblyRegistrations",
+              assembly.registrationRecordId,
+            );
+            await updateDoc(regRecordRef, {
+              registrations: arrayRemove(regToUpdate),
+            });
+            await updateDoc(regRecordRef, {
+              registrations: arrayUnion(newReg),
+            });
+          }
+        }
+      }
+      // --- FIN LOGICA ASSEMBLYREGISTRATIONS ---
       toast.success(currentBlocked ? "Voto habilitado" : "Voto bloqueado");
     } else {
       toast.error("Error al actualizar estado");
@@ -519,22 +583,107 @@ const AssemblyDashboardPage = () => {
 
     const registry = registries.find((r) => r.id === registryId);
     if (!currentDeleted && registry) {
-      // If deleting, also remove from active users collection
-      // Document to match is registry.userDocument or registry.documento (whichever was used for login)
-      const docToDelete = registry.userDocument || registry.documento;
-      if (docToDelete) {
-        await deleteAssemblyUser(docToDelete, assemblyId);
+      // --- LOGICA PARA ELIMINAR PROPIEDAD DE ASSEMBLYREGISTRATIONS ---
+      if (assembly && assembly.assemblyRegistrations) {
+        const regToUpdate = assembly.assemblyRegistrations.find((reg) =>
+          reg.representedProperties.some((p) => p.ownerId === registryId),
+        );
+
+        if (regToUpdate) {
+          const assemblyRef = doc(db, "assembly", assemblyId);
+
+          // Si es la propiedad principal (ownerId), borramos TODO el registro
+          if (regToUpdate.ownerId === registryId) {
+            // 1. Liberar todas las propiedades representadas en el master list
+            await Promise.all(
+              regToUpdate.representedProperties.map((p) =>
+                updateRegistryStatus(activeRegistriesListId, p.ownerId, false),
+              ),
+            );
+
+            // 2. Eliminar de los arrays de registros
+            await updateDoc(assemblyRef, {
+              assemblyRegistrations: arrayRemove(regToUpdate),
+            });
+            if (assembly.registrationRecordId) {
+              const regRecordRef = doc(
+                db,
+                "assemblyRegistrations",
+                assembly.registrationRecordId,
+              );
+              await updateDoc(regRecordRef, {
+                registrations: arrayRemove(regToUpdate),
+              });
+            }
+
+            // 3. Borrar usuario activo
+            const docToDelete = regToUpdate.mainDocument;
+            if (docToDelete) {
+              await deleteAssemblyUser(docToDelete, assemblyId);
+            }
+
+            toast.success(
+              "Registro completo eliminado (Propiedad principal eliminada)",
+            );
+            return; // Salimos ya que ya liberamos todo
+          } else {
+            // Si es una propiedad secundaria, solo removemos esa
+            const updatedProps = regToUpdate.representedProperties.filter(
+              (p) => p.ownerId !== registryId,
+            );
+
+            // Actualizamos el objeto
+            const newReg = {
+              ...regToUpdate,
+              representedProperties: updatedProps,
+            };
+
+            await updateDoc(assemblyRef, {
+              assemblyRegistrations: arrayRemove(regToUpdate),
+            });
+            await updateDoc(assemblyRef, {
+              assemblyRegistrations: arrayUnion(newReg),
+            });
+
+            if (assembly.registrationRecordId) {
+              const regRecordRef = doc(
+                db,
+                "assemblyRegistrations",
+                assembly.registrationRecordId,
+              );
+              await updateDoc(regRecordRef, {
+                registrations: arrayRemove(regToUpdate),
+              });
+              await updateDoc(regRecordRef, {
+                registrations: arrayUnion(newReg),
+              });
+            }
+          }
+        }
       }
+      // --- FIN LOGICA ASSEMBLYREGISTRATIONS ---
+    }
+    // Cambiamos toggleRegistryDeletion por updateRegistryStatus con false para "liberar" la propiedad
+    let res;
+    if (!currentDeleted) {
+      res = await updateRegistryStatus(
+        activeRegistriesListId,
+        registryId,
+        false,
+      );
+    } else {
+      res = await toggleRegistryDeletion(
+        activeRegistriesListId,
+        registryId,
+        !currentDeleted,
+      );
     }
 
-    const res = await toggleRegistryDeletion(
-      activeRegistriesListId,
-      registryId,
-      !currentDeleted,
-    );
     if (res.success) {
       toast.success(
-        currentDeleted ? "Registro restaurado" : "Registro movido a eliminados",
+        currentDeleted
+          ? "Registro restaurado"
+          : "Registro liberado (puede volver a registrarse)",
       );
     } else {
       toast.error("Error al actualizar estado");

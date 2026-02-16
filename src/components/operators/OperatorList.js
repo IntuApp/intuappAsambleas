@@ -1,31 +1,30 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
 
-import EntityCard from "./EntityCard";
 import CustomIcon from "../basics/CustomIcon";
 import CustomButton from "../basics/CustomButton";
 import CustomText from "../basics/CustomText";
 import { ICON_PATHS } from "@/constans/iconPaths";
 import { formatDate, getIconPath, getTypeName } from "@/lib/utils";
+import OperatorCard from "./OperatorCard";
 
 const ITEMS_PER_PAGE = 6;
 
-export default function EntityList({
+export default function OperatorList({
   viewMode,
-  entities = [],
-  onManageEntity,
+  operators = [],
+  onManageOperator,
   onCreateAssembly,
   onViewAssembly,
 }) {
   const [page, setPage] = useState(1);
 
-  const totalPages = Math.max(1, Math.ceil(entities.length / ITEMS_PER_PAGE));
-  console.log("entities", entities);
+  const totalPages = Math.max(1, Math.ceil(operators.length / ITEMS_PER_PAGE));
 
   // 🔹 Reset cuando cambian datos o vista
   useEffect(() => {
     setPage(1);
-  }, [viewMode, entities]);
+  }, [viewMode, operators]);
 
   // 🔹 Protección extra
   useEffect(() => {
@@ -34,14 +33,10 @@ export default function EntityList({
     }
   }, [page, totalPages]);
 
-  const paginatedEntities = useMemo(() => {
+  const paginatedOperators = useMemo(() => {
     const start = (page - 1) * ITEMS_PER_PAGE;
-    return entities.slice(start, start + ITEMS_PER_PAGE);
-  }, [entities, page]);
-
-  console.log("entities:", entities.length);
-  console.log("totalPages:", totalPages);
-  console.log("page:", page);
+    return operators.slice(start, start + ITEMS_PER_PAGE);
+  }, [operators, page]);
 
   /* ===========================
      GRID VIEW
@@ -50,11 +45,11 @@ export default function EntityList({
     return (
       <div className="max-w-[1128px] w-full">
         <div className="flex flex-wrap gap-6">
-          {paginatedEntities.map((entity) => (
-            <EntityCard
-              key={entity.id}
-              entity={entity}
-              onManage={onManageEntity}
+          {paginatedOperators.map((operator) => (
+            <OperatorCard
+              key={operator.id}
+              operator={operator}
+              onManage={onManageOperator}
               onCreateAssembly={onCreateAssembly}
               onViewAssembly={onViewAssembly}
             />
@@ -134,103 +129,47 @@ export default function EntityList({
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b border-[#D3DAE0]">
-                {[
-                  "Tipo",
-                  "Nombre",
-                  "Asambleístas",
-                  "Ubicación",
-                  "Próxima asamblea",
-                  "Hora",
-                  "Acciones",
-                ].map((h) => (
-                  <th key={h} className="py-5 px-4 text-center">
-                    <CustomText
-                      variant="labelL"
-                      className="font-bold text-[#0E3C42]"
-                    >
-                      {h}
-                    </CustomText>
-                  </th>
-                ))}
+                {["Operador", "# Entidades", "Ubicación", "Acciones"].map(
+                  (h) => (
+                    <th key={h} className="py-5 px-4 text-center">
+                      <CustomText
+                        variant="labelL"
+                        className="font-bold text-[#0E3C42]"
+                      >
+                        {h}
+                      </CustomText>
+                    </th>
+                  ),
+                )}
               </tr>
             </thead>
 
             <tbody>
-              {paginatedEntities.map((entity) => (
+              {paginatedOperators.map((operator) => (
                 <tr
-                  key={entity.id}
+                  key={operator.id}
                   className="border-b last:border-none hover:bg-gray-50/50"
                 >
-                  <td className="py-4 px-8">
-                    <div className="w-10 h-10 rounded-full bg-[#D5DAFF] flex items-center justify-center">
-                      <CustomIcon path={getIconPath(entity)} size={24} />
-                    </div>
-                  </td>
-
-                  <td className="py-4 px-4">
+                  <td className="py-4 px-4 text-center">
                     <CustomText variant="labelM" className="font-medium">
-                      {getTypeName(entity)}
+                      {operator.name}
                     </CustomText>
-                    <CustomText variant="labelM">{entity.name}</CustomText>
                   </td>
 
                   <td className="py-4 px-4 text-center">
-                    {entity.asambleistasCount || 0}
+                    {operator.entities?.length || 0}
                   </td>
+
+                  <td className="py-4 px-4 text-center">{operator.city}</td>
 
                   <td className="py-4 px-4 text-center">
-                    {entity.address ? `${entity.address}, ` : ""}
-                    {entity.city}
-                  </td>
-
-                  <td className="py-4 px-4 text-center">
-                    {entity.activeAssembly ? (
-                      <span className="inline-flex items-center gap-1.5 bg-[#FACCCD] text-[#930002] px-3 py-1 rounded-full text-[11px] font-bold">
-                        <span className="w-1.5 h-1.5 bg-[#930002] rounded-full animate-pulse" />
-                        En vivo
-                      </span>
-                    ) : entity.nextAssembly ? (
-                      formatDate(entity.nextAssembly.date)
-                    ) : (
-                      "No hay"
-                    )}
-                  </td>
-
-                  <td className="py-4 px-4 text-center">
-                    {entity.activeAssembly
-                      ? `Inició hace ${entity.activeAssembly.startedAgo}`
-                      : entity.nextAssembly?.time || "-"}
-                  </td>
-
-                  <td className="py-4 px-8">
-                    <div className="flex justify-center gap-3">
-                      <CustomButton
-                        variant="secondary"
-                        className="p-2 rounded-full border-2"
-                        onClick={() =>
-                          entity.activeAssembly
-                            ? onViewAssembly(entity)
-                            : onCreateAssembly(entity)
-                        }
-                      >
-                        <CustomIcon
-                          path={
-                            entity.activeAssembly
-                              ? ICON_PATHS.eye
-                              : ICON_PATHS.add
-                          }
-                          size={20}
-                        />
-                      </CustomButton>
-
-                      <CustomButton
-                        variant="primary"
-                        className="p-2 rounded-full"
-                        onClick={() => onManageEntity(entity)}
-                      >
-                        <CustomIcon path={ICON_PATHS.settings} size={20} />
-                      </CustomButton>
-                    </div>
+                    <CustomButton
+                      variant="primary"
+                      className="p-2 rounded-full"
+                      onClick={() => onManageOperator(operator)}
+                    >
+                      <CustomIcon path={ICON_PATHS.settings} size={20} />
+                    </CustomButton>
                   </td>
                 </tr>
               ))}

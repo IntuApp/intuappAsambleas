@@ -2,55 +2,93 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+
 import { db, storage } from "@/lib/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import {
+  doc,
+  onSnapshot,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  serverTimestamp,
+  collection,
+} from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import {
-  getEntityById,
-  getAssemblyRegistriesList,
-  updateRegistryStatus,
-} from "@/lib/entities";
-import { updateAssembly } from "@/lib/assembly";
-import { collection, query, where } from "firebase/firestore";
+import { getEntityById, updateRegistryStatus } from "@/lib/entities";
+
 import Loader from "@/components/basics/Loader";
+
 import {
-  User,
   Check,
-  MapPin,
-  Video,
-  Copy,
-  ArrowRight,
-  ArrowLeft,
-  Search,
   Building2,
-  HelpCircle,
+  Video,
+  ArrowLeft,
+  Trash2,
+  UploadCloud,
+  FileText,
   AlertTriangle,
-  X,
-  LogOut,
+  Plus,
 } from "lucide-react";
 import { toast } from "react-toastify";
-import { QUESTION_STATUS, QUESTION_TYPES, submitVote } from "@/lib/questions";
+import {
+  QUESTION_STATUS,
+  QUESTION_TYPES,
+  submitVote,
+  submitBatchVotes,
+} from "@/lib/questions";
 
-import { createAssemblyUser, getAssemblyUser } from "@/lib/assemblyUser";
-import AsambleistaLogin from "@/components/assemblies/AsambleistaLogin";
-import AsambleistaDashboard from "@/components/assemblies/AsambleistaDashboard";
+import Step1Document from "@/components/assemblyMember/step/Step1Document";
+import Step2UserInfo from "@/components/assemblyMember/step/Step2UserInfo";
+import Step3Properties from "@/components/assemblyMember/step/Step3Properties";
+import Step4AddProperties from "@/components/assemblyMember/step/Step4AddProperties";
+import Step5Review from "@/components/assemblyMember/step/Step5Review";
+import Step6Condition from "@/components/assemblyMember/step/Step6Condition";
+import StepDiscovery from "@/components/assemblyMember/step/StepDiscovery";
 import QuestionItem from "@/components/dashboard/QuestionItem";
-import RegistrationWizard from "@/components/assemblies/RegistrationWizard";
+import AsambleistaDashboard from "@/components/assemblies/AsambleistaDashboard";
+import { createAssemblyUser, getAssemblyUser } from "@/lib/assemblyUser";
+import CustomButton from "@/components/basics/CustomButton";
+import CustomText from "@/components/basics/CustomText";
+import LoginMember from "@/components/assemblyMember/LoginMember";
+
+const ProgressBar = ({ currentStep, totalSteps = 7 }) => (
+  <div className="w-full h-2 bg-[#F3F6F9] rounded-full overflow-hidden">
+    <div
+      className="h-full bg-[#D5DAFF] transition-all duration-500 ease-out"
+      style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+    />
+  </div>
+);
 
 export default function AssemblyAccessPage() {
   const { id } = useParams();
   const router = useRouter();
 
+  // Basic State
   const [loading, setLoading] = useState(true);
   const [assembly, setAssembly] = useState(null);
   const [entity, setEntity] = useState(null);
+  const [activeRegistriesListId, setActiveRegistriesListId] = useState(null);
   const [registries, setRegistries] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [questions, setQuestions] = useState([]);
+  const [isInMeeting, setIsInMeeting] = useState(false);
   const [userVotingPreference, setUserVotingPreference] = useState(null);
+  const [addNewProperties, setAddNewProperties] = useState(false);
+
+  // New Registration Wizard State Machine
+  // 0: Search/Login
+  // 1: User Info
+  // 2: Discovery (List Found)
+  // 3: Verification Loop (By Index)
+  // 4: Ask "Add Another?"
+  // 5: Manual Add Property Form
+  // 6: Summary
+  // 7: Terms
+  const [prevStep, setPrevStep] = useState(0);
   const [regStep, setRegStep] = useState(0);
 
-  // Data State for Wizard
+  // Data State
   const [regDocument, setRegDocument] = useState("");
   const [userInfo, setUserInfo] = useState({
     firstName: "",
@@ -58,180 +96,492 @@ export default function AssemblyAccessPage() {
     email: "",
     phone: "",
   });
+
+  // Queue for verifying properties found in step 1
   const [verificationQueue, setVerificationQueue] = useState([]);
   const [currentVerificationIndex, setCurrentVerificationIndex] = useState(0);
+
+  // Final List of verified properties to submit
+  // Item: { registry, role, powerFile, powerUrl }
   const [verifiedRegistries, setVerifiedRegistries] = useState([]);
-  const [currentRole, setCurrentRole] = useState("");
+
+  // Temp State for Verification Loop
+  const [currentRole, setCurrentRole] = useState(""); // "" | 'owner' | 'proxy'
   const [currentFile, setCurrentFile] = useState(null);
-  const [addAnotherDecision, setAddAnotherDecision] = useState(null);
-  const [manualProp, setManualProp] = useState({ tower: "", unit: "" });
+
+  // Temp State for "Add Another?" Step
+  const [addAnotherDecision, setAddAnotherDecision] = useState(null); // 'yes' | 'no'
+
+  // Temp State for "Add Property Form"
+  const [addPropType, setAddPropType] = useState("");
+  const [addPropGroup, setAddPropGroup] = useState("");
+  const [addPropRegistry, setAddPropRegistry] = useState(null);
+  const [addPropRole, setAddPropRole] = useState("");
+  const [addPropFile, setAddPropFile] = useState(null);
+
+  // Load User & Data
+  // Load User & Data - REMOVED PERSISTENCE
+  /* useEffect(() => {
+    const savedUser = localStorage.getItem(`assemblyUser_${id}`);
+    if (savedUser) setCurrentUser(JSON.parse(savedUser));
+  }, [id]); */
+
+  // Check if user is blocked/deleted
+  useEffect(() => {
+    if (currentUser && registries.length > 0) {
+      // Find my registries in the live list
+      const myLiveRegistries = registries.filter(
+        (r) =>
+          currentUser.registries?.some((ur) => ur.registryId === r.id) ||
+          (currentUser.registryId && r.id === currentUser.registryId),
+      );
+
+      // If I have registries but they are ALL deleted, kick me out.
+      // Or if I have NO registries found (which shouldn't happen unless deleted entirely from DB)
+      if (myLiveRegistries.length > 0) {
+        const allDeleted = myLiveRegistries.every((r) => r.isDeleted);
+        if (allDeleted) {
+          toast.error("Has sido bloqueado de esta asamblea.");
+          localStorage.removeItem(`assemblyUser_${id}`);
+          setCurrentUser(null);
+          setRegStep(0);
+        }
+      }
+    }
+  }, [registries, currentUser, id]);
 
   useEffect(() => {
+    let unsubDetails = () => {};
+    let unsubQuestions = () => {};
+
     const assemblyRef = doc(db, "assembly", id);
-    const unsub = onSnapshot(assemblyRef, async (docSnap) => {
+    const unsubAssembly = onSnapshot(assemblyRef, async (docSnap) => {
       if (docSnap.exists()) {
-        const data = { id: docSnap.id, ...docSnap.data() };
-        setAssembly(data);
-        if (data.entityId) {
-          const res = await getEntityById(data.entityId);
-          if (res.success) setEntity(res.data);
+        const assemblyData = { id: docSnap.id, ...docSnap.data() };
+        setAssembly(assemblyData);
+
+        // If assembly is back to create mode (restarted), kick users out
+        if (assemblyData.status === "create" && currentUser) {
+          toast.info("La asamblea ha sido reiniciada.");
+          localStorage.removeItem(`assemblyUser_${id}`);
+          window.location.reload();
         }
-      } else toast.error("Asamblea no encontrada");
+
+        if (assemblyData.entityId) {
+          const resEntity = await getEntityById(assemblyData.entityId);
+          if (resEntity.success) {
+            setEntity(resEntity.data);
+
+            const listId =
+              assemblyData.assemblyRegistriesListId ||
+              resEntity.data.assemblyRegistriesListId;
+            setActiveRegistriesListId(listId);
+
+            if (listId) {
+              const listRef = doc(db, "assemblyRegistriesList", listId);
+              unsubDetails = onSnapshot(listRef, (listSnap) => {
+                if (listSnap.exists()) {
+                  const regs = Object.entries(
+                    listSnap.data().assemblyRegistries || {},
+                  ).map(([key, val]) => ({
+                    id: key,
+                    ...val,
+                  }));
+                  setRegistries(regs);
+                }
+              });
+            }
+          }
+        }
+
+        // Questions
+        if (assemblyData.questions && assemblyData.questions.length > 0) {
+          const qRef = collection(db, "question");
+          unsubQuestions = onSnapshot(qRef, (qSnap) => {
+            const qList = qSnap.docs
+              .map((d) => ({ id: d.id, ...d.data() }))
+              .filter(
+                (q) =>
+                  assemblyData.questions.includes(q.id) &&
+                  !q.isDeleted &&
+                  (q.status === QUESTION_STATUS.LIVE ||
+                    q.status === QUESTION_STATUS.FINISHED),
+              );
+            setQuestions(qList);
+          });
+        }
+      } else {
+        toast.error("Asamblea no encontrada");
+      }
       setLoading(false);
     });
-    return () => unsub();
+
+    return () => {
+      unsubAssembly();
+      unsubDetails();
+      unsubQuestions();
+    };
   }, [id]);
 
-  useEffect(() => {
-    if (!entity?.assemblyRegistriesListId) return;
-    const listRef = doc(
-      db,
-      "assemblyRegistriesList",
-      entity.assemblyRegistriesListId,
-    );
-    return onSnapshot(listRef, (snap) => {
-      if (snap.exists()) {
-        const regs = Object.entries(snap.data().assemblyRegistries || {}).map(
-          ([k, v]) => ({ id: k, ...v }),
-        );
-        setRegistries(regs);
-      }
-    });
-  }, [entity]);
-
-  useEffect(() => {
-    if (!assembly?.questions?.length) return;
-    const qRef = collection(db, "question");
-    return onSnapshot(qRef, (snap) => {
-      const qList = snap.docs
-        .map((d) => ({ id: d.id, ...d.data() }))
-        .filter(
-          (q) =>
-            assembly.questions.includes(q.id) &&
-            !q.isDeleted &&
-            (q.status === QUESTION_STATUS.LIVE ||
-              q.status === QUESTION_STATUS.FINISHED),
-        );
-      setQuestions(qList);
-    });
-  }, [assembly?.questions]);
+  /* --- HANDLERS --- */
 
   const handleAccess = async (document) => {
-    if (assembly.status === "create")
-      return toast.info("Espera a que inicie la reunión");
+    if (assembly.status === "create") {
+      return toast.info("Podrá ingresar cuando la reunión esté en curso");
+    }
+
     setLoading(true);
+
     try {
+      // 1. Check if user exists in AssemblyUser (Already Registered)
       const res = await getAssemblyUser(document, id);
       if (res.success) {
+        // User exists -> Login
         setCurrentUser(res.data);
+        localStorage.setItem(`assemblyUser_${id}`, JSON.stringify(res.data));
+        toast.success("Bienvenido");
+        setLoading(false);
         return;
       }
-      if (assembly.status === "registries_finalized")
-        return toast.error("El registro ha finalizado");
 
+      // 2. User does NOT exist.
+      // Check if registration is closed (registries_finalized).
+      if (assembly.status === "registries_finalized") {
+        setLoading(false);
+        return toast.error(
+          "El registro ha finalizado. Solo pueden ingresar usuarios registrados.",
+        );
+      }
+
+      // 3. User does NOT exist AND Registration is Open. -> START REGISTRATION FLOW.
+      setRegDocument(document);
+
+      // Find all registries matching document in the uploaded Excel list
       const found = registries.filter(
         (r) =>
           String(r.documento).trim().toLowerCase() ===
-          String(document).trim().toLowerCase(),
+          document.trim().toLowerCase(),
       );
 
-      if (
-        found.length === 0 &&
-        (assembly.accessMethod === "database_document" ||
-          !assembly.accessMethod)
-      ) {
-        return toast.error("Documento no encontrado en base de datos");
-      }
+      // ACCESS METHOD: 'free_document' vs 'database_document'
+      const accessMethod = assembly.accessMethod || "database_document";
 
-      setRegDocument(document);
-      const queue = found.filter((r) => !r.registerInAssembly && !r.isDeleted);
-      setVerificationQueue(queue);
-
-      // Branching logic: If 2 or more properties, auto-mark as owner and skip step 3
-      if (queue.length >= 2) {
-        const autoVerified = queue.map((r) => ({
-          registry: r,
-          role: "owner",
-          powerFile: null,
-          isIdentified: true,
-          isManual: false,
-        }));
-        setVerifiedRegistries(autoVerified);
-
-        if (
-          assembly.requireFullName ||
-          assembly.requireEmail ||
-          assembly.requirePhone
-        ) {
-          setRegStep(2);
-        } else {
-          setRegStep(4); // Skip to addition choice
+      // 3a. Validation for 'database_document'
+      if (accessMethod === "database_document") {
+        if (found.length === 0) {
+          setLoading(false);
+          return toast.error("Documento no asociado a ninguna propiedad.");
+        }
+        // Blocked check
+        if (found.every((r) => r.isDeleted)) {
+          setLoading(false);
+          return toast.error("Estas bloqueado de esta asamblea");
         }
       } else {
-        // Standard flow (0 or 1 property)
-        if (
-          assembly.requireFullName ||
-          assembly.requireEmail ||
-          assembly.requirePhone
-        ) {
-          setRegStep(2);
-        } else if (queue.length > 0) {
-          setRegStep(3);
+        // 'free_document' blocked check
+        if (found.length > 0 && found.every((r) => r.isDeleted)) {
+          setLoading(false);
+          return toast.error("Estas bloqueado de esta asamblea");
+        }
+      }
+
+      // 3b. Check if properties are ALREADY CLAIMED by someone else
+      // If ANY property associated with this document is already claimed (registerInAssembly === true)
+      // and the current user trying to register is NOT the one who claimed it (checked by step 1),
+      // we block them.
+      const alreadyRegisteredProps = found.filter(
+        (r) => r.registerInAssembly === true,
+      );
+      if (alreadyRegisteredProps.length > 0) {
+        setLoading(false);
+        return toast.error(
+          "Una o más propiedades de este documento ya fueron registradas por otro usuario. Comuníquese con soporte.",
+        );
+      }
+
+      // 3c. Prepare Verification Queue (Unclaimed valid properties)
+      const availableToRegister = found.filter(
+        (r) => !r.registerInAssembly && !r.isDeleted,
+      );
+
+      // Double check for database_document: must have items
+      if (
+        accessMethod === "database_document" &&
+        availableToRegister.length === 0
+      ) {
+        setLoading(false);
+        // This usually falls into "alreadyRegisteredProps" check above, but logically ensures we don't proceed with empty queue
+        return toast.error(
+          "No hay propiedades disponibles para registrar con este documento.",
+        );
+      }
+
+      setVerificationQueue(availableToRegister);
+      setVerifiedRegistries([]);
+      setCurrentVerificationIndex(0);
+
+      // Pre-fill info if available
+      if (availableToRegister[0]) {
+        setUserInfo((prev) => ({
+          ...prev,
+          firstName:
+            availableToRegister[0].firstName ||
+            availableToRegister[0].nombre ||
+            "",
+          lastName:
+            availableToRegister[0].lastName ||
+            availableToRegister[0].apellido ||
+            "",
+          email: availableToRegister[0].email || "",
+          phone: availableToRegister[0].celular || "",
+        }));
+      } else {
+        setUserInfo({ firstName: "", lastName: "", email: "", phone: "" });
+      }
+
+      // Determine Next Step
+      if (
+        assembly.requireFullName ||
+        assembly.requireEmail ||
+        assembly.requirePhone
+      ) {
+        setRegStep(1); // User Info
+      } else {
+        if (availableToRegister.length === 0) {
+          // Free document with no matching properties -> Manual Add
+          setRegStep(5);
         } else {
-          setRegStep(4);
+          setCurrentRole("");
+          setRegStep(2); // Discovery
         }
       }
     } catch (e) {
-      toast.error("Error de acceso");
+      console.error(e);
+      toast.error("Error al verificar acceso");
     } finally {
       setLoading(false);
     }
   };
 
+  // STEP 1 Handler (User Info Submit)
+  const handleUserInfoSubmit = () => {
+    if (assembly.requireFullName && (!userInfo.firstName || !userInfo.lastName))
+      return toast.error("Nombre y apellido son requeridos");
+    if (assembly.requireEmail && !userInfo.email)
+      return toast.error("Email es requerido");
+    if (assembly.requirePhone && !userInfo.phone)
+      return toast.error("Teléfono es requerido");
+
+    // If we have properties to verify, go to Discovery(2)
+    // If not, it means we are in free_document mode and need to add manually(5)
+    if (verificationQueue.length > 0) {
+      setRegStep(2); // Go to Discovery
+    } else {
+      setAddNewProperties(true);
+      setRegStep(5); // Go to Manual Add
+    }
+  };
+
+  // STEP 2 -> 3 (Was 1 -> 2)
+  const startVerificationLoop = () => {
+    if (verificationQueue.length >= 2) {
+      // Auto-verify all as owner
+      const items = verificationQueue.map((reg) => ({
+        registry: reg,
+        role: "owner",
+        powerFile: null,
+        isManual: false,
+      }));
+      setVerifiedRegistries(items);
+      checkAddAnotherConditions();
+    } else {
+      setCurrentVerificationIndex(0);
+      setCurrentRole("");
+      setCurrentFile(null);
+      setRegStep(3);
+    }
+  };
+
+  // STEP 3 Handler (Next Property) logic...
+
+  // STEP 2 Handler (Next Property)
   const confirmCurrentVerification = () => {
-    if (!currentRole) return toast.error("Selecciona tu participación");
+    const currentReg = verificationQueue[currentVerificationIndex];
+    if (currentRole === "proxy" && !currentFile) {
+      // Optional file? Description says "no es obligatorio".
+      // OK to proceed.
+    }
 
     const newItem = {
-      registry: verificationQueue[currentVerificationIndex] || {
-        propiedad: manualProp.unit,
-        grupo: manualProp.tower,
-        coeficiente: 0,
-        id: `manual_${Date.now()}`,
-      },
+      registry: currentReg,
       role: currentRole,
       powerFile: currentFile,
-      isIdentified: regStep === 3,
-      isManual: regStep === 5,
+      isManual: false,
     };
 
-    setVerifiedRegistries((p) => [...p, newItem]);
+    setVerifiedRegistries((prev) => [...prev, newItem]);
 
-    // Cleanup for next item
-    setCurrentRole("");
-    setCurrentFile(null);
-    setManualProp({ tower: "", unit: "" });
-
-    if (
-      regStep === 3 &&
-      currentVerificationIndex < verificationQueue.length - 1
-    ) {
-      setCurrentVerificationIndex((p) => p + 1);
+    // Check if more
+    if (currentVerificationIndex < verificationQueue.length - 1) {
+      // Next
+      setCurrentVerificationIndex((prev) => prev + 1);
+      setCurrentRole("owner");
+      setCurrentFile(null);
     } else {
-      if (regStep === 3) {
-        setRegStep(4);
-      } else {
-        setRegStep(6);
-      }
+      // Done with queue
+      checkAddAnotherConditions();
+    }
+  };
+
+  const checkAddAnotherConditions = () => {
+    // Check Config Limts
+    // If canAddOtherRepresentatives is false -> Skip to Summary
+    if (assembly.canAddOtherRepresentatives === false) {
+      return setRegStep(6); // Summary (shifted)
+    }
+
+    // If powerLimit is set and reached -> Skip to Summary
+    if (
+      assembly.powerLimit &&
+      verifiedRegistries.length >= parseInt(assembly.powerLimit)
+    ) {
+      return setRegStep(6);
+    }
+
+    setRegStep(4); // Ask Add Another
+  };
+
+  // STEP 4 Handler (Answer Yes/No) (Was 3)
+  const handleAddAnotherDecision = () => {
+    if (addAnotherDecision === "yes") {
+      setAddNewProperties(true);
+      // Reset add form and go to 5 (Was 4)
+      setAddPropType("");
+      setAddPropRegistry(null);
+      setAddPropRole("owner");
+      setAddPropFile(null);
+    } else if (addAnotherDecision === "no") {
+      setRegStep(6); // Summary (Was 5)
+    } else {
+      toast.error("Selecciona una opción");
+    }
+  };
+
+  // STEP 5 Handler (Confirm Manual Add) (Was 4)
+  const confirmManualAdd = () => {
+    if (!addPropRegistry) return toast.error("Selecciona una propiedad");
+    // Check duplicate
+    if (verifiedRegistries.some((r) => r.registry.id === addPropRegistry.id)) {
+      return toast.error("Esta propiedad ya está en tu lista");
+    }
+
+    const newItem = {
+      registry: addPropRegistry,
+      role: addPropRole,
+      powerFile: addPropFile,
+      isManual: true,
+    };
+
+    setVerifiedRegistries((prev) => [...prev, newItem]);
+    if (regStep === 4) {
+      setAddNewProperties(false);
+      setRegStep(5); // Summary (Was 5)
+    } else if (regStep === 5) {
+      setRegStep(6); // Summary (Was 5)
     }
   };
 
   const removeVerifiedItem = (index) => {
-    setVerifiedRegistries((p) => p.filter((_, i) => i !== index));
+    const item = verifiedRegistries[index];
+    if (item && !item.isManual) {
+      return toast.error(
+        "No puedes eliminar una propiedad identificada por tu documento.",
+      );
+    }
+    const updated = verifiedRegistries.filter((_, i) => i !== index);
+    setVerifiedRegistries(updated);
   };
 
+  // --- HELPERS ---
+  const alphanumericSort = (a, b) => {
+    return a.toString().localeCompare(b.toString(), undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
+  };
+
+  // derived for manual add
+  const availableTypes = useMemo(() => {
+    const availableRegs = registries.filter((r) => !r.registerInAssembly);
+    const types = new Set(availableRegs.map((r) => r.tipo || "Otro"));
+    return Array.from(types).sort(alphanumericSort);
+  }, [registries]);
+
+  const hasMultipleTypes = useMemo(
+    () => availableTypes.length > 1,
+    [availableTypes],
+  );
+  const currentSingleType = useMemo(
+    () => (!hasMultipleTypes ? availableTypes[0] : null),
+    [hasMultipleTypes, availableTypes],
+  );
+
+  useEffect(() => {
+    if (!hasMultipleTypes && currentSingleType) {
+      setAddPropType(currentSingleType);
+    }
+  }, [hasMultipleTypes, currentSingleType]);
+
+  const availableGroups = useMemo(() => {
+    const typeToUse = addPropType || currentSingleType;
+    if (!typeToUse) return [];
+    const availableRegs = registries.filter(
+      (r) => !r.registerInAssembly && (r.tipo || "Otro") === typeToUse,
+    );
+
+    const groupsSet = new Set(
+      availableRegs.map((r) => r.grupo).filter((g) => g && g !== "-"),
+    );
+
+    // Check if there are properties without group
+    const hasEmptyGroup = availableRegs.some(
+      (r) => !r.grupo || r.grupo === "-",
+    );
+
+    const sortedGroups = Array.from(groupsSet).sort(alphanumericSort);
+    if (hasEmptyGroup) {
+      sortedGroups.push("Sin grupo");
+    }
+
+    return sortedGroups;
+  }, [addPropType, currentSingleType, registries]);
+
+  const filteredProperties = useMemo(() => {
+    const typeToUse = addPropType || currentSingleType;
+    if (!typeToUse) return [];
+    return registries
+      .filter((r) => {
+        if (r.registerInAssembly) return false;
+        const rType = r.tipo || "Otro";
+        if (rType !== typeToUse) return false;
+
+        if (addPropGroup) {
+          if (addPropGroup === "Sin grupo") {
+            return !r.grupo || r.grupo === "-";
+          }
+          return r.grupo === addPropGroup;
+        }
+
+        return true;
+      })
+      .sort((a, b) => alphanumericSort(a.propiedad, b.propiedad));
+  }, [addPropType, addPropGroup, currentSingleType, registries]);
+
+  // FINAL SUBMIT (Step 6)
   const handleFinalSubmit = async () => {
     setLoading(true);
     try {
+      // 1. Upload files
       const finalRegistries = await Promise.all(
         verifiedRegistries.map(async (item) => {
           let url = null;
@@ -244,55 +594,112 @@ export default function AssemblyAccessPage() {
             url = await getDownloadURL(fileRef);
           }
           return {
+            documentRepresentative: regDocument,
             registryId: item.registry.id,
+            firstName: userInfo.firstName,
+            lastName: userInfo.lastName,
+            email: userInfo.email,
+            phone: userInfo.phone,
             role: item.role,
             powerUrl: url,
             propiedad: item.registry.propiedad,
-            grupo: item.registry.grupo,
             coeficiente: item.registry.coeficiente,
+            regDocument: item.registry.documento, // original doc in registry
           };
         }),
       );
 
+      const mainRegistry = verifiedRegistries[0]?.registry;
+
       const userData = {
         assemblyId: id,
-        document: regDocument,
-        firstName: userInfo.firstName,
-        lastName: userInfo.lastName,
-        email: userInfo.email,
-        phone: userInfo.phone,
         registries: finalRegistries,
-        role: "Asambleista",
+        registryId: mainRegistry?.id,
+        userDocument: regDocument,
       };
+
       const res = await createAssemblyUser(userData);
 
       if (res.success) {
-        if (entity?.assemblyRegistriesListId) {
+        // --- LOGICA DE REGISTRO PARA ASSEMBLYREGISTRATIONS ---
+        const representedProperties = finalRegistries.map((r, index) => {
+          const originalItem = verifiedRegistries[index];
+          const regInfo = originalItem.registry;
+          return {
+            ownerId: r.registryId,
+            documento: r.regDocument,
+            propiedad: r.propiedad,
+            coeficiente: r.coeficiente,
+            numeroVotos: regInfo.numeroVotos || "1",
+            votingBlocked: regInfo.voteBlocked || false,
+            addedByUser: !!originalItem.isManual,
+            role: originalItem.role, // Propietario o Apoderado
+            power: r.powerUrl || null, // Atributo solicitado para el documento
+            tipo: regInfo.tipo || "",
+            grupo: regInfo.grupo || "",
+          };
+        });
+
+        const newRegistration = {
+          assemblyId: id,
+          mainDocument: regDocument,
+          ownerId: mainRegistry?.id || "",
+          firstName: userInfo.firstName || "",
+          lastName: userInfo.lastName || "",
+          email: userInfo.email || "",
+          phone: userInfo.phone || "",
+          createdAt: new Date(),
+          representedProperties: representedProperties,
+        };
+
+        const assemblyRef = doc(db, "assembly", id);
+        await updateDoc(assemblyRef, {
+          assemblyRegistrations: arrayUnion(newRegistration),
+        });
+
+        if (assembly.registrationRecordId) {
+          const regRecordRef = doc(
+            db,
+            "assemblyRegistrations",
+            assembly.registrationRecordId,
+          );
+          await updateDoc(regRecordRef, {
+            registrations: arrayUnion(newRegistration),
+          });
+        }
+        // --- FIN LOGICA DE REGISTRO ---
+
+        if (activeRegistriesListId) {
           await Promise.all(
-            finalRegistries.map((r) => {
-              if (String(r.registryId).startsWith("manual_"))
-                return Promise.resolve();
-              return updateRegistryStatus(
-                entity.assemblyRegistriesListId,
-                r.registryId,
-                true,
-                { ...userData, powerUrl: r.powerUrl, role: r.role },
-              );
-            }),
+            finalRegistries.map((r) =>
+              updateRegistryStatus(activeRegistriesListId, r.registryId, true, {
+                ...userData,
+
+                powerUrl: r.powerUrl,
+                role: r.role,
+              }),
+            ),
           );
         }
-        setCurrentUser({ ...userData, id: res.id });
-        toast.success("Registro completo");
+
+        const fullUser = { ...userData, id: res.id };
+        setCurrentUser(fullUser);
+        // localStorage.setItem(`assemblyUser_${id}`, JSON.stringify(fullUser));
+        toast.success("Registro completado");
+        setRegStep(0);
+      } else {
+        toast.error("Error al crear usuario");
       }
     } catch (e) {
       console.error(e);
-      toast.error("Error en el registro");
-    } finally {
-      setLoading(false);
+      toast.error("Error en el proceso");
     }
+    setLoading(false);
   };
 
-  if (loading && !assembly)
+  /* --- RENDER --- */
+
+  if (loading)
     return (
       <div className="h-screen flex items-center justify-center">
         <Loader />
@@ -301,27 +708,25 @@ export default function AssemblyAccessPage() {
   if (!assembly)
     return <div className="p-10 text-center">Asamblea no encontrada</div>;
 
+  // DASHBOARD
   if (currentUser) {
     const userRegistryIds = (currentUser.registries || []).map(
       (r) => r.registryId,
     );
-    const myRegistries = [
-      ...registries.filter(
-        (r) => userRegistryIds.includes(r.id) && !r.isDeleted,
-      ),
-      ...(currentUser.registries || [])
-        .filter((r) => String(r.registryId).startsWith("manual_"))
-        .map((r) => ({
-          id: r.registryId,
-          propiedad: r.propiedad,
-          grupo: r.grupo,
-          coeficiente: r.coeficiente || 0,
-          isManual: true,
-        })),
-    ];
+    if (
+      currentUser.registryId &&
+      !userRegistryIds.includes(currentUser.registryId)
+    ) {
+      userRegistryIds.push(currentUser.registryId);
+    }
+    const myRegistries = registries.filter(
+      (r) => userRegistryIds.includes(r.id) && !r.isDeleted,
+    );
+    const dashboardUser = { ...currentUser, myRegistries };
+
     return (
       <AsambleistaDashboard
-        user={{ ...currentUser, myRegistries }}
+        user={dashboardUser}
         assembly={assembly}
         entity={entity}
         registries={registries}
@@ -329,6 +734,7 @@ export default function AssemblyAccessPage() {
         userVotingPreference={userVotingPreference}
         onSetVotingPreference={setUserVotingPreference}
         onLogout={() => {
+          localStorage.removeItem(`assemblyUser_${id}`);
           setCurrentUser(null);
           setRegStep(0);
         }}
@@ -340,48 +746,179 @@ export default function AssemblyAccessPage() {
                 : `https://${assembly.meetLink}`,
               "_blank",
             );
-          else toast.info("Sin link");
+          else toast.info("Link no disponible");
         }}
-        renderQuestion={(q, p) => (
+        renderQuestion={(q, extraProps = {}) => (
           <QuestionItem
             q={q}
             userRegistries={myRegistries}
             assembly={assembly}
             userVotingPreference={userVotingPreference}
             onSetVotingPreference={setUserVotingPreference}
-            {...p}
+            {...extraProps}
           />
         )}
       />
     );
   }
 
+  // WIZARD FRAME
   return (
-    <RegistrationWizard
-      regStep={regStep}
-      setRegStep={setRegStep}
-      assembly={assembly}
-      entity={entity} // Pass entity to access columnAliases
-      userInfo={userInfo}
-      setUserInfo={setUserInfo}
-      regDocument={regDocument}
-      setRegDocument={setRegDocument}
-      onHandleAccess={handleAccess}
-      verificationQueue={verificationQueue}
-      currentVerificationIndex={currentVerificationIndex}
-      setCurrentVerificationIndex={setCurrentVerificationIndex}
-      currentRole={currentRole}
-      setCurrentRole={setCurrentRole}
-      currentFile={currentFile}
-      setCurrentFile={setCurrentFile}
-      confirmCurrentVerification={confirmCurrentVerification}
-      verifiedRegistries={verifiedRegistries}
-      removeVerifiedItem={removeVerifiedItem}
-      manualProp={manualProp}
-      setManualProp={setManualProp}
-      registries={registries}
-      handleFinalSubmit={handleFinalSubmit}
-      loading={loading}
-    />
+    <div className="h-full h-screen flex items-center justify-center">
+      {prevStep === 0 && (
+        <LoginMember
+          assembly={assembly}
+          entity={entity}
+          onLogin={() => setPrevStep(1)}
+        />
+      )}
+      {prevStep === 1 && (
+        <div className="w-full max-w-3xl rounded-[40px] shadow-sm  flex flex-col bg-white p-6 gap-[40px] max-w-[1080px] w-full">
+          <div className="flex items-center justify-between w-full gap-4">
+            {regStep !== 4 && (
+              <CustomButton
+                onClick={
+                  regStep === 0
+                    ? () => setPrevStep(0)
+                    : regStep === 5
+                      ? () => setRegStep(6)
+                      : () => setRegStep(regStep - 1)
+                }
+                className="p-0 bg-transparent border-none hover:bg-transparent "
+              >
+                <ArrowLeft size={24} className="text-gray-400" />
+              </CustomButton>
+            )}
+            <div className="flex-1 flex items-center justify-center text-center w-full">
+              <ProgressBar currentStep={regStep} />
+            </div>
+            <div className="bg-[#D5DAFF] px-3 py-2 rounded-full">
+              <CustomText
+                variant="labelS"
+                className="text-[#00093F] font-medium"
+              >
+                Paso {regStep} de 7
+              </CustomText>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center justify-center w-full h-full">
+            {regStep === 0 && (
+              <Step1Document
+                document={regDocument}
+                setDocument={setRegDocument}
+                onNext={() => handleAccess(regDocument)}
+                loading={loading}
+              />
+            )}
+
+            {regStep === 1 && (
+              <Step2UserInfo
+                userInfo={userInfo}
+                setUserInfo={setUserInfo}
+                onNext={handleUserInfoSubmit}
+                assembly={assembly}
+                loading={loading}
+              />
+            )}
+
+            {regStep === 2 && (
+              <StepDiscovery
+                verificationQueue={verificationQueue}
+                onContinue={startVerificationLoop}
+              />
+            )}
+
+            {regStep === 3 && verificationQueue[currentVerificationIndex] && (
+              <Step3Properties
+                verificationQueue={verificationQueue}
+                currentVerificationIndex={currentVerificationIndex}
+                currentRole={currentRole}
+                setCurrentRole={setCurrentRole}
+                currentFile={currentFile}
+                setCurrentFile={setCurrentFile}
+                onContinue={confirmCurrentVerification}
+                assembly={assembly}
+              />
+            )}
+
+            {/* STEP 4: ASK ADD ANOTHER */}
+            {regStep === 4 && (
+              <Step4AddProperties
+                hasStepDecision={addNewProperties}
+                availableTypes={availableTypes}
+                availableGroups={availableGroups}
+                filteredProperties={filteredProperties}
+                addAnotherDecision={addAnotherDecision}
+                setAddAnotherDecision={setAddAnotherDecision}
+                onDecisionContinue={handleAddAnotherDecision}
+                addPropType={addPropType}
+                setAddPropType={setAddPropType}
+                addPropGroup={addPropGroup}
+                setAddPropGroup={setAddPropGroup}
+                addPropRegistry={addPropRegistry}
+                setAddPropRegistry={setAddPropRegistry}
+                addPropRole={addPropRole}
+                setAddPropRole={setAddPropRole}
+                addPropFile={addPropFile}
+                setAddPropFile={setAddPropFile}
+                onConfirmManualAdd={confirmManualAdd}
+                entity={entity}
+                assembly={assembly}
+              />
+            )}
+
+            {/* STEP 5: MANUAL ADD FORM / LOOP */}
+            {regStep === 5 && (
+              <Step4AddProperties
+                hasStepDecision={addNewProperties}
+                addPropType={addPropType}
+                addAnotherDecision={addAnotherDecision}
+                setAddAnotherDecision={setAddAnotherDecision}
+                onDecisionContinue={handleAddAnotherDecision}
+                setAddPropType={setAddPropType}
+                addPropGroup={addPropGroup}
+                setAddPropGroup={setAddPropGroup}
+                addPropRegistry={addPropRegistry}
+                setAddPropRegistry={setAddPropRegistry}
+                addPropRole={addPropRole}
+                setAddPropRole={setAddPropRole}
+                addPropFile={addPropFile}
+                setAddPropFile={setAddPropFile}
+                onConfirmManualAdd={confirmManualAdd}
+                availableTypes={availableTypes}
+                availableGroups={availableGroups}
+                filteredProperties={filteredProperties}
+                entity={entity}
+                assembly={assembly}
+              />
+            )}
+
+            {/* STEP 6: SUMMARY */}
+            {regStep === 6 && (
+              <Step5Review
+                userInfo={userInfo}
+                regDocument={regDocument}
+                verifiedRegistries={verifiedRegistries}
+                onRemoveItem={removeVerifiedItem}
+                onAddAnother={() => {
+                  setAddPropType("");
+                  setAddPropRegistry(null);
+                  setAddPropRole("owner");
+                  setAddPropFile(null);
+                  setRegStep(5);
+                }}
+                onContinue={() => setRegStep(7)}
+              />
+            )}
+
+            {/* STEP 7: TERMS */}
+            {regStep === 7 && (
+              <Step6Condition onAccept={handleFinalSubmit} loading={loading} />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -31,6 +31,19 @@ export const formatDate = (dateString) => {
     return dateString;
   }
 };
+export const formatDateTime = (dateString) => {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+
+  const formattedDate = date.toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  return `${formattedDate}`;
+};
 
 export const getIconPath = (entity) => {
   const type = (entity?.typeName || entity?.type || "").toLowerCase();
@@ -65,4 +78,20 @@ export const getIconTypeAssembly = (assembly) => {
   if (type.includes("4")) return ICON_PATHS.cooperativa;
 
   return null;
+};
+export const parseHour = (hourString) => {
+  let hour = "08";
+  let minute = "00";
+  let ampm = "AM";
+
+  if (hourString) {
+    const match = hourString.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/i);
+    if (match) {
+      hour = match[1].padStart(2, "0");
+      minute = match[2];
+      ampm = match[3].toUpperCase();
+    }
+  }
+
+  return { hour, minute, ampm };
 };

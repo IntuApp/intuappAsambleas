@@ -31,6 +31,8 @@ export default function EntityCard({
     pendingDb = false,
   } = entity;
 
+  console.log("entityCard", entity);
+
   return (
     <div className="max-w-[550px] max-h-[312px] w-full h-full rounded-3xl border border-[#F3F6F9] bg-[#FFFFFF] p-6 flex flex-col gap-5 hover:shadow-soft transition-all">
       {/* Header */}

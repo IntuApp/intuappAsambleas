@@ -14,7 +14,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="es" className={redHatDisplay.className}>
-      <body>
+      <body className="w-full h-full bg-[#F4F7F9]">
         {children}
         <ToastContainer />
       </body>

@@ -4,13 +4,13 @@ import PropTypes from "prop-types";
 
 const textStyles = {
   Title: "text-[57px] leading-[72px] font-bold",
-  TitleX: "text-[40px] leading-[48px]",
-  TitleL: "text-[32px] leading-[40px]",
-  TitleM: "text-[24px] leading-[32px]",
-  SubTitle: "text-[24px] leading-[32px]",
+  TitleX: "text-[40px] leading-[48px] font-bold",
+  TitleL: "text-[32px] leading-[40px] font-bold",
+  TitleM: "text-[24px] leading-[32px] font-bold",
+  SubTitle: "text-[24px] leading-[32px] font-bold",
 
   bodyX: "text-[22px] leading-[32px]",
-  bodyL: "text-[18px] leading-[24px]",
+  bodyL: "text-[18px] leading-[24px] ",
   bodyM: "text-[16px] leading-[24px]",
   bodyS: "text-[14px] leading-[16px]",
 

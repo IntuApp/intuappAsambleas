@@ -2,20 +2,23 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Home, Users, Calendar, CreditCard, LogOut } from "lucide-react";
+import { ICON_PATHS } from "@/constans/iconPaths";
 import { logout } from "@/lib/auth";
 import { toast } from "react-toastify";
+import CustomIcon from "../basics/CustomIcon";
+import CustomText from "../basics/CustomText";
 
 const navItems = [
-  { href: "/superAdmin", label: "Inicio", icon: <Home size={20} /> },
+  { href: "/superAdmin", label: "Inicio", icon: ICON_PATHS.home },
   {
     href: "/superAdmin/operadores",
     label: "Op. Log.",
-    icon: <Users size={20} />,
+    icon: ICON_PATHS.groupPeople,
   },
   {
     href: "/superAdmin/asambleas",
     label: "Asambleas",
-    icon: <Calendar size={20} />,
+    icon: ICON_PATHS.calendar,
   },
 ];
 
@@ -34,13 +37,15 @@ export default function HeaderSuperAdmin() {
   };
 
   return (
-    <aside className=" h-screen w-20 sm:w-24 bg-white border-r border-gray-200 flex flex-col items-center py-6 justify-between shadow-sm">
-      {/* LOGO + NAV */}
-      <div className="flex flex-col items-center space-y-10">
+    <aside className="bg-white md:w-[104px] md:h-[690px] border-r border-gray-200 pt-7 flex flex-col items-center justify-between shadow-sm flex-shrink-0">
+      <div className="flex flex-col items-center space-y-10 w-full">
         {/* LOGO */}
-        <div className="flex flex-col items-center">
-          <img src="/logos/logo-header.png" alt="Logo" className="h-10 mb-2" />
-          <div className="w-15 h-[1px] bg-gray-200 mt-0"></div>
+        <div className="max-w-[88px] max-h-[72px] w-full border-b-2 pb-4 border-[#D5DAFF] flex justify-center">
+          <img
+            src="/logos/logo-header.png"
+            alt="Logo"
+            className="max-w-[64px] max-h-[48px]"
+          />
         </div>
 
         {/* NAV */}
@@ -51,14 +56,15 @@ export default function HeaderSuperAdmin() {
               <Link
                 key={href}
                 href={href}
-                className={`flex flex-col items-center justify-center text-sm font-medium transition-colors ${
-                  isActive
-                    ? "text-blue-600 bg-blue-50 rounded-xl py-2 px-3"
-                    : "text-gray-700 hover:text-blue-500"
-                }`}
+                className={`w-[88px] h-[68px] flex flex-col items-center justify-center rounded-xl transition-colors hover:text-black hover:font-bold
+                  ${
+                    isActive
+                      ? "bg-[#EEF0FF] text-black font-bold"
+                      : "text-[#00093F] hover:text-blue-500"
+                  }`}
               >
-                <div className="mb-1">{icon}</div>
-                <span className="text-xs">{label}</span>
+                <CustomIcon path={icon} size={24} />
+                <CustomText variant="labelM">{label}</CustomText>
               </Link>
             );
           })}

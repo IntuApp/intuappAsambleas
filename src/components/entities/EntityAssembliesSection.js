@@ -16,7 +16,7 @@ import { ICON_PATHS } from "@/constans/iconPaths";
 import { deleteAssembly } from "@/lib/assembly";
 import CustomTypeAssembly from "../basics/CustomTypeAssembly";
 
-const EntityAssembliesSection = ({ entityId, assemblies }) => {
+const EntityAssembliesSection = ({ entityId, assemblies, createAssemblyRoute, viewAssemblyRoute }) => {
   const router = useRouter();
 
   const [localAssemblies, setLocalAssemblies] = useState(assemblies);
@@ -117,7 +117,7 @@ const EntityAssembliesSection = ({ entityId, assemblies }) => {
 
           <CustomButton
             variant="primary"
-            onClick={() => router.push(`/operario/${entityId}/crear-asamblea`)}
+            onClick={createAssemblyRoute}
             className="flex items-center gap-1 px-4 py-2"
           >
             <CustomIcon path={ICON_PATHS.add} size={20} />
@@ -184,7 +184,7 @@ const EntityAssembliesSection = ({ entityId, assemblies }) => {
                       <CustomButton
                         variant="primary"
                         onClick={() =>
-                          router.push(`/operario/${entityId}/${assembly.id}`)
+                          viewAssemblyRoute(assembly.id)
                         }
                         className="p-2"
                       >

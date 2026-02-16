@@ -2,6 +2,7 @@ import React from "react";
 import { ICON_PATHS } from "@/constans/iconPaths";
 import CustomIcon from "@/components/basics/CustomIcon";
 import CustomText from "../basics/CustomText";
+import AssemblyStatus from "../assemblies/AssemblyStatus";
 
 export default function ListItem({
   overline, // Top small text
@@ -9,10 +10,12 @@ export default function ListItem({
   subtitle, // Bottom text
   entity, // Entity object (alternative to title/subtitle)
   status, // { text, color, dot }
+  date,
   onClick,
   isAssamblea,
   showNextAssembly = false,
   classContainer = "",
+  iconArrow = false,
 }) {
   const getIconPath = () => {
     const type = (entity?.typeName || entity?.type || "").toLowerCase();
@@ -62,7 +65,7 @@ export default function ListItem({
     }
   };
 
-  const displayStatusText = formatDate(status?.text);
+  const displayStatusText = formatDate(date);
 
   return (
     <div onClick={onClick} className={`flex items-center ${classContainer}`}>
@@ -86,12 +89,12 @@ export default function ListItem({
             <p className="text-xs text-gray-500 truncate">{overline}</p>
           )}
 
-          <CustomText variant="labelL" className="text-[#000000] font-bold">
+          <CustomText variant="labelL" className="text-[#000000] font-bold truncate">
             {entity?.name || title}
           </CustomText>
 
           {(entity?.typeName || entity?.type || subtitle) && (
-            <CustomText variant="labelM" className="text-[#3D3D44] font-medium">
+            <CustomText variant="labelM" className="text-[#3D3D44] font-medium truncate">
               {entity?.typeName || entity?.type || subtitle}
               {showNextAssembly && (
                 <>
@@ -123,18 +126,11 @@ export default function ListItem({
           </span>
         )}
         {status && isAssamblea && (
-          <span
-            className={`px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 bg-[#B8EAF0] `}
-          >
-            <CustomIcon path={ICON_PATHS.calendar} size={16} color="#0E3C42" />
-            <CustomText variant="labelM" className="text-[#0E3C42] font-bold">
-              {displayStatusText}
-            </CustomText>
-          </span>
+          <AssemblyStatus status={status} date={displayStatusText} />
         )}
       </div>
       <div>
-        {!isAssamblea && (
+        {iconArrow && (
           <CustomIcon path={ICON_PATHS.arrowRight} size={16} color="#000000" />
         )}
       </div>

@@ -32,6 +32,8 @@ const EntityDatabaseManager = ({
   // Excel Upload State
   const [excelData, setExcelData] = useState([]);
   const [excelHeaders, setExcelHeaders] = useState([]);
+  const [columnAliases, setColumnAliases] = useState({});
+
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [excelFileName, setExcelFileName] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -435,7 +437,10 @@ const EntityDatabaseManager = ({
         }}
         data={excelData}
         setData={setExcelData}
+        columnAliases={columnAliases}
+        setColumnAliases={setColumnAliases}
         headers={excelHeaders}
+        setHeaders={setExcelHeaders} // 🔥 ESTA LÍNEA FALTABA
         fileName={excelFileName}
         onAccept={handleUpdateDatabase}
         uploading={uploading}

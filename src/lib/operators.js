@@ -10,37 +10,148 @@ import {
   getDoc,
   updateDoc,
   deleteDoc,
+  Timestamp,
+  orderBy,
+  limit,
+  onSnapshot,
 } from "firebase/firestore";
 
-export async function createOperator(data, userId) {
+import bcrypt from "bcryptjs";
+
+
+// =============================
+// CREATE OPERATOR
+// =============================
+export async function createOperator(data) {
   try {
-    const docRef = await addDoc(collection(db, "representative-operator"), {
+    // Hash password
+    if (data.password) {
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+      data.password = hashedPassword;
+    }
+
+    const docRef = await addDoc(collection(db, "user"), {
       ...data,
-      userId: userId,
+      role: "3",
       createdAt: serverTimestamp(),
     });
 
     return { success: true, id: docRef.id };
   } catch (error) {
-    console.error("Error creating representative:", error);
+    console.error("Error creating operator:", error);
     return { success: false, error };
   }
 }
+export function listenOperators(callback) {
+  const q = query(
+    collection(db, "user"),
+    where("role", "==", "3")
+  );
 
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const operators = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    callback(operators);
+  });
+
+  return unsubscribe;
+}
+
+// =============================
+// GET OPERATORS
+// =============================
 export async function getOperators() {
   try {
-    const res = await fetch("/api/operators");
-    if (!res.ok) return [];
-    return await res.json();
+    const operatorsRef = collection(db, "user");
+
+    const q = query(operatorsRef, where("role", "==", "3"));
+
+    const querySnapshot = await getDocs(q);
+
+    const operators = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return { success: true, data: operators };
   } catch (error) {
     console.error("Error fetching operators:", error);
-    return [];
+    return { success: false, error: "Error fetching operators" };
   }
 }
 
+
+// =============================
+// GET OPERATORS WITH NEXT ASSEMBLY
+// =============================
+export async function getOperatorsWithNextAssembly() {
+  try {
+    const operatorsQuery = query(
+      collection(db, "user"),
+      where("role", "==", "3"),
+    );
+
+    const operatorsSnapshot = await getDocs(operatorsQuery);
+
+    const operators = [];
+
+    for (const operatorDoc of operatorsSnapshot.docs) {
+      const operatorData = { id: operatorDoc.id, ...operatorDoc.data() };
+
+      const entitiesQuery = query(
+        collection(db, "entity"),
+        where("operatorId", "==", operatorDoc.id),
+      );
+
+      const entitiesSnapshot = await getDocs(entitiesQuery);
+      const entityIds = entitiesSnapshot.docs.map((doc) => doc.id);
+
+      let nextAssembly = null;
+
+      if (entityIds.length > 0) {
+        const assembliesQuery = query(
+          collection(db, "assembly"),
+          where("entityId", "in", entityIds.slice(0, 10)),
+          where("status", "==", "create"),
+          where("date", ">=", Timestamp.now()),
+          orderBy("date", "asc"),
+          limit(1),
+        );
+
+        const assembliesSnapshot = await getDocs(assembliesQuery);
+
+        if (!assembliesSnapshot.empty) {
+          const assemblyDoc = assembliesSnapshot.docs[0];
+          nextAssembly = {
+            id: assemblyDoc.id,
+            ...assemblyDoc.data(),
+          };
+        }
+      }
+
+      operators.push({
+        ...operatorData,
+        entities: entityIds,
+        nextAssembly,
+      });
+    }
+
+    return { success: true, data: operators };
+  } catch (error) {
+    console.error("Error fetching operators:", error);
+    return { success: false, error: "Error fetching operators" };
+  }
+}
+
+
+// =============================
+// GET OPERATOR BY ID
+// =============================
 export async function getOperatorById(id) {
   try {
-    // 1. Get User Data
     const userDocRef = doc(db, "user", id);
     const userDoc = await getDoc(userDocRef);
 
@@ -48,30 +159,11 @@ export async function getOperatorById(id) {
       return { success: false, error: "Operator not found" };
     }
 
-    const userData = { id: userDoc.id, ...userDoc.data() };
-
-    // 2. Get Representative Data
-    const q = query(
-      collection(db, "representative-operator"),
-      where("userId", "==", id)
-    );
-    const querySnapshot = await getDocs(q);
-
-    let representativeData = {};
-    let representativeId = null;
-
-    if (!querySnapshot.empty) {
-      const repDoc = querySnapshot.docs[0];
-      representativeData = repDoc.data();
-      representativeId = repDoc.id;
-    }
-
     return {
       success: true,
       data: {
-        ...userData,
-        representative: representativeData,
-        representativeId: representativeId,
+        id: userDoc.id,
+        ...userDoc.data(),
       },
     };
   } catch (error) {
@@ -80,37 +172,24 @@ export async function getOperatorById(id) {
   }
 }
 
-import bcrypt from "bcryptjs";
 
-export async function updateOperator(
-  userId,
-  representativeId,
-  userData,
-  representativeData
-) {
+// =============================
+// UPDATE OPERATOR
+// =============================
+export async function updateOperator(userId, updatedData) {
   try {
     // Hash password if present
-    if (userData.password) {
-      const hashedPassword = await bcrypt.hash(userData.password, 10);
-      userData.password = hashedPassword;
+    if (updatedData.password) {
+      const hashedPassword = await bcrypt.hash(updatedData.password, 10);
+      updatedData.password = hashedPassword;
     }
 
-    // Update User
     const userRef = doc(db, "user", userId);
-    await updateDoc(userRef, userData);
 
-    // Update Representative
-    if (representativeId) {
-      const repRef = doc(db, "representative-operator", representativeId);
-      await updateDoc(repRef, representativeData);
-    } else {
-      // Create if not exists (fallback)
-      await addDoc(collection(db, "representative-operator"), {
-        ...representativeData,
-        userId: userId,
-        createdAt: serverTimestamp(),
-      });
-    }
+    await updateDoc(userRef, {
+      ...updatedData,
+      updatedAt: serverTimestamp(),
+    });
 
     return { success: true };
   } catch (error) {
@@ -119,12 +198,13 @@ export async function updateOperator(
   }
 }
 
-export async function deleteOperator(userId, representativeId) {
+
+// =============================
+// DELETE OPERATOR
+// =============================
+export async function deleteOperator(userId) {
   try {
     await deleteDoc(doc(db, "user", userId));
-    if (representativeId) {
-      await deleteDoc(doc(db, "representative-operator", representativeId));
-    }
     return { success: true };
   } catch (error) {
     console.error("Error deleting operator:", error);

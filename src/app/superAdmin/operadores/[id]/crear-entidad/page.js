@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import CreateEntityForm from "@/components/entities/CreateEntityForm";
 import TopBar from "@/components/ui/TopBar";
@@ -9,6 +9,7 @@ import { getOperatorById } from "@/lib/operators";
 import CustomText from "@/components/basics/CustomText";
 
 export default function CreateEntityPage() {
+  const { id } = useParams();
   const { user } = useUser();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -16,20 +17,20 @@ export default function CreateEntityPage() {
 
   useEffect(() => {
     const fetchOperatorData = async () => {
-      if (!user?.uid) return;
+      if (!id) return;
 
-      const res = await getOperatorById(user.uid);
+      const res = await getOperatorById(id);
       if (res.success) {
         setOperatorData(res.data);
       } else {
         // Fallback if operator doc not found or error, just use basic user info
-        console.warn("Operator data not found for user", user.uid);
+        console.warn("Operator data not found for user", id);
       }
       setLoading(false);
     };
 
     fetchOperatorData();
-  }, [user]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -49,9 +50,9 @@ export default function CreateEntityPage() {
         </div>
 
         <CreateEntityForm
-          operatorId={user.uid}
+          operatorId={id}
           onCancel={() => router.back()}
-          onSuccess={(res) => router.push(`/operario/${res.id}`)}
+          onSuccess={(res) => router.push(`/superAdmin/operadores/${id}`)}
         />
       </div>
     </div>

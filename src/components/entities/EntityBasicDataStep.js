@@ -1,5 +1,5 @@
 import CustomInput from "@/components/basics/inputs/CustomInput";
-import { colombiaCities } from "@/lib/colombiaCities";
+import { colombiaCities } from "@/constans/colombiaCities";
 import CustomText from "../basics/CustomText";
 import CustomSelect from "../basics/inputs/CustomSelect";
 

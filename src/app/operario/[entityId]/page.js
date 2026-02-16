@@ -54,6 +54,9 @@ const EntityDetailPage = () => {
     type: "",
     city: "",
     address: "",
+    adminName: "",
+    adminEmail: "",
+    adminPhone: "",
   });
 
   const fetchEntityData = useCallback(async () => {
@@ -212,10 +215,15 @@ const EntityDetailPage = () => {
                   <Info label="Asambleístas" value={registries.length} />
                   <Info label="Ciudad" value={entityData.city} />
                   <Info label="Dirección" value={entityData.address} />
+                  <Info label="Admin" value={entityData.adminEntity.name} />
+                  <Info label="Email" value={entityData.adminEntity.email} />
+                  <Info label="Teléfono" value={entityData.adminEntity.phone} />
                 </div>
               </div>
 
               <EntityAssembliesSection
+                createAssemblyRoute={() => router.push(`/operario/${entityId}/crear-asamblea`)}
+                viewAssemblyRoute={(assemblyId) => router.push(`/operario/${entityId}/${assemblyId}`)}
                 entityId={entityId}
                 assemblies={assemblies}
               />

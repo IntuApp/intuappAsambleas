@@ -8,6 +8,7 @@ export default function CustomOptionSelect({
   options = [],
   value,
   onChange,
+  classContentOptions,
 }) {
   return (
     <div className="mb-6">
@@ -15,7 +16,7 @@ export default function CustomOptionSelect({
         {label} {required && <span className="text-red-500">*</span>}
       </CustomText>
 
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className={`flex flex-col md:flex-row gap-4 ${classContentOptions}`}>
         {options.map((opt) => {
           const selected = value === opt.value;
 

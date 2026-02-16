@@ -12,6 +12,7 @@ module.exports = {
       },
       fontFamily: {
         display: ["var(--font-red-hat-display)"],
+        sans: ["var(--font-redhat)"],
       },
     },
   },

@@ -1,38 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
-import { Download, Upload, FileSpreadsheet, Trash2, Check } from "lucide-react";
-
-import CustomInput from "@/components/basics/inputs/CustomInput";
-import { ExcelEditor } from "@/components/basics/ExcelEditor";
+import { Check } from "lucide-react";
 
 import {
   validateExcelStructure,
   validateExcelTotals,
 } from "@/lib/excelValidation";
-import {
-  createEntity,
-  createEntityAdmin,
-  createAssemblyRegistriesList,
-} from "@/lib/entities";
+
+import { createEntity, createAssemblyRegistriesList } from "@/lib/entities";
+
 import { getEntityTypes } from "@/lib/masterData";
-import { colombiaCities } from "@/lib/colombiaCities";
+
 import CustomText from "../basics/CustomText";
-import CustomSelect from "../basics/inputs/CustomSelect";
 import CustomButton from "../basics/CustomButton";
 import CustomIcon from "../basics/CustomIcon";
 import { ICON_PATHS } from "@/constans/iconPaths";
+
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import SuccessModal from "../modals/SuccessModal";
+
 import EntityBasicDataStep from "./EntityBasicDataStep";
 import EntityExcelUploadStep from "./EntityExcelUploadStep";
 
-export default function CreateEntityForm({
-  operatorId,
-  representativeId,
-  onCancel,
-  onSuccess,
-}) {
+export default function CreateEntityForm({ operatorId, onCancel, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [entityTypes, setEntityTypes] = useState([]);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
@@ -43,7 +34,6 @@ export default function CreateEntityForm({
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdEntity, setCreatedEntity] = useState(null);
 
-  // Form State
   const [entityForm, setEntityForm] = useState({
     name: "",
     nit: "",
@@ -61,6 +51,10 @@ export default function CreateEntityForm({
     !entityForm.type ||
     !entityForm.address.trim() ||
     excelData.length === 0;
+
+  /* =====================================================
+     FETCH TYPES
+  ===================================================== */
 
   useEffect(() => {
     const fetchTypes = async () => {
@@ -82,50 +76,50 @@ export default function CreateEntityForm({
     return translations[typeName] || typeName;
   };
 
+  /* =====================================================
+     EXCEL UPLOAD
+  ===================================================== */
+
   const handleFileUpload = (e) => {
-    const file = e.target.files ? e.target.files[0] : null;
+    const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
+
     reader.onload = (evt) => {
       const bstr = evt.target.result;
       const wb = XLSX.read(bstr, { type: "binary" });
-      const wsname = wb.SheetNames[0];
-      const ws = wb.Sheets[wsname];
+      const ws = wb.Sheets[wb.SheetNames[0]];
 
       const rawData = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
       if (rawData.length === 0) {
         toast.error("El archivo está vacío");
         return;
       }
+
       const headers = rawData[0];
       const data = XLSX.utils.sheet_to_json(ws);
 
-      const rowValidation = validateExcelStructure(data);
+      const validation = validateExcelStructure(data);
 
       setExcelHeaders(headers);
       setExcelData(data);
       setExcelFileName(file.name);
 
-      if (!rowValidation.valid) {
-        toast.warn(
-          <div>
-            <p className="font-bold">Advertencia: Datos incompletos</p>
-            <ul className="list-disc pl-4 text-xs max-h-20 overflow-y-auto mt-2 text-yellow-800">
-              {rowValidation.errors.slice(0, 3).map((err, i) => (
-                <li key={i}>{err}</li>
-              ))}
-              {rowValidation.errors.length > 3 && <li>...</li>}
-            </ul>
-          </div>,
-          { autoClose: 10000 },
-        );
+      if (!validation.valid) {
+        toast.warn("El archivo tiene filas incompletas.");
       } else {
-        toast.success("Archivo cargado. Verifique los datos en el paso 4.");
+        toast.success("Archivo cargado correctamente.");
       }
     };
+
     reader.readAsBinaryString(file);
   };
+
+  /* =====================================================
+     CREATE FLOW
+  ===================================================== */
 
   const handleConfirmCreate = async () => {
     setShowConfirmationModal(false);
@@ -133,10 +127,9 @@ export default function CreateEntityForm({
   };
 
   const handleCreateEntity = async () => {
-    // Validations
     if (!entityForm.name || !entityForm.type) {
       toast.warn(
-        "Por favor complete los campos obligatorios: Nombre de la entidad, Tipo de entidad y Ciudad",
+        "Por favor complete los campos obligatorios: Nombre y Tipo de entidad",
       );
       return;
     }
@@ -152,66 +145,41 @@ export default function CreateEntityForm({
 
     const structureVal = validateExcelStructure(excelData);
     if (!structureVal.valid) {
-      toast.error(
-        <div>
-          <p className="font-bold">Error en estructura de datos:</p>
-          <ul className="list-disc pl-4 text-sm max-h-40 overflow-y-auto">
-            {structureVal.errors.slice(0, 10).map((err, i) => (
-              <li key={i}>{err}</li>
-            ))}
-          </ul>
-        </div>,
-      );
+      toast.error("Error en estructura del archivo Excel.");
       setLoading(false);
       return;
     }
 
     const totalVal = validateExcelTotals(excelData);
     if (!totalVal.valid) {
-      toast.error(
-        <div>
-          <p className="font-bold">Error en coeficientes:</p>
-          <ul className="list-disc pl-4 text-sm">
-            {totalVal.errors.map((err, i) => (
-              <li key={i}>{err}</li>
-            ))}
-          </ul>
-        </div>,
-      );
+      toast.error("Error en los coeficientes del Excel.");
       setLoading(false);
       return;
     }
 
-    // 1. Create Assembly Registry List
-    let assemblyRegistriesListId = null;
-    if (excelData.length > 0) {
-      const resRegistries = await createAssemblyRegistriesList(excelData);
-      if (resRegistries.success) {
-        assemblyRegistriesListId = resRegistries.id;
-      } else {
-        toast.error("Error al guardar la base de datos de asambleístas");
-        setLoading(false);
-        return;
+    /* 1️⃣ Crear Assembly Registries */
+    const resRegistries = await createAssemblyRegistriesList(excelData);
+
+    if (!resRegistries.success) {
+      toast.error("Error al guardar la base de datos de asambleístas");
+      setLoading(false);
+      return;
+    }
+
+    // Normalizar aliases
+    const normalizedColumnAliases = {};
+
+    excelHeaders.forEach((header) => {
+      const alias = columnAliases?.[header];
+
+      // Solo guardar alias si es diferente al header original
+      if (alias && alias.trim() && alias.trim() !== header) {
+        normalizedColumnAliases[header] = alias.trim();
       }
-    }
+    });
+    const assemblyRegistriesListId = resRegistries.id;
 
-    // 2. Create Entity Admin
-    const adminData = {
-      name: entityForm.adminName,
-      email: entityForm.adminEmail,
-      phone: entityForm.adminPhone,
-      role: "admin_entity",
-    };
-
-    const resAdmin = await createEntityAdmin(adminData);
-
-    if (!resAdmin.success) {
-      toast.error("Error creando administrador de la entidad");
-      setLoading(false);
-      return;
-    }
-
-    // 3. Create Entity
+    /* 2️⃣ Crear Entity con admin embebido */
     const entityData = {
       name: entityForm.name,
       nit: entityForm.nit,
@@ -219,16 +187,22 @@ export default function CreateEntityForm({
       city: entityForm.city,
       address: entityForm.address,
       databaseStatus: "done",
-      assemblyRegistriesListId: assemblyRegistriesListId,
-      columnAliases: columnAliases || {}, // Save aliases
+      assemblyRegistriesListId,
+
+      // Guardar headers reales
+      headers: excelHeaders,
+
+      // Guardar solo aliases distintos
+      columnAliases: normalizedColumnAliases,
+
+      adminEntity: {
+        name: entityForm.adminName,
+        email: entityForm.adminEmail,
+        phone: entityForm.adminPhone,
+      },
     };
 
-    const resEntity = await createEntity(
-      entityData,
-      resAdmin.id,
-      operatorId,
-      representativeId,
-    );
+    const resEntity = await createEntity(entityData, operatorId);
 
     if (resEntity.success) {
       setCreatedEntity(resEntity);
@@ -240,6 +214,10 @@ export default function CreateEntityForm({
     setLoading(false);
   };
 
+  /* =====================================================
+     RENDER
+  ===================================================== */
+
   return (
     <div className="gap-5 flex flex-col h-full">
       <ConfirmationModal
@@ -250,11 +228,12 @@ export default function CreateEntityForm({
         onConfirm={handleConfirmCreate}
         onClose={() => setShowConfirmationModal(false)}
         title="¿Registrar nueva entidad?"
-        message={`Podrás completar o modificar su información más adelante.`}
+        message="Podrás completar o modificar su información más adelante."
       />
+
       <SuccessModal
         isOpen={showSuccessModal}
-        message="La entidad ha sido creada y guardada correctamente. Ahora puedes añadir asambleas o gestionar sus datos."
+        message="La entidad ha sido creada correctamente."
         onConfirm={() => {
           setShowSuccessModal(false);
           if (onSuccess && createdEntity) {
@@ -293,6 +272,7 @@ export default function CreateEntityForm({
             Cancelar
           </CustomText>
         </CustomButton>
+
         <CustomButton
           variant="primary"
           className="py-3 px-4 flex gap-2"
