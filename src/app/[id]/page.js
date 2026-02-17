@@ -847,7 +847,7 @@ export default function AssemblyAccessPage() {
       {prevStep === 1 && (
         <div className="w-full max-w-3xl rounded-[40px] shadow-sm  flex flex-col bg-white p-6 gap-[40px] max-w-[1080px] w-full">
           <div className="flex items-center justify-between w-full gap-4">
-            {regStep !== 4 && (
+            {regStep !== 4 || regStep!==6 && (
               <CustomButton
                 onClick={
                   regStep === 0
@@ -981,6 +981,7 @@ export default function AssemblyAccessPage() {
                   setRegStep(5);
                 }}
                 onContinue={() => setRegStep(7)}
+                assembly={assembly}
               />
             )}
 

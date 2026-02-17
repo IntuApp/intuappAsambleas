@@ -161,13 +161,6 @@ export default function AsambleistaDashboard({
             setActiveTab={setActiveTab}
           />
         </div>
-
-        <div className="mt-auto pt-8">
-          <button className="flex flex-col items-center gap-1 text-gray-300 hover:text-gray-500 transition">
-            <Building2 size={24} />
-            <span className="text-[8px] font-bold uppercase">IntuApp</span>
-          </button>
-        </div>
       </aside>
 
       {/* Mobile Bottom Bar (optional, hidden on desktop) */}
@@ -599,9 +592,20 @@ export default function AsambleistaDashboard({
                   </div>
                 </div>
 
-                <h2 className="text-xl font-bold text-[#0E3C42] mt-4">
-                  Mis Respuestas
-                </h2>
+                <div className="flex flex-col gap-1">
+                  <CustomText
+                    variant="bodyX"
+                    className="text-[#0E3C42] font-bold"
+                  >
+                    Asamblea {assembly.name}
+                  </CustomText>
+                  <CustomText
+                    variant="labelL"
+                    className="text-[#0E3C42] font-regular"
+                  >
+                    Estos son los resultados de las votaciones de esta asamblea.
+                  </CustomText>
+                </div>
                 {sortedQuestions.map((q) => {
                   const propertiesToUse =
                     registrationData?.representedProperties ||
@@ -615,25 +619,11 @@ export default function AsambleistaDashboard({
                         (v) =>
                           v.questionId === q.id && v.propertyOwnerId === propId,
                       );
-                      // Reconstruct answer format for grouping logic: it used to be { option: string } etc.
-                      // Now it's selectedOptions: [] in vote doc.
+
                       if (!foundVote) return null;
 
                       let answer = null;
                       if (q.type === QUESTION_TYPES.OPEN) {
-                        // selectedOptions might contain the text if updated correctly or I need to check how I save OPEN questions
-                        // In QuestionItem.js submitBlockVote for OPEN, I did { answerText: ... }
-                        // But submitBatchVotes sends selectedOptions.
-                        // Wait, submitBatchVotes in src/lib/questions.js writes user payload directly if used in old way.
-                        // But QuestionItem.js calls submitBatchVotes(id, votes).
-                        // And I will update QuestionItem.js to format votes correctly for new submitBatchVotes.
-                        // New submitBatchVotes expects `selectedOptions` array.
-                        // For OPEN question, where do we store the text?
-                        // The user requested: "selectedOptions: string[]".
-                        // For OPEN, maybe we store the text as the single element of the array?
-                        // Or "vote" doc needs a text field?
-                        // The user example didn't mention open questions.
-                        // I'll assume selectedOptions[0] holds the text if OPEN.
                         answer = { answerText: foundVote.selectedOptions?.[0] };
                       } else if (
                         q.type === QUESTION_TYPES.MULTIPLE ||
@@ -674,60 +664,111 @@ export default function AsambleistaDashboard({
                   return (
                     <div
                       key={q.id}
-                      className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm"
+                      className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm mb-6"
                     >
-                      <h3 className="text-lg font-bold text-[#0E3C42] mb-6">
+                      <CustomText
+                        variant="bodyX"
+                        className="text-[#0E3C42] font-bold"
+                      >
                         {q.title}
-                      </h3>
+                      </CustomText>
 
                       {groups.length > 0 ? (
                         <div className="flex flex-col gap-6">
                           {groups.map((group, idx) => {
-                            let ansText = "";
-                            if (group.answer.option)
-                              ansText = group.answer.option;
-                            if (group.answer.options)
-                              ansText = group.answer.options.join(", ");
-                            if (group.answer.answerText)
-                              ansText = group.answer.answerText;
-
                             return (
-                              <div
-                                key={idx}
-                                className="bg-gray-50 p-6 rounded-2xl border border-gray-100"
-                              >
-                                <div className="flex flex-wrap gap-2 mb-4">
+                              <div key={idx} className="flex flex-col gap-3">
+                                {/* Header con las propiedades que votaron esto */}
+                                <div className="flex flex-wrap gap-2 items-center">
+                                  <CustomText
+                                    variant="labelS"
+                                    className="font-medium"
+                                  >
+                                    Respuesta de:
+                                  </CustomText>
                                   {group.properties.map((reg, rIdx) => (
-                                    <span
+                                    <CustomText
                                       key={rIdx}
-                                      className="bg-indigo-50 text-[#8B9DFF] text-[10px] font-black uppercase px-2 py-1 rounded-md border border-indigo-100"
+                                      variant="labelS"
+                                      className="font-bold uppercase px-2 py-1 rounded-md border border-indigo-100"
                                     >
                                       {reg.tipo ? `${reg.tipo} - ` : ""}
                                       {reg.grupo ? `${reg.grupo} - ` : ""}
                                       {reg.propiedad}
-                                    </span>
+                                    </CustomText>
                                   ))}
                                 </div>
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    Respuesta
-                                  </span>
-                                  <span className="bg-green-100 text-green-600 text-[9px] font-black uppercase px-2 py-0.5 rounded-full">
-                                    Votado
-                                  </span>
+
+                                {/* Renderizado de las Respuestas con Estilo Visual de Tarjeta Seleccionada */}
+                                <div className="flex flex-col gap-3">
+                                  {/* CASO 1: Selección Múltiple (Checkboxes cuadrados) */}
+                                  {q.type === QUESTION_TYPES.MULTIPLE &&
+                                    group.answer.options &&
+                                    group.answer.options.map((opt, i) => (
+                                      <div
+                                        key={i}
+                                        className="w-full p-4 rounded-xl border border-[#4059FF] bg-[#EEF0FF] flex items-center gap-3"
+                                      >
+                                        <div className="w-5 h-5 bg-[#4059FF] rounded-md flex items-center justify-center shrink-0">
+                                          <Check
+                                            size={14}
+                                            className="text-white"
+                                            strokeWidth={3}
+                                          />
+                                        </div>
+                                        <CustomText
+                                          variant="bodyM"
+                                          className="font-bold text-[#0E3C42]"
+                                        >
+                                          {opt}
+                                        </CustomText>
+                                      </div>
+                                    ))}
+
+                                  {/* CASO 2: Selección Única / Si-No (Radio buttons circulares) */}
+                                  {(q.type === QUESTION_TYPES.UNIQUE ||
+                                    q.type === QUESTION_TYPES.YES_NO) &&
+                                    (group.answer.option ||
+                                      group.answer.options?.[0]) && (
+                                      <div className="w-full p-4 rounded-xl border border-[#4059FF] bg-[#EEF0FF] flex items-center gap-3">
+                                        <div className="w-5 h-5 rounded-full border-2 border-[#4059FF] flex items-center justify-center shrink-0">
+                                          <div className="w-2.5 h-2.5 bg-[#4059FF] rounded-full" />
+                                        </div>
+                                        <CustomText
+                                          variant="bodyM"
+                                          className="font-bold text-[#0E3C42]"
+                                        >
+                                          {group.answer.option ||
+                                            group.answer.options[0]}
+                                        </CustomText>
+                                      </div>
+                                    )}
+
+                                  {/* CASO 3: Respuesta Abierta */}
+                                  {q.type === QUESTION_TYPES.OPEN &&
+                                    group.answer.answerText && (
+                                      <div className="w-full p-4 rounded-xl border border-[#4059FF] bg-[#EEF0FF]">
+                                        <CustomText
+                                          variant="bodyM"
+                                          className="font-bold text-[#0E3C42]"
+                                        >
+                                          {group.answer.answerText}
+                                        </CustomText>
+                                      </div>
+                                    )}
                                 </div>
-                                <p className="text-xl font-black text-[#0E3C42]">
-                                  {ansText}
-                                </p>
                               </div>
                             );
                           })}
                         </div>
                       ) : (
                         <div className="bg-gray-50 p-6 rounded-2xl border border-dashed border-gray-200 text-center">
-                          <p className="text-sm font-bold text-gray-400">
+                          <CustomText
+                            variant="bodyS"
+                            className="font-bold text-gray-400"
+                          >
                             No participaste en esta pregunta.
-                          </p>
+                          </CustomText>
                         </div>
                       )}
                     </div>
@@ -740,43 +781,59 @@ export default function AsambleistaDashboard({
         {activeTab === "ayuda" && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
             {/* HELP BANNER */}
-            <div className="bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-[40px] p-10 md:p-16 mb-12 relative overflow-hidden shadow-xl shadow-indigo-100">
+            <div className=" rounded-[40px] p-10 md:p-6 mb-12 relative overflow-hidden shadow-xl shadow-indigo-100">
               {/* Abstract decorative shapes */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-300/20 rounded-full blur-2xl translate-y-1/3 -translate-x-1/4"></div>
+              <div className="absolute -top-10 -left-20 w-64 h-64 bg-[#94A2FF] opacity-100 blur-[100px] rounded-full pointer-events-none" />
+
+              <div className="absolute top-0 left-[300px] w-80 h-44 bg-[#36C5C5] opacity-30 blur-[80px] rounded-full pointer-events-none" />
+
+              <div className="absolute -right-20 -bottom-20 w-56 h-96 bg-[#36C5C5] opacity-30 blur-[100px] rounded-full pointer-events-none" />
+              <div className="absolute  right-[200px] -bottom-20 w-64 h-64 bg-[#94A2FF] opacity-80 blur-[80px] rounded-full pointer-events-none" />
 
               <div className="relative z-10 max-w-2xl">
-                <h2 className="text-4xl font-black text-white mb-4 leading-tight">
+                <CustomText
+                  variant="TitleL"
+                  className="font-bold text-[#0E3C42]"
+                >
                   ¿Tienes algún problema?
-                </h2>
-                <p className="text-indigo-50 text-lg font-medium mb-10 opacity-90">
+                </CustomText>
+                <CustomText
+                  variant="bodyL"
+                  className="text-[#0E3C42] mb-10 opacity-90"
+                >
                   Estamos aquí para ayudarte, envíanos un mensaje para
                   asistencia rápida.
-                </p>
+                </CustomText>
 
-                <button
+                <CustomButton
                   onClick={() =>
                     window.open(
                       "https://api.whatsapp.com/send?phone=YOUR_NUMBER_HERE",
                       "_blank",
                     )
                   }
-                  className="bg-white/20 backdrop-blur-md text-white px-8 py-4 rounded-2xl font-black flex items-center gap-3 hover:bg-white/30 transition shadow-lg active:scale-95"
+                  variant="primary"
+                  className="px-4 py-3 flex items-center gap-2"
                 >
-                  <MessageCircle size={22} className="fill-white/20" />
-                  Escribenos
-                </button>
+                  <MessageCircle size={22} className="text-black" />
+                  <CustomText variant="labelL" className="font-bold">
+                    Escríbenos
+                  </CustomText>
+                </CustomButton>
               </div>
 
               {/* Illustration-like background element (Visual) */}
-              <div className="absolute right-12 top-1/2 -translate-y-1/2 hidden lg:block opacity-20">
-                <HelpCircle size={180} className="text-white" />
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden lg:block">
+               <img src="/logos/decorations/figureTwo.png" alt="" className="w-[200px] h-[200px] object-cover"/>
               </div>
             </div>
 
-            <h3 className="text-2xl font-black text-[#0E3C42] mb-8">
+            <CustomText
+              variant="SubTitle"
+              className="font-black text-[#0E3C42] mb-8"
+            >
               Preguntas frecuentes
-            </h3>
+            </CustomText>
 
             <div className="flex flex-col gap-4">
               {/* FAQ 1 */}
@@ -785,12 +842,15 @@ export default function AsambleistaDashboard({
                   onClick={() => setOpenFaq(openFaq === 1 ? null : 1)}
                   className="w-full px-8 py-6 flex justify-between items-center text-left hover:bg-gray-50 transition"
                 >
-                  <span className="text-lg font-bold text-[#4F46E5]">
+                  <CustomText
+                    variant="TitleS"
+                    className="font-bold text-[#4059FF]"
+                  >
                     ¿Cómo se vota?
-                  </span>
+                  </CustomText>
                   <ChevronDown
                     size={20}
-                    className={`text-[#4F46E5] transition-transform duration-300 ${
+                    className={`text-[#4059FF] transition-transform duration-300 ${
                       openFaq === 1 ? "rotate-180" : ""
                     }`}
                   />
@@ -803,17 +863,32 @@ export default function AsambleistaDashboard({
                   <div className="px-8 pb-8 text-gray-500 font-medium leading-relaxed border-t border-gray-50 pt-6">
                     <ol className="list-decimal pl-5 space-y-3">
                       <li>
-                        El operador iniciará la votación de cada pregunta.
-                      </li>
-                      <li>La pregunta aparecerá en tu pantalla.</li>
-                      <li>Selecciona tu respuesta.</li>
-                      <li>
-                        Pulsa el botón &quot;votar&quot; para registrar tu voto.
+                        <CustomText variant="bodyM" className="text-gray-500">
+                          El operador iniciará la votación de cada pregunta.
+                        </CustomText>
                       </li>
                       <li>
-                        Si tienes hasta 4 representaciones, puedes votar por
-                        cada propiedad o una sola vez para todas (según tu
-                        elección inicial).
+                        <CustomText variant="bodyM" className="text-gray-500">
+                          La pregunta aparecerá en tu pantalla.
+                        </CustomText>
+                      </li>
+                      <li>
+                        <CustomText variant="bodyM" className="text-gray-500">
+                          Selecciona tu respuesta.
+                        </CustomText>
+                      </li>
+                      <li>
+                        <CustomText variant="bodyM" className="text-gray-500">
+                          Pulsa el botón &quot;votar&quot; para registrar tu
+                          voto.
+                        </CustomText>
+                      </li>
+                      <li>
+                        <CustomText variant="bodyM" className="text-gray-500">
+                          Si tienes hasta 4 representaciones, puedes votar por
+                          cada propiedad o una sola vez para todas (según tu
+                          elección inicial).
+                        </CustomText>
                       </li>
                     </ol>
                   </div>
@@ -826,12 +901,15 @@ export default function AsambleistaDashboard({
                   onClick={() => setOpenFaq(openFaq === 2 ? null : 2)}
                   className="w-full px-8 py-6 flex justify-between items-center text-left hover:bg-gray-50 transition"
                 >
-                  <span className="text-lg font-bold text-[#4F46E5]">
+                  <CustomText
+                    variant="TitleS"
+                    className="font-bold text-[#4059FF]"
+                  >
                     ¿Cómo edito mi registro?
-                  </span>
+                  </CustomText>
                   <ChevronDown
                     size={20}
-                    className={`text-[#4F46E5] transition-transform duration-300 ${
+                    className={`text-[#4059FF] transition-transform duration-300 ${
                       openFaq === 2 ? "rotate-180" : ""
                     }`}
                   />
@@ -842,8 +920,10 @@ export default function AsambleistaDashboard({
                   }`}
                 >
                   <div className="px-8 pb-8 text-gray-500 font-medium leading-relaxed border-t border-gray-50 pt-6">
-                    No se puede editar. Debe solicitar al operador logistico la
-                    eliminación para volver a registrarse.
+                    <CustomText variant="bodyM" className="text-gray-500">
+                      No se puede editar. Debe solicitar al operador logistico
+                      la eliminación para volver a registrarse.
+                    </CustomText>
                   </div>
                 </div>
               </div>
@@ -854,12 +934,15 @@ export default function AsambleistaDashboard({
                   onClick={() => setOpenFaq(openFaq === 3 ? null : 3)}
                   className="w-full px-8 py-6 flex justify-between items-center text-left hover:bg-gray-50 transition"
                 >
-                  <span className="text-lg font-bold text-[#4F46E5]">
+                  <CustomText
+                    variant="TitleS"
+                    className="font-bold text-[#4059FF]"
+                  >
                     Sobre los resultados de las votaciones
-                  </span>
+                  </CustomText>
                   <ChevronDown
                     size={20}
-                    className={`text-[#4F46E5] transition-transform duration-300 ${
+                    className={`text-[#4059FF] transition-transform duration-300 ${
                       openFaq === 3 ? "rotate-180" : ""
                     }`}
                   />
@@ -870,30 +953,33 @@ export default function AsambleistaDashboard({
                   }`}
                 >
                   <div className="px-8 pb-8 text-gray-500 font-medium leading-relaxed border-t border-gray-50 pt-6">
-                    <p className="font-bold text-[#0E3C42] mb-4">
+                    <CustomText
+                      variant="bodyM"
+                      className="font-bold text-[#0E3C42] mb-4"
+                    >
                       Los resultados emitidos en la plataforma se obtienen con
                       base en los coeficientes, según lo establecido en la Ley
                       675 de 2001:
-                    </p>
+                    </CustomText>
                     <ul className="space-y-4">
                       <li className="flex gap-2">
                         <span className="font-bold text-gray-700 min-w-max">
                           •
                         </span>
-                        <span>
+                        <CustomText variant="bodyM" className="text-gray-500">
                           <strong className="text-gray-700">
                             Artículo 37. Derecho al voto:
                           </strong>{" "}
                           &ldquo;El voto de cada propietario equivaldrá al
                           porcentaje del coeficiente de copropiedad del
                           respectivo bien privado.&ldquo;
-                        </span>
+                        </CustomText>
                       </li>
                       <li className="flex gap-2">
                         <span className="font-bold text-gray-700 min-w-max">
                           •
                         </span>
-                        <span>
+                        <CustomText variant="bodyM" className="text-gray-500">
                           <strong className="text-gray-700">
                             Artículo 45. Quórum y mayorías:
                           </strong>{" "}
@@ -906,7 +992,7 @@ export default function AsambleistaDashboard({
                           de los coeficientes de copropiedad, y tomará
                           decisiones con el voto favorable de la mitad más uno
                           de dichos coeficientes.&rdquo;
-                        </span>
+                        </CustomText>
                       </li>
                     </ul>
                   </div>
@@ -950,7 +1036,10 @@ export default function AsambleistaDashboard({
                   onClick={onLogout}
                   className=" flex items-center gap-2 py-2 px-4"
                 >
-                  <CustomIcon path={ICON_PATHS.exit} size={18} /> Cerrar sesión
+                  <CustomIcon path={ICON_PATHS.exit} size={18} /> 
+                  <CustomText variant="labelL" className="font-bold">
+                    Cerrar sesión
+                  </CustomText>
                 </CustomButton>
                 {/* Certificado de participación - Hidden as requested */}
                 {/* 

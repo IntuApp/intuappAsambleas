@@ -86,6 +86,7 @@ export default function EntityBasicDataStep({
         <CustomInput
           label="Dirección"
           variant="labelM"
+          optional
           className="max-w-[344px] max-h-[80px]"
           classLabel="text-[#333333] font-bold"
           classInput="max-w-[344px] max-h-[56px] w-full pl-4 pr-4 py-3 rounded-lg border"

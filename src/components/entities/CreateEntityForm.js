@@ -49,7 +49,6 @@ export default function CreateEntityForm({ operatorId, onCancel, onSuccess }) {
     loading ||
     !entityForm.name.trim() ||
     !entityForm.type ||
-    !entityForm.address.trim() ||
     excelData.length === 0;
 
   /* =====================================================

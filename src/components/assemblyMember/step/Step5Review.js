@@ -14,6 +14,7 @@ export default function Step5Review({
   onRemoveItem,
   onAddAnother,
   onContinue,
+  assembly,
 }) {
   const ITEMS_PER_PAGE = 4;
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,7 +53,7 @@ export default function Step5Review({
           Información personal
         </CustomText>
 
-        <div className="shadow-soft border border-gray-100 rounded-2xl p-5 flex items-center gap-5 mb-10 max-w-[406px]">
+        <div className="shadow-soft border border-gray-100 rounded-2xl p-5 flex items-center gap-5 mb-4 max-w-[406px]">
           <div className="p-2 bg-[#EEF0FF] rounded-full">
             <CustomIcon
               path={ICON_PATHS.accountCircle}
@@ -146,7 +147,7 @@ export default function Step5Review({
 
         {/* Paginación */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-3 mt-8">
+          <div className="flex items-center justify-center gap-3 mt-4">
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}
@@ -185,18 +186,26 @@ export default function Step5Review({
         )}
       </div>
 
-      {/* Footer Buttons */}
-      <div className="flex items-center justify-center gap-4 mt-6">
-        <CustomButton
-          variant="secondary"
-          onClick={onAddAnother}
-          className="p-3"
-        >
-          <CustomText variant="bodyM" className="text-[#0E3C42] font-bold">
-            Añadir otra propiedad
-          </CustomText>
-        </CustomButton>
+      {assembly.powerLimit <= verifiedRegistries.length && (
+        <CustomText variant="bodyM" className="text-[#0E3C42] font-bold">
+          Ya has añadido todas las propiedades que puedes representar.
+        </CustomText>
+      )}
 
+      {/* Footer Buttons */}
+      <div className="flex items-center justify-center gap-4 mt-2">
+        {assembly.canAddOtherRepresentatives && (
+          <CustomButton
+            disabled={assembly.powerLimit <= verifiedRegistries.length}
+            variant="secondary"
+            onClick={onAddAnother}
+            className="p-3"
+          >
+            <CustomText variant="bodyM" className="text-[#0E3C42] font-bold">
+              Añadir otra propiedad
+            </CustomText>
+          </CustomButton>
+        )}
         <CustomButton
           variant="primary"
           onClick={onContinue}
