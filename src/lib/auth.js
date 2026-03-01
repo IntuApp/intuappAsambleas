@@ -1,91 +1,73 @@
-import { useState, useEffect } from "react";
+'use server' 
 
-const USER_SESSION_KEY = "user_session";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, addDoc, updateDoc, doc } from "firebase/firestore";
+import bcrypt from "bcryptjs";
+import { cookies } from "next/headers"; 
 
-export const login = async (email, password) => {
-  try {
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+export async function loginUser(email, password) {
+  if (!email || !password) throw new Error("Email and password are required");
+  if (!db) throw new Error("Database connection not available");
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Login failed");
-    }
+  const q = query(collection(db, "user"), where("email", "==", email));
+  const querySnapshot = await getDocs(q);
 
-    const userSession = await response.json();
+  if (querySnapshot.empty) throw new Error("Usuario no encontrado");
 
-    localStorage.setItem(USER_SESSION_KEY, JSON.stringify(userSession));
-    window.dispatchEvent(new Event("storage")); // Trigger update for useAuth
-    return userSession;
-  } catch (e) {
-    throw new Error(e.message);
-  }
-};
+  const userDoc = querySnapshot.docs[0];
+  const userData = userDoc.data();
 
-export const register = async (userData) => {
-  try {
-    const response = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData),
-    });
+  const isValid = await bcrypt.compare(password, userData.password);
+  if (!isValid) throw new Error("Contraseña incorrecta");
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Registration failed");
-    }
+  const sessionToken = crypto.randomUUID();
+  
+  await updateDoc(doc(db, "user", userDoc.id), {
+    currentSessionToken: sessionToken
+  });
 
-    return await response.json();
-  } catch (error) {
-    console.error("Error registering user:", error);
-    return { success: false, message: error.message };
-  }
-};
+  const cookieStore = await cookies();
+  cookieStore.set('session', JSON.stringify({ 
+    uid: userDoc.id, 
+    role: userData.role, 
+    token: sessionToken 
+  }), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+  });
 
-export const logout = async () => {
-  try {
-    localStorage.removeItem(USER_SESSION_KEY);
-    window.dispatchEvent(new Event("storage"));
-  } catch (error) {
-    console.error("Error al cerrar sesión:", error);
-    throw new Error(error.message);
-  }
-};
+  const userSession = {
+    uid: userDoc.id,
+    email: userData.email,
+    role: userData.role,
+    ...userData,
+  };
 
-export const useAuth = () => {
-  const [user, setUser] = useState(null);
+  delete userSession.password;
+  return userSession;
+}
 
-  useEffect(() => {
-    const checkUser = () => {
-      const storedUser = localStorage.getItem(USER_SESSION_KEY);
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      } else {
-        setUser(null);
+export async function logoutUser() {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get('session')?.value;
+
+  if (sessionCookie) {
+    try {
+      const session = JSON.parse(sessionCookie);
+      
+      // 1. Borramos el token de sesión en Firebase para invalidarlo por completo
+      if (session.uid && db) {
+        await updateDoc(doc(db, "user", session.uid), {
+          currentSessionToken: null 
+        });
       }
-    };
+    } catch (error) {
+      console.error("Error limpiando la sesión en la base de datos:", error);
+    }
+  }
 
-    checkUser();
-
-    const handleStorageChange = () => {
-      checkUser();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
-
-  return { user };
-};
-
-export const resetPassword = async (email) => {
-  // Not implemented for custom auth yet, or needs a different approach (e.g. email service)
-  console.warn("Reset password not implemented for custom auth");
-  return false;
-};
+  // 2. Destruimos la cookie en el navegador del usuario
+  cookieStore.delete('session');
+}

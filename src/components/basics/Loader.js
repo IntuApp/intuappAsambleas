@@ -1,8 +1,10 @@
-import React from 'react';
+import React from "react";
 
 const Loader = ({ text = "Cargando...", className = "" }) => {
   return (
-    <div className={`flex flex-col items-center justify-center w-full h-full min-h-[50vh] ${className}`}>
+    <div
+      className={`flex flex-col items-center justify-center w-full h-full min-h-[50vh] ${className}`}
+    >
       <div className="relative flex items-center justify-center mb-4">
         {/* Outer pulsing ring */}
         <div className="absolute w-16 h-16 border-4 border-blue-100 rounded-full animate-ping opacity-75"></div>

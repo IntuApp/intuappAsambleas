@@ -1,0 +1,300 @@
+import React, { useState, useMemo } from "react";
+import { Search, Trash2, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import CustomText from "../basics/CustomText";
+
+const AttendanceTable = ({
+    assembly,
+    registrations = [],
+    masterList = {},
+    onAction // Función que recibirá el item a eliminar
+}) => {
+    const [activeTab, setActiveTab] = useState("Registrados");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    // --- 1. PROCESAMIENTO Y APLANAMIENTO DE DATOS ---
+    const { registrados, pendientes, eliminados } = useMemo(() => {
+        const reg = [];
+        const pend = [];
+        const elim = [];
+        const occupiedIds = new Set();
+
+        // A. Procesar Registrados (Aplanamos el array representedProperties)
+        registrations?.forEach((userReg, userIndex) => {
+            // Si el usuario completo está marcado como eliminado (soft delete opcional)
+            if (userReg.isDeleted) {
+                elim.push(userReg); // Lógica base para eliminados
+                return;
+            }
+
+            (userReg.representedProperties || []).forEach((prop, propIndex) => {
+                const masterInfo = masterList[prop.ownerId] || {};
+                occupiedIds.add(prop.ownerId);
+
+                reg.push({
+                    // Datos de la lista maestra
+                    ...masterInfo,
+                    id: prop.ownerId,
+                    tipo: masterInfo.Tipo || masterInfo.tipo,
+                    grupo: masterInfo.Grupo || masterInfo.grupo,
+                    propiedad: masterInfo.Propiedad || masterInfo.propiedad,
+                    coeficiente: prop.coefi || masterInfo.Coeficiente || masterInfo.coeficiente,
+                    documento: masterInfo.Documento || masterInfo.documento, // Normalizamos el documento del excel
+                    // Datos del usuario que registró la propiedad
+                    mainDocument: userReg.mainDocument,
+                    firstName: userReg.firstName,
+                    lastName: userReg.lastName,
+                    // Datos específicos de la representación
+                    role: prop.role,
+                    power: prop.power,
+                    addedByUser: prop.addedByUser,
+                    // Índices para facilitar la eliminación en el array original
+                    userIndex,
+                    propIndex,
+                    registrationId: userReg.mainDocument // Identificador para buscarlo en DB
+                });
+            });
+        });
+
+        // B. Procesar Pendientes (Los que están en masterList pero no en occupiedIds)
+        Object.entries(masterList).forEach(([id, data]) => {
+            if (!occupiedIds.has(id)) {
+                pend.push({
+                    ...data,
+                    id,
+                    tipo: data.Tipo || data.tipo,
+                    grupo: data.Grupo || data.grupo,
+                    propiedad: data.Propiedad || data.propiedad,
+                    coeficiente: data.Coeficiente || data.coeficiente,
+                    documento: data.Documento || data.documento // Normalizamos el documento del excel
+                });
+            }
+        });
+
+        return { registrados: reg, pendientes: pend, eliminados: elim };
+    }, [registrations, masterList]);
+
+    // --- 2. FILTRADO POR PESTAÑA Y BÚSQUEDA ---
+    const currentData = useMemo(() => {
+        let source = [];
+        if (activeTab === "Registrados") source = registrados;
+        if (activeTab === "Pendientes") source = pendientes;
+        if (activeTab === "Registros eliminados") source = eliminados;
+
+        if (!searchTerm) return source;
+
+        const lowerSearch = searchTerm.toLowerCase();
+        return source.filter(item =>
+            String(item.propiedad || "").toLowerCase().includes(lowerSearch) ||
+            String(item.mainDocument || "").toLowerCase().includes(lowerSearch) ||
+            String(item.documento || "").toLowerCase().includes(lowerSearch) ||
+            String(item.grupo || "").toLowerCase().includes(lowerSearch) ||
+            String(item.firstName || "").toLowerCase().includes(lowerSearch) ||
+            String(item.lastName || "").toLowerCase().includes(lowerSearch)
+        );
+    }, [activeTab, registrados, pendientes, eliminados, searchTerm]);
+
+    // --- 3. PAGINACIÓN ---
+    const totalPages = Math.ceil(currentData.length / itemsPerPage) || 1;
+    const currentItems = currentData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    // --- 4. RENDERIZADO CONDICIONAL DE PODER ---
+    const renderPoder = (item) => {
+        if (activeTab !== "Registrados") return "-";
+
+        // Si es propietario, nunca sube poder
+        if (item.role === "owner") {
+            return (
+                <span className="px-4 py-1 rounded-full border border-gray-200 text-[#0E3C42] text-xs font-bold bg-gray-50">
+                    Propietario
+                </span>
+            );
+        }
+
+        // Si es asamblea presencial (typeId === "1")
+        if (String(assembly?.typeId) === "1") {
+            return (
+                <span className="px-4 py-1 rounded-full border border-gray-200 text-[#0E3C42] text-xs font-bold bg-gray-50">
+                    Poder físico
+                </span>
+            );
+        }
+
+        // Si es asamblea virtual/mixta (typeId === "2" u otro)
+        if (item.power) {
+            return (
+                <a
+                    href={item.power}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#4059FF] hover:underline flex items-center justify-center gap-2 font-bold text-xs"
+                >
+                    <img src="/logos/users/iconFile.png" alt="file" className="w-4 h-4 object-contain" onError={(e) => e.target.style.display = 'none'} />
+                    Descargar poder
+                </a>
+            );
+        } else {
+            return (
+                <span className="px-4 py-1 rounded-full border border-gray-200 text-[#0E3C42] text-xs font-bold bg-gray-50">
+                    Poder físico
+                </span>
+            );
+        }
+    };
+
+    return (
+        <div className="w-full bg-white border border-[#F3F6F9] rounded-3xl p-6 flex flex-col gap-6 shadow-soft mt-8">
+
+            {/* HEADER Y PESTAÑAS */}
+            <div className="flex flex-col gap-4 mb-6">
+                <CustomText variant="TitleM" className="font-bold text-[#0E3C42]">Asistencia</CustomText>
+                <div className="flex flex-wrap gap-2">
+                    {["Registrados", "Pendientes", "Registros eliminados"].map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => { setActiveTab(tab); setCurrentPage(1); }}
+                            className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === tab
+                                    ? "bg-[#E0E7FF] text-[#0E3C42] shadow-sm"
+                                    : "bg-transparent text-gray-500 hover:bg-gray-50"
+                                }`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                </div>
+                <CustomText variant="bodyS" className="text-[#838383]">
+                    {activeTab === "Registrados" ? "Aquí puedes ver las unidades que ya confirmaron su asistencia." :
+                        activeTab === "Pendientes" ? "Unidades que aún no se han registrado en la asamblea." :
+                            "Historial de registros eliminados o anulados."}
+                </CustomText>
+            </div>
+
+            {/* BUSCADOR */}
+            <div className="relative mb-6">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                    type="text"
+                    placeholder="Busca por torre, # de propiedad, documento o nombre"
+                    className="w-full bg-white border border-gray-200 rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium outline-none focus:border-[#8B9DFF] transition-all"
+                    value={searchTerm}
+                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                />
+            </div>
+
+            {/* TABLA */}
+            <div className="overflow-x-auto border border-gray-100 rounded-xl">
+                <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                        <tr className="bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                            <th className="py-4 px-6">Tipo</th>
+                            <th className="py-4 px-6">Grupo</th>
+                            <th className="py-4 px-6"># Propiedad</th>
+                            <th className="py-4 px-6">Coeficiente</th>
+                            <th className="py-4 px-6">Documento</th>
+
+                            {/* Condicional: Nombre */}
+                            {assembly?.requireFullName && activeTab === "Registrados" && (
+                                <th className="py-4 px-6">Nombre</th>
+                            )}
+
+                            {/* Condicional: Poder (Solo en Registrados) */}
+                            {activeTab === "Registrados" && (
+                                <th className="py-4 px-6 text-center">Poder</th>
+                            )}
+
+                            {/* Acción */}
+                            {activeTab !== "Pendientes" && (
+                                <th className="py-4 px-6 text-center">Acción</th>
+                            )}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {currentItems.map((item, idx) => (
+                            <tr key={item.id || idx} className="border-b border-gray-50 hover:bg-slate-50/50 transition text-sm text-[#0E3C42]">
+                                <td className="py-4 px-6 font-medium text-gray-500">{item.tipo || "-"}</td>
+                                <td className="py-4 px-6 font-medium text-gray-500">{item.grupo || "-"}</td>
+                                <td className="py-4 px-6 font-bold">{item.propiedad || "-"}</td>
+                                <td className="py-4 px-6 font-medium text-gray-500">{item.coeficiente || "0"}%</td>
+
+                                {/* LÓGICA DE DOCUMENTO APLICADA AQUÍ */}
+                                <td className="py-4 px-6 font-medium">
+                                    {activeTab === "Registrados" ? (item.mainDocument || "-") : (item.documento || "-")}
+                                </td>
+
+                                {assembly?.requireFullName && activeTab === "Registrados" && (
+                                    <td className="py-4 px-6 font-medium capitalize">
+                                        {item.firstName ? `${item.firstName} ${item.lastName || ""}`.toLowerCase() : "-"}
+                                    </td>
+                                )}
+
+                                {activeTab === "Registrados" && (
+                                    <td className="py-4 px-6 text-center">
+                                        {renderPoder(item)}
+                                    </td>
+                                )}
+
+                                {activeTab !== "Pendientes" && (
+                                    <td className="py-4 px-6 text-center">
+                                        <button
+                                            onClick={() => onAction && onAction(item, activeTab === "Registrados" ? "delete" : "restore")}
+                                            className={`p-2 rounded-full transition ${activeTab === "Registrados"
+                                                    ? "bg-red-50 text-red-500 hover:bg-red-100"
+                                                    : "bg-green-50 text-green-500 hover:bg-green-100"
+                                                }`}
+                                            title={activeTab === "Registrados" ? "Eliminar registro" : "Restaurar registro"}
+                                        >
+                                            {activeTab === "Registrados" ? <Trash2 size={18} /> : <RefreshCw size={18} />}
+                                        </button>
+                                    </td>
+                                )}
+                            </tr>
+                        ))}
+
+                        {currentItems.length === 0 && (
+                            <tr>
+                                <td colSpan="10" className="py-12 text-center text-gray-400 font-medium">
+                                    No se encontraron propiedades para mostrar en esta sección.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* PAGINACIÓN */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 mt-6">
+                    <button
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage((p) => p - 1)}
+                        className="p-2 text-gray-400 hover:text-[#0E3C42] disabled:opacity-30"
+                    >
+                        <ChevronLeft size={20} />
+                    </button>
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                        <button
+                            key={i}
+                            onClick={() => setCurrentPage(i + 1)}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${currentPage === i + 1
+                                    ? "bg-[#D9E9E9] text-[#0E3C42]"
+                                    : "bg-transparent text-gray-500 hover:bg-gray-100"
+                                }`}
+                        >
+                            {i + 1}
+                        </button>
+                    ))}
+                    <button
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage((p) => p + 1)}
+                        className="p-2 text-gray-400 hover:text-[#0E3C42] disabled:opacity-30"
+                    >
+                        <ChevronRight size={20} />
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default AttendanceTable;

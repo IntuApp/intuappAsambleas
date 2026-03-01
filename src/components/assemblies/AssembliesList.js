@@ -12,8 +12,15 @@ import {
   Video,
   Users,
 } from "lucide-react";
-import Button from "@/components/basics/Button";
+import CustomButton from "@/components/basics/CustomButton";
 import Loader from "@/components/basics/Loader";
+import CustomText from "../basics/CustomText";
+import CustomIcon from "../basics/CustomIcon";
+import { getTypeName } from "@/lib/utils";
+import CustomTypeAssembly from "../basics/CustomTypeAssembly";
+import { useRouter } from "next/navigation";
+import CustomStates from "./CustomStates";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
 export default function AssembliesList({
   data = [],
@@ -21,6 +28,7 @@ export default function AssembliesList({
   onCreateClick,
   getDetailUrl,
 }) {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [assemblyStatusFilter, setAssemblyStatusFilter] = useState("");
@@ -108,19 +116,19 @@ export default function AssembliesList({
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="">
+      <div className="flex flex-col gap-6 w-full">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-[#0E3C42]">Asambleas</h1>
-          </div>
-          <Button
+        <div className="flex justify-between items-center">
+          <CustomText variant="TitleX" className="text-[#0E3C42] font-bold">
+            Asambleas
+          </CustomText>
+          <CustomButton
             onClick={onCreateClick}
             icon={Plus}
             className="flex items-center gap-2 bg-[#94A2FF] !text-[#000000] hover:bg-[#7a8ce0] !font-bold px-6 py-3 font-semibold shadow-md transition"
           >
             Crear Asamblea
-          </Button>
+          </CustomButton>
         </div>
 
         {/* Filters and Search */}
@@ -180,29 +188,41 @@ export default function AssembliesList({
             </select>
 
             {/* View Mode Toggle */}
-            <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
-              <button
+            <div className="flex items-center rounded-xl p-1.5 gap-2">
+              <CustomButton
                 onClick={() => setViewMode("grid")}
-                className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${
-                  viewMode === "grid"
-                    ? "bg-white text-[#8B9DFF] shadow-sm"
-                    : "text-gray-500"
-                }`}
+                className={`flex items-center gap-2 p-2 rounded-lg font-bold transition-all ${viewMode === "grid"
+                    ? "bg-[#EEF0FF] border border-[#94A2FF] shadow-sm text-[#4059FF]"
+                    : "bg-[#FFFFFF] border border-[#DBE2E8] shadow-sm text-[#3D3D44]"
+                  }`}
               >
-                <Grid3x3 size={18} />
-                <span className="hidden sm:inline">Vista tarjetas</span>
-              </button>
-              <button
+                <CustomIcon path={ICON_PATHS.layoutGrid} size={16} />
+                <CustomText
+                  variant="labelL"
+                  className={
+                    viewMode === "grid" ? "text-[#4059FF] font-medium" : "text-[#3D3D44] font-medium"
+                  }
+                >
+                  Vista tarjetas
+                </CustomText>
+              </CustomButton>
+              <CustomButton
                 onClick={() => setViewMode("list")}
-                className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${
-                  viewMode === "list"
-                    ? "bg-white text-[#8B9DFF] shadow-sm"
-                    : "text-gray-500"
-                }`}
+                className={`flex items-center gap-2 p-2 rounded-lg font-bold transition-all ${viewMode === "list"
+                    ? "bg-[#EEF0FF] border border-[#94A2FF] shadow-sm text-[#4059FF]"
+                    : "bg-[#FFFFFF] border border-[#DBE2E8] shadow-sm text-[#3D3D44]"
+                  }`}
               >
-                <List size={18} />
-                <span className="hidden sm:inline">Vista lista</span>
-              </button>
+                <CustomIcon path={ICON_PATHS.viewList} size={16} />
+                <CustomText
+                  variant="labelL"
+                  className={
+                    viewMode === "list" ? "text-[#4059FF] font-medium" : "text-[#3D3D44] font-medium"
+                  }
+                >
+                  Vista lista
+                </CustomText>
+              </CustomButton>
             </div>
           </div>
         </div>
@@ -220,139 +240,145 @@ export default function AssembliesList({
               return (
                 <div
                   key={assembly.id}
-                  className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col"
+                  className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col gap-4"
                 >
-                  <h3 className="text-xl font-bold text-[#0E3C42] mb-4 line-clamp-2 min-h-[56px]">
+                  <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">
                     {assembly.name}
-                  </h3>
+                  </CustomText>
 
-                  <div className="space-y-2 mb-4 flex-1">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-semibold">Operador:</span>{" "}
-                      {assembly.operatorName}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-semibold">Entidad:</span>{" "}
-                      {assembly.entityName}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-semibold">Próxima asamblea:</span>{" "}
-                      {assembly.date || "Por definir"}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-semibold">Hora:</span>{" "}
-                      {assembly.hour || "Por definir"}
-                    </p>
+                  <div className="space-y-2  flex-1">
+                    <div className="flex gap-2">
+                      <CustomText variant="bodyM" className="font-regular">Operador:</CustomText>
+                      <CustomText variant="bodyM" className="font-bold">{assembly.operatorName}</CustomText>
+                    </div>
+                    <div className="flex gap-2">
+                      <CustomText variant="bodyM" className="font-regular">Entidad:</CustomText>
+                      <CustomText variant="bodyM" className="font-bold">{assembly.entityName}</CustomText>
+                    </div>
+                  </div>
+                  <div className="space-y-2 flex-1 mb-2">
+                    <div className="flex gap-2">
+                      <CustomText variant="bodyM" className="font-regular">Próxima asamblea:</CustomText>
+                      <CustomText variant="bodyM" className="font-bold">{assembly.date || "Por definir"}</CustomText>
+                    </div>
+                    <div className="flex gap-2">
+                      <CustomText variant="bodyM" className="font-regular">Hora:</CustomText>
+                      <CustomText variant="bodyM" className="font-bold">{assembly.hour || "Por definir"}</CustomText>
+                    </div>
                   </div>
 
                   {/* Badges */}
-                  <div className="flex gap-2 mb-6 flex-wrap">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        assembly.type === "Presencial"
-                          ? "bg-[#0E3C42] text-white"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {assembly.type === "Presencial" ? (
-                        <Users size={12} className="inline mr-1" />
-                      ) : (
-                        <Video size={12} className="inline mr-1" />
-                      )}
-                      {assembly.type || "Virtual"}
-                    </span>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${statusBadge.className}`}
-                    >
-                      {statusBadge.dot && (
-                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                      )}
-                      {statusBadge.text}
-                    </span>
+                  <div className="flex gap-2 flex-wrap mb-2">
+                    <div>
+                      <CustomTypeAssembly type={assembly.typeId} className="px-4 py-2 rounded-full bg-white border border-[#DBE2E8]" />
+
+                    </div>
+                    <div>
+                      <CustomStates status={assembly.statusID} className="px-3 py-1 rounded-full " />
+                    </div>
                   </div>
 
-                  {/* Action Button */}
-                  <a
-                    href={getDetailUrl ? getDetailUrl(assembly) : "#"}
-                    className="w-full bg-[#8B9DFF] hover:bg-[#7a8ce0] text-black  py-3 rounded-xl font-bold shadow-lg shadow-indigo-100 transition flex items-center justify-center gap-2"
+                  <CustomButton
+                    onClick={() => {
+                      if (assembly.operatorId === "sin-operador") {
+                        toast.warning("Esta asamblea pertenece a una entidad sin operador asignado.");
+                        return;
+                      }
+                      router.push(`/admin/operadores/${assembly.operatorId}/${assembly.entityId}/${assembly.id}`)
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-3"
                   >
-                    <Eye size={18} />
-                    Ver Asamblea
-                  </a>
+                    <CustomIcon path={ICON_PATHS.eye} size={18} />
+                    <CustomText className="font-bold">Ver Asamblea</CustomText>
+                  </CustomButton>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+              <table className="w-full whitespace-nowrap">
+                <thead className="bg-white border-b border-gray-100">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">
-                      Asamblea
+                    <th className="px-6 py-5 text-left text-sm font-bold text-[#0E3C42]">
+                      Nombre de la Asamblea
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">
+                    <th className="px-6 py-5 text-left text-sm font-bold text-[#0E3C42]">
                       Operador
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">
+                    <th className="px-6 py-5 text-left text-sm font-bold text-[#0E3C42]">
                       Entidad
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">
+                    <th className="px-6 py-5 text-left text-sm font-bold text-[#0E3C42]">
                       Fecha
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">
+                    <th className="px-6 py-5 text-left text-sm font-bold text-[#0E3C42]">
+                      Hora
+                    </th>
+                    <th className="px-6 py-5 text-left text-sm font-bold text-[#0E3C42]">
+                      Tipo
+                    </th>
+                    <th className="px-6 py-5 text-left text-sm font-bold text-[#0E3C42]">
                       Estado
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">
-                      Acciones
+                    <th className="px-6 py-5 text-center text-sm font-bold text-[#0E3C42]">
+                      Acción
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-50">
                   {currentItems.map((assembly) => {
-                    const statusBadge = getStatusBadge(assembly.status);
-
                     return (
                       <tr
                         key={assembly.id}
-                        className="hover:bg-gray-50 transition"
+                        className="hover:bg-gray-50 transition-colors"
                       >
-                        <td className="px-6 py-4">
-                          <p className="font-semibold text-[#0E3C42]">
+                        <td className="px-6 py-4 align-middle">
+                          <p className="font-medium text-[#0E3C42]">
                             {assembly.name}
                           </p>
-                          <p className="text-sm text-gray-500">
-                            {assembly.type}
-                          </p>
                         </td>
-                        <td className="px-6 py-4 text-gray-600">
+                        <td className="px-6 py-4 align-middle text-sm text-gray-600">
                           {assembly.operatorName}
                         </td>
-                        <td className="px-6 py-4 text-gray-600">
+                        <td className="px-6 py-4 align-middle text-sm text-gray-600">
                           {assembly.entityName}
                         </td>
-                        <td className="px-6 py-4 text-gray-600">
-                          {assembly.date} - {assembly.hour}
+                        <td className="px-6 py-4 align-middle text-sm text-gray-600">
+                          {assembly.date || "Por definir"}
                         </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit ${statusBadge.className}`}
-                          >
-                            {statusBadge.dot && (
-                              <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                            )}
-                            {statusBadge.text}
-                          </span>
+                        <td className="px-6 py-4 align-middle text-sm text-gray-600">
+                          {assembly.hour || "Por definir"}
                         </td>
-                        <td className="px-6 py-4">
-                          <a
-                            href={getDetailUrl ? getDetailUrl(assembly) : "#"}
-                            className="text-[#8B9DFF] hover:text-[#7a8ce0] font-semibold flex items-center gap-1"
-                          >
-                            <Eye size={16} />
-                            Ver
-                          </a>
+                        <td className="px-6 py-4 align-middle">
+                          <CustomTypeAssembly
+                            type={assembly.typeId}
+                            className="px-3 py-1.5 text-xs rounded-full bg-white border border-[#DBE2E8] w-max"
+                          />
+                        </td>
+                        <td className="px-6 py-4 align-middle">
+                          <CustomStates
+                            status={assembly.statusID}
+                            className="px-3 py-1.5 text-xs rounded-full w-max"
+                          />
+                        </td>
+                        <td className="px-6 py-4 align-middle">
+                          <div className="flex justify-center w-full">
+                            <CustomButton
+                              onClick={() => {
+                                if (assembly.operatorId === "sin-operador") {
+                                  toast.warning("Esta asamblea pertenece a una entidad sin operador asignado.");
+                                  return;
+                                }
+                                router.push(`/admin/operadores/${assembly.operatorId}/${assembly.entityId}/${assembly.id}`);
+                              }}
+                              className="p-2"
+                              title="Ver Asamblea"
+                            >
+                              <CustomIcon path={ICON_PATHS.eye} size={20} />
+                            </CustomButton>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -366,17 +392,16 @@ export default function AssembliesList({
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 mb-8">
-            <Button
+            <CustomButton
               onClick={() => paginate(currentPage - 1)}
               disabled={currentPage === 1}
-              className={`p-2 rounded-lg border transition ${
-                currentPage === 1
-                  ? "border-gray-200 text-black cursor-not-allowed"
-                  : "border-gray-300 text-black hover:bg-gray-50"
-              }`}
+              className={`p-2 rounded-lg border transition ${currentPage === 1
+                ? "border-gray-200 text-black cursor-not-allowed"
+                : "border-gray-300 text-black hover:bg-gray-50"
+                }`}
             >
               <ChevronLeft size={20} />
-            </Button>
+            </CustomButton>
 
             {[...Array(totalPages)].map((_, index) => {
               const pageNumber = index + 1;
@@ -386,17 +411,16 @@ export default function AssembliesList({
                 (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
               ) {
                 return (
-                  <button
+                  <CustomButton
                     key={pageNumber}
                     onClick={() => paginate(pageNumber)}
-                    className={`w-10 h-10 rounded-lg border transition ${
-                      currentPage === pageNumber
-                        ? "bg-[#8B9DFF] text-white border-[#8B9DFF]"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
+                    className={`w-10 h-10 rounded-lg border transition ${currentPage === pageNumber
+                      ? "bg-[#8B9DFF] text-white border-[#8B9DFF]"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
                   >
                     {pageNumber}
-                  </button>
+                  </CustomButton>
                 );
               } else if (
                 pageNumber === currentPage - 2 ||
@@ -411,17 +435,16 @@ export default function AssembliesList({
               return null;
             })}
 
-            <button
+            <CustomButton
               onClick={() => paginate(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className={`p-2 rounded-lg border transition ${
-                currentPage === totalPages
-                  ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                  : "border-gray-300 text-gray-700 hover:bg-gray-50"
-              }`}
+              className={`p-2 rounded-lg border transition ${currentPage === totalPages
+                ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
             >
               <ChevronRight size={20} />
-            </button>
+            </CustomButton>
           </div>
         )}
       </div>

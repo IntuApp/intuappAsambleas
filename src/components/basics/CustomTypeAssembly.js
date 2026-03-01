@@ -1,7 +1,6 @@
 "use client";
 
 import { ICON_PATHS } from "@/constans/iconPaths";
-import React from "react";
 import CustomIcon from "./CustomIcon";
 import CustomText from "./CustomText";
 
@@ -21,15 +20,15 @@ const TYPE_CONFIG = {
 };
 
 const mapType = (type) => {
-  if (type === "Presencial" || type === "registries_finalized") {
+  if (type === "1") {
     return TYPE_CONFIG.live;
   }
 
-  if (type === "Virtual") {
+  if (type === "2") {
     return TYPE_CONFIG.finished;
   }
 
-  if (type === "Mixta") {
+  if (type === "3") {
     return TYPE_CONFIG.scheduled;
   }
 

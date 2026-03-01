@@ -45,26 +45,20 @@ export const formatDateTime = (dateString) => {
   return `${formattedDate}`;
 };
 
-export const getIconPath = (entity) => {
-  const type = (entity?.typeName || entity?.type || "").toLowerCase();
-
-  console.log(type);
-
-  if (type.includes("1")) return ICON_PATHS.sindicato;
-  if (type.includes("2")) return ICON_PATHS.conjunto;
-  if (type.includes("3")) return ICON_PATHS.empresa;
-  if (type.includes("4")) return ICON_PATHS.cooperativa;
+export const getIconPath = (typeID) => {
+  if (typeID === "1") return ICON_PATHS.sindicato;
+  if (typeID === "2") return ICON_PATHS.conjunto;
+  if (typeID === "3") return ICON_PATHS.empresa;
+  if (typeID === "4") return ICON_PATHS.cooperativa;
 
   return null;
 };
 
-export const getTypeName = (entity) => {
-  const type = (entity?.typeName || entity?.type || "").toLowerCase();
-
-  if (type.includes("1")) return "Sindicato";
-  if (type.includes("2")) return "Conjunto Residencial";
-  if (type.includes("3")) return "Empresa";
-  if (type.includes("4")) return "Cooperativa";
+export const getTypeName = (typeID) => {
+  if (typeID === "1") return "Sindicato";
+  if (typeID === "2") return "Conjunto Residencial";
+  if (typeID === "3") return "Empresa";
+  if (typeID === "4") return "Cooperativa";
 
   return null;
 };

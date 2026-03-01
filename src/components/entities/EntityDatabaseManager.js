@@ -1,452 +1,134 @@
 "use client";
-
-import React, { useState } from "react";
-import { Edit2, CloudUpload, Search, Trash2 } from "lucide-react";
-import Button from "@/components/basics/Button";
-import * as XLSX from "xlsx";
-import { toast } from "react-toastify";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import {
-  updateAssemblyRegistriesList,
-  createAssemblyRegistriesList,
-} from "@/lib/entities";
-import { validateExcelData } from "@/lib/excelValidation";
-import ExcelPreviewModal from "@/components/modals/ExcelPreviewModal";
-import CustomButton from "../basics/CustomButton";
+import React, { useState, useMemo } from "react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import CustomText from "../basics/CustomText";
-import { ICON_PATHS } from "@/constans/iconPaths";
+import CustomButton from "../basics/CustomButton";
 import CustomIcon from "../basics/CustomIcon";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
-const EntityDatabaseManager = ({
-  entityData,
-  registries,
-  registriesCreatedAt,
-  onRefresh,
-}) => {
-  // Pagination & Search
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(30);
-  const [searchTerm, setSearchTerm] = useState("");
+export default function EntityDatabaseManager({ entityData, registries = [] }) {
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10; // Cantidad de asambleístas por página
 
-  // Excel Upload State
-  const [excelData, setExcelData] = useState([]);
-  const [excelHeaders, setExcelHeaders] = useState([]);
-  const [columnAliases, setColumnAliases] = useState({});
+    // 1. Extraemos los headers para pintar las columnas.
+    // Priorizamos los alias guardados en la BD, si no, usamos las llaves crudas del primer registro.
+    const displayHeaders = useMemo(() => {
+        if (registries.length === 0) return [];
 
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [excelFileName, setExcelFileName] = useState("");
-  const [uploading, setUploading] = useState(false);
-
-  // --- Handlers ---
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files ? e.target.files[0] : null;
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const bstr = evt.target.result;
-      const wb = XLSX.read(bstr, { type: "binary" });
-      const wsname = wb.SheetNames[0];
-      const ws = wb.Sheets[wsname];
-
-      // Get headers
-      const rawData = XLSX.utils.sheet_to_json(ws, { header: 1 });
-      if (rawData.length === 0) {
-        toast.error("El archivo está vacío");
-        return;
-      }
-      const headers = rawData[0];
-      const data = XLSX.utils.sheet_to_json(ws);
-
-      // Validate immediately
-      const validation = validateExcelData(data);
-      if (!validation.valid) {
-        toast.error(
-          <div>
-            <p className="font-bold">Errores en el archivo:</p>
-            <ul className="list-disc pl-4 text-sm max-h-40 overflow-y-auto">
-              {validation.errors.slice(0, 10).map((err, i) => (
-                <li key={i}>{err}</li>
-              ))}
-              {validation.errors.length > 10 && (
-                <li>... y {validation.errors.length - 10} más.</li>
-              )}
-            </ul>
-          </div>,
-          { autoClose: 10000 },
-        );
-        e.target.value = "";
-        return;
-      }
-
-      console.log("data", registries);
-      console.log("data", excelData);
-      console.log("data", headers);
-      console.log("data", data);
-      console.log("data", file);
-
-      setExcelHeaders(headers);
-      setExcelData(data);
-      setExcelFileName(file.name);
-      setShowPreviewModal(true);
-    };
-    reader.readAsBinaryString(file);
-  };
-
-  const handleUpdateDatabase = async () => {
-    setUploading(true);
-    try {
-      if (entityData.assemblyRegistriesListId) {
-        // Update existing list
-        const res = await updateAssemblyRegistriesList(
-          entityData.assemblyRegistriesListId,
-          excelData,
-        );
-        if (res.success) {
-          toast.success("Base de datos actualizada correctamente");
-        } else {
-          toast.error("Error al actualizar la base de datos");
+        // Si la entidad tiene headers guardados, usamos esos ordenados
+        if (entityData?.headers && entityData.headers.length > 0) {
+            return entityData.headers.map(header => ({
+                original: header,
+                display: entityData.columnAliases?.[header] || header
+            }));
         }
-      } else {
-        // Create new list
-        const res = await createAssemblyRegistriesList(excelData);
-        if (res.success) {
-          // Link to entity
-          const entityRef = doc(db, "entity", entityData.id);
-          await updateDoc(entityRef, {
-            assemblyRegistriesListId: res.id,
-            databaseStatus: "done",
-          });
-          toast.success("Base de datos creada y vinculada correctamente");
-        } else {
-          toast.error("Error al crear la base de datos");
-        }
-      }
-      setShowPreviewModal(false);
-      setExcelData([]);
-      setExcelFileName("");
-      if (onRefresh) onRefresh();
-    } catch (error) {
-      console.error("Error updating database:", error);
-      toast.error("Ocurrió un error inesperado");
-    }
-    setUploading(false);
-  };
 
-  const handleDeleteRegistry = async (itemToDelete) => {
-    // Check if property is currently registered in an assembly
-    if (itemToDelete.registerInAssembly) {
-      return toast.error(
-        "No se puede eliminar una propiedad que ya tiene un registro de asambleísta activo. Por favor, elimine primero el registro desde la gestión de la asamblea.",
-      );
-    }
+        // Fallback: Sacamos las llaves del primer registro (excluyendo 'id')
+        const firstRegKeys = Object.keys(registries[0]).filter(k => k !== 'id');
+        return firstRegKeys.map(key => ({ original: key, display: key }));
+    }, [registries, entityData]);
 
-    if (confirm("¿Estás seguro de eliminar este registro?")) {
-      try {
-        const updatedList = registries.filter((r) => r !== itemToDelete);
+    // 2. Lógica de Paginación
+    const totalPages = Math.max(1, Math.ceil(registries.length / itemsPerPage));
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentData = registries.slice(startIndex, startIndex + itemsPerPage);
 
-        const res = await updateAssemblyRegistriesList(
-          entityData.assemblyRegistriesListId,
-          updatedList,
-        );
-
-        if (res.success) {
-          toast.success("Registro eliminado correctamente");
-          if (onRefresh) onRefresh();
-        } else {
-          toast.error("Error al eliminar el registro");
-        }
-      } catch (error) {
-        console.error("Error deleting registry:", error);
-        toast.error("Error al eliminar el registro");
-      }
-    }
-  };
-
-  const getVisiblePages = () => {
-    const maxVisible = 5;
-
-    if (totalPages <= maxVisible) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-
-    if (currentPage <= 3) {
-      return [1, 2, 3];
-    }
-
-    if (currentPage >= totalPages - 2) {
-      return [totalPages - 2, totalPages - 1, totalPages];
-    }
-
-    return [currentPage - 1, currentPage, currentPage + 1];
-  };
-
-  // --- Filtering & Pagination ---
-  const filteredRegistries = registries.filter((item) => {
-    const searchLower = searchTerm.toLowerCase();
-    return Object.values(item).some((val) =>
-      String(val).toLowerCase().includes(searchLower),
-    );
-  });
-
-  const totalPages = Math.ceil(filteredRegistries.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredRegistries.slice(
-    indexOfFirstItem,
-    indexOfLastItem,
-  );
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-[#0E3C42]">
-          Base de Datos de Asambleísta
-        </h2>
-        <div className="flex gap-4">
-          <CustomButton
-            variant="secondary"
-            className="px-3 py-2 flex items-center gap-2"
-            size="S"
-            onClick={() => {
-              if (registries.length > 0) {
-                setExcelData(registries);
-                setExcelHeaders(Object.keys(registries[0]));
-                setExcelFileName(`Base de datos actual - ${entityData.name}`);
-                setShowPreviewModal(true);
-              } else {
-                toast.info(
-                  "No hay datos para editar. Cargue un archivo primero.",
-                );
-              }
-            }}
-          >
-            <CustomIcon path={ICON_PATHS.pencil} size={20} />
-            <CustomText variant="labelL" className="font-bold">
-              Editar Base de Datos
-            </CustomText>
-          </CustomButton>
-          <div className="relative">
-            <input
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleFileUpload}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-            />
-            <CustomButton
-              variant="primary"
-              className="px-3 py-2 flex items-center gap-2"
-            >
-              <CustomIcon path={ICON_PATHS.cloudUpload} size={20} />
-              <CustomText variant="labelL" className="font-bold">
-                Actualizar Base de Datos
-              </CustomText>
-            </CustomButton>
-          </div>
-        </div>
-      </div>
-
-      <p className="text-sm text-gray-500 mb-6">
-        La siguiente base de datos fue cargada el{" "}
-        <span className="bg-[#ABE7E5] text-[#0E3C42] px-2 py-0.5 rounded text-xs font-bold">
-          {registriesCreatedAt
-            ? (() => {
-                const date = registriesCreatedAt.toDate
-                  ? registriesCreatedAt.toDate()
-                  : new Date(registriesCreatedAt);
-                const day = date.getDate().toString().padStart(2, "0");
-                const months = [
-                  "Ene",
-                  "Feb",
-                  "Mar",
-                  "Abr",
-                  "May",
-                  "Jun",
-                  "Jul",
-                  "Ago",
-                  "Sep",
-                  "Oct",
-                  "Nov",
-                  "Dic",
-                ];
-                const month = months[date.getMonth()];
-                const year = date.getFullYear();
-                return `${day}/${month}/${year}`;
-              })()
-            : "-"}
-        </span>
-      </p>
-
-      {/* Filters */}
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1 relative">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={20}
-          />
-          <input
-            type="text"
-            placeholder="Buscar"
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-blue-500"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-          />
-        </div>
-        <select className="border border-gray-300 rounded-lg px-4 py-2 outline-none focus:border-blue-500 bg-white min-w-[120px]">
-          <option>Tipo</option>
-        </select>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto border border-gray-200 rounded-lg">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50">
-            <tr className="border-b border-gray-200 text-sm text-gray-800">
-              <th className="py-3 px-4 font-bold">Tipo</th>
-              <th className="py-3 px-4 font-bold">Grupo</th>
-              <th className="py-3 px-4 font-bold">Propiedad</th>
-              <th className="py-3 px-4 font-bold">Coeficiente</th>
-              <th className="py-3 px-4 font-bold">Votos</th>
-              <th className="py-3 px-4 font-bold">Documento</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentItems.length > 0 ? (
-              currentItems.map((reg, index) => (
-                <tr
-                  key={index}
-                  className="border-b border-gray-50 hover:bg-blue-50/30 transition-colors text-sm"
-                >
-                  <td className="py-4 px-4 text-gray-700">
-                    {reg.tipo || reg.Tipo || "-"}
-                  </td>
-                  <td className="py-4 px-4 text-gray-700">
-                    {reg.grupo || reg.Grupo || "-"}
-                  </td>
-                  <td className="py-4 px-4 text-gray-700 font-medium">
-                    {reg.propiedad || reg.Propiedad || "-"}
-                  </td>
-                  <td className="py-4 px-4 text-gray-700">
-                    {reg.coeficiente || reg.Coeficiente || "0.00"}%
-                  </td>
-                  <td className="py-4 px-4 text-gray-700">
-                    {reg.numeroVotos || reg.NumeroVotos || "1"}
-                  </td>
-                  <td className="py-4 px-4 text-gray-700">
-                    {reg.documento || reg.Documento || "-"}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={8} className="py-8 text-center text-gray-500">
-                  No se encontraron registros
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="w-full flex justify-end">
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2 py-8">
-            {/* Anterior */}
-            <CustomButton
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="px-4 py-2 bg-white border border-[#F3F6F9] rounded-full hover:bg-[#ABE7E5] transition"
-            >
-              <CustomText variant="labelL" className="font-bold">
-                Anterior
-              </CustomText>
-            </CustomButton>
-
-            {/* Páginas */}
-            {getVisiblePages().map((page) => {
-              const isActive = page === currentPage;
-
-              return (
+    return (
+        <div className="bg-[#FFFFFF] max-w-[1128px] rounded-3xl border border-[#F3F6F9] p-8">
+            <div className="flex items-center justify-between">
+                <CustomText variant="bodyX" as="h5" className="font-bold text-[#0E3C42]">
+                    Base de Datos de Asambleístas
+                </CustomText>
                 <CustomButton
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 rounded-full border transition ${
-                    isActive
-                      ? "bg-[#ABE7E5] border-[#ABE7E5]"
-                      : "bg-[#F3F6F9] border-[#F3F6F9] hover:bg-[#ABE7E5]"
-                  }`}
+                    variant="primary"
+                    className="px-3 py-2 flex items-center gap-2"
                 >
-                  <CustomText
-                    variant="labelL"
-                    className={`font-bold ${
-                      isActive ? "text-[#0E3C42]" : "text-[#000000]"
-                    }`}
-                  >
-                    {page}
-                  </CustomText>
+                    <CustomIcon path={ICON_PATHS.cloudUpload} size={20} />
+                    <CustomText variant="labelL" className="font-bold">
+                        Actualizar Base de Datos
+                    </CustomText>
                 </CustomButton>
-              );
-            })}
+            </div>
 
-            {/* Ellipsis */}
-            {totalPages > 5 && currentPage < totalPages - 2 && (
-              <span className="px-2 text-gray-500 font-bold">…</span>
+            <div className="flex items-center gap-2 text-gray-500 mb-6">
+                <CustomText variant="labelM" className="" >
+                    La siguiente base de datos fue cargada el{" "}
+
+                </CustomText>
+                <CustomText variant="labelM" className="font-bold bg-[#ABE7E5] text-[#0E3C42] px-2 py-1 rounded-full">
+                    {new Date(entityData.createdAt).toLocaleDateString()}
+                </CustomText></div>
+            {registries.length === 0 ? (
+                <div className="p-12 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+                    <CustomText variant="bodyM" className="text-gray-500 font-bold">No hay base de datos cargada.</CustomText>
+                </div>
+            ) : (
+                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-gray-200 bg-[#F3F6F9]">
+                                {displayHeaders.map((header, idx) => (
+                                    <th key={idx} className="py-4 px-6 font-bold text-[#0E3C42] text-[14px]">
+                                        {header.display}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {currentData.map((row) => (
+                                <tr key={row.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                                    {displayHeaders.map((header, idx) => (
+                                        <td key={idx} className="py-4 px-6 text-[#3D3D44] text-[14px]">
+                                            {row[header.display] || row[header.original] || "-"}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
-            {/* Siguiente */}
-            <CustomButton
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="px-4 py-2 bg-white border border-[#F3F6F9] rounded-full hover:bg-[#ABE7E5] transition"
-            >
-              <CustomText variant="labelL" className="font-bold">
-                Siguiente
-              </CustomText>
-            </CustomButton>
+            {/* Paginación */}
+            {registries.length > itemsPerPage && (
+                <div className="flex justify-end mt-4">
+                    <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 border border-gray-200 shadow-sm">
+                        <button
+                            onClick={() => setCurrentPage(1)}
+                            disabled={currentPage === 1}
+                            className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30"
+                        >
+                            <ChevronsLeft size={18} />
+                        </button>
+                        <button
+                            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30"
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
 
-            {/* Última */}
-            <CustomButton
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-white border border-[#F3F6F9] rounded-full hover:bg-[#ABE7E5] transition"
-            >
-              <CustomText variant="labelL" className="font-bold">
-                Última
-              </CustomText>
-            </CustomButton>
-          </div>
-        )}
-      </div>
+                        <div className="px-4 font-bold text-[#0E3C42] text-sm">
+                            Página {currentPage} de {totalPages}
+                        </div>
 
-      {/* Modal */}
-      <ExcelPreviewModal
-        isOpen={showPreviewModal}
-        onClose={() => {
-          setShowPreviewModal(false);
-          setExcelData([]);
-          setExcelHeaders([]);
-          setExcelFileName("");
-        }}
-        data={excelData}
-        setData={setExcelData}
-        columnAliases={columnAliases}
-        setColumnAliases={setColumnAliases}
-        headers={excelHeaders}
-        setHeaders={setExcelHeaders} // 🔥 ESTA LÍNEA FALTABA
-        fileName={excelFileName}
-        onAccept={handleUpdateDatabase}
-        uploading={uploading}
-      />
-    </div>
-  );
-};
-
-export default EntityDatabaseManager;
+                        <button
+                            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30"
+                        >
+                            <ChevronRight size={18} />
+                        </button>
+                        <button
+                            onClick={() => setCurrentPage(totalPages)}
+                            disabled={currentPage === totalPages}
+                            className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30"
+                        >
+                            <ChevronsRight size={18} />
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

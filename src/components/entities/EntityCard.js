@@ -7,7 +7,6 @@ import {
   Eye,
   Settings,
 } from "lucide-react";
-import Button from "@/components/basics/Button";
 import CustomText from "../basics/CustomText";
 import CustomIcon from "../basics/CustomIcon";
 import { ICON_PATHS } from "@/constans/iconPaths";
@@ -34,14 +33,15 @@ export default function EntityCard({
   console.log("entityCard", entity);
 
   return (
-    <div className="max-w-[550px] max-h-[312px] w-full h-full rounded-3xl border border-[#F3F6F9] bg-[#FFFFFF] p-6 flex flex-col gap-5 hover:shadow-soft transition-all">
+    <div className="max-w-full max-h-[312px] w-full h-full rounded-3xl border border-[#F3F6F9] bg-[#FFFFFF] p-6 flex flex-col gap-5 hover:shadow-soft transition-all">
       {/* Header */}
-      <div className="max-w-[502px] max-h-[40px] w-full flex justify-between items-center">
-        <CustomText variant="bodyX" className="font-bold text-[#0E3C42]">
+      <div className="w-full flex  justify-between items-center">
+        <CustomText variant="bodyX" className="font-bold text-[#0E3C42] leading-tight">
           {name}
         </CustomText>
-        <div className="w-10 h-10 rounded-full bg-[#D5DAFF] flex items-center justify-center shrink-0 overflow-hidden">
-          <CustomIcon path={getIconPath(entity)} size={24} color="#00093F" />
+        <div className="w-10 h-10 rounded-full bg-[#D5DAFF] flex items-center justify-center shrink-0">
+          {/* Tu función de icono */}
+          <CustomIcon path={getIconPath(entity.typeID)} size={24} color="#0000" />
         </div>
       </div>
 

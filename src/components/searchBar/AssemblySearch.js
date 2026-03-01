@@ -1,6 +1,6 @@
 "use client";
 import CustomIcon from "../basics/CustomIcon";
-import CustomInput from "../basics/inputs/CustomInput";
+import CustomInput from "../basics/CustomInput";
 import { ICON_PATHS } from "@/constans/iconPaths";
 
 export default function AssemblySearchBar({
@@ -13,6 +13,8 @@ export default function AssemblySearchBar({
   sortBy,
   onSortChange,
 }) {
+  console.log(typeFilter);
+  console.log(statusFilter);
   return (
     <div className="bg-white w-full flex gap-4 w-[1080px]">
       {/* Buscar */}
@@ -44,9 +46,9 @@ export default function AssemblySearchBar({
         }}
       >
         <option value="">Tipo</option>
-        <option value="Presencial">Presencial</option>
-        <option value="Virtual">Virtual</option>
-        <option value="Mixta">Mixta</option>
+        <option value="1">Presencial</option>
+        <option value="2">Virtual</option>
+        <option value="3">Mixta</option>
       </select>
 
       {/* Estado */}
@@ -63,9 +65,9 @@ export default function AssemblySearchBar({
         }}
       >
         <option value="">Estado</option>
-        <option value="create">Agendada</option>
-        <option value="started">En vivo</option>
-        <option value="finished">Finalizada</option>
+        <option value="1">Agendada</option>
+        <option value="2">En vivo</option>
+        <option value="3">Finalizada</option>
       </select>
     </div>
   );

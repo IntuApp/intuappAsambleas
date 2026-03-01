@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import CustomText from "./CustomText";
 import CustomButton from "./CustomButton";
 import CustomIcon from "./CustomIcon";

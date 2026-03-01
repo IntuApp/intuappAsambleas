@@ -1,15 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
-import {
-  getEntityById,
-  getAssemblyRegistriesList,
-  updateEntity,
-  deleteEntity,
-} from "@/lib/entities";
-import { getAssemblyById } from "@/lib/assembly";
+// Importamos los métodos 
+import { listenToEntityById, listenToEntityAssemblies, getAssemblyRegistriesArray } from "@/lib/entity";
+import { deleteEntity, updateEntityBasicData } from "@/lib/entityActions"; 
 import { getEntityTypes } from "@/lib/masterData";
 
 import Loader from "@/components/basics/Loader";
@@ -19,260 +16,248 @@ import CustomIcon from "@/components/basics/CustomIcon";
 
 import EntityDatabaseManager from "@/components/entities/EntityDatabaseManager";
 import EntityAssembliesSection from "@/components/entities/EntityAssembliesSection";
-import EntityEditModal from "@/components/entities/EntityEditModal";
+import EntityEditModal from "@/components/entities/EntityEditModal"; 
 
-import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import SuccessModal from "@/components/modals/SuccessModal";
+import ConfirmationModal from "@/components/modal/ConfirmationModal";
+import SuccessModal from "@/components/modal/SuccessModal";
 
 import { ICON_PATHS } from "@/constans/iconPaths";
 import { getIconPath, getTypeName } from "@/lib/utils";
-import { toast } from "react-toastify";
-import { usePageTitle } from "@/context/PageTitleContext";
 
-const EntityDetailPage = () => {
-  const { entityId } = useParams();
-  const router = useRouter();
-  const { setSegmentTitle } = usePageTitle();
 
-  const [loading, setLoading] = useState(true);
-  const [entityData, setEntityData] = useState(null);
-  const [assemblies, setAssemblies] = useState([]);
-  const [registries, setRegistries] = useState([]);
-  const [registriesCreatedAt, setRegistriesCreatedAt] = useState(null);
+const OperatorEntityDetailPage = () => {
+    // 🔥 1. Ya no usamos operatorId de la URL, solo el entityId
+    const { entityId } = useParams();
+    const router = useRouter();
 
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [entityTypes, setEntityTypes] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [entityData, setEntityData] = useState(null);
+    const [assemblies, setAssemblies] = useState([]);
+    const [registries, setRegistries] = useState([]);
 
-  // 🔥 modales eliminar
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [entityTypes, setEntityTypes] = useState([]);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    nit: "",
-    type: "",
-    city: "",
-    address: "",
-    adminName: "",
-    adminEmail: "",
-    adminPhone: "",
-  });
+    // Modales eliminar
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchEntityData = useCallback(async () => {
-    if (!entityId) return;
-
-    setLoading(true);
-    const res = await getEntityById(entityId);
-
-    if (!res.success) {
-      toast.error("Error cargando entidad");
-      router.push(`/operario/entidades`);
-      return;
-    }
-
-    const data = res.data;
-    setEntityData(data);
-    setSegmentTitle(entityId, data.name);
-
-    setFormData({
-      name: data.name || "",
-      nit: data.nit || "",
-      type: data.type || "",
-      city: data.city || "",
-      address: data.address || "",
+    // Estado del Formulario de Edición
+    const [formData, setFormData] = useState({
+        name: "",
+        nit: "",
+        type: "",
+        city: "",
+        address: "",
+        adminName: "",
+        adminEmail: "",
+        adminPhone: "",
     });
+    const [isSavingEdit, setIsSavingEdit] = useState(false); 
 
-    if (data.assemblyRegistriesListId) {
-      const resList = await getAssemblyRegistriesList(
-        data.assemblyRegistriesListId,
-      );
-      if (resList.success) {
-        setRegistries(Object.values(resList.data));
-        setRegistriesCreatedAt(resList.createdAt);
-      }
-    }
+    // Escuchador de la Entidad
+    useEffect(() => {
+        if (!entityId) return;
 
-    if (Array.isArray(data.lastUpdateOwners)) {
-      const results = await Promise.all(
-        data.lastUpdateOwners.map((id) => getAssemblyById(id)),
-      );
-      setAssemblies(results.filter((r) => r.success).map((r) => r.data));
-    } else if (data.lastUpdateOwners) {
-      const resAssembly = await getAssemblyById(data.lastUpdateOwners);
-      if (resAssembly.success) setAssemblies([resAssembly.data]);
-    }
+        const unsubscribeEntity = listenToEntityById(entityId, async (data) => {
+            if (data) {
+                setEntityData(data);
+                
+                // Llenamos el formData con los datos que llegan de Firebase
+                setFormData({
+                    name: data.name || "",
+                    nit: data.nit || "",
+                    type: data.typeID || "", 
+                    city: data.city || "",
+                    address: data.address || "",
+                    adminName: data.adminEntity?.name || "",
+                    adminEmail: data.adminEntity?.email || "",
+                    adminPhone: data.adminEntity?.phone || "",
+                });
 
-    setLoading(false);
-  }, [entityId, router, setSegmentTitle]);
+                if (data.assemblyRegistriesListId) {
+                    const regs = await getAssemblyRegistriesArray(data.assemblyRegistriesListId);
+                    setRegistries(regs);
+                }
+            } else {
+                toast.error("La entidad no existe o fue eliminada.");
+                router.back();
+            }
+            setLoading(false);
+        });
 
-  useEffect(() => {
-    fetchEntityData();
-    getEntityTypes().then((res) => res.success && setEntityTypes(res.data));
-  }, [fetchEntityData]);
+        const unsubscribeAssemblies = listenToEntityAssemblies(entityId, (data) => {
+            setAssemblies(data);
+        });
 
-  const handleSaveEntity = async () => {
-    setLoading(true);
-    const res = await updateEntity(entityId, formData);
+        getEntityTypes().then((res) => res.success && setEntityTypes(res.data));
 
-    if (res.success) {
-      toast.success("Entidad actualizada correctamente");
-      setIsEditModalOpen(false);
-      fetchEntityData();
-    } else {
-      toast.error("Error al actualizar entidad");
-    }
-    setLoading(false);
-  };
+        return () => {
+            unsubscribeEntity();
+            unsubscribeAssemblies();
+        };
+    }, [entityId, router]);
 
-  // 🔥 eliminar entidad
-  const handleConfirmDeleteEntity = async () => {
-    setIsDeleting(true);
-    const res = await deleteEntity(entityId);
 
-    if (res.success) {
-      setShowDeleteModal(false);
-      setShowSuccessModal(true);
-    } else {
-      toast.error("Error al eliminar entidad");
-      setIsDeleting(false);
-    }
-  };
+    // Función para guardar la edición
+    const handleSaveEntity = async () => {
+        if (!formData.name || !formData.type) {
+            toast.error("El nombre y el tipo de entidad son obligatorios.");
+            return;
+        }
 
-  if (loading) {
+        setIsSavingEdit(true);
+        try {
+            const res = await updateEntityBasicData(entityId, formData); 
+            if (res.success) {
+                toast.success("Entidad actualizada correctamente");
+                setIsEditModalOpen(false); 
+            }
+        } catch (error) {
+            toast.error(error.message || "Error al actualizar la entidad");
+        } finally {
+            setIsSavingEdit(false);
+        }
+    };
+
+    // Eliminar entidad
+    const handleConfirmDeleteEntity = async () => {
+        setIsDeleting(true);
+        try {
+            const res = await deleteEntity(entityId); 
+            if (res.success) {
+                setShowDeleteModal(false);
+                setShowSuccessModal(true);
+            }
+        } catch (error) {
+            toast.error("Error al eliminar entidad");
+            setIsDeleting(false);
+        }
+    };
+
+    if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader /></div>;
+    if (!entityData) return null;
+
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader />
-      </div>
-    );
-  }
+        <>
+            <div className="flex flex-col w-full max-w-[1128px] gap-8">
+                
+                {/* MODAL DE EDICIÓN */}
+                <EntityEditModal
+                    isOpen={isEditModalOpen}
+                    entityForm={formData}
+                    setEntityForm={setFormData}
+                    entityTypes={entityTypes}
+                    loading={isSavingEdit} 
+                    onClose={() => setIsEditModalOpen(false)}
+                    onSubmit={handleSaveEntity} 
+                />
 
-  if (!entityData) return null;
+                {/* HEADER DE LA ENTIDAD */}
+                {!isEditModalOpen && (
+                    <div className="flex flex-col gap-8">
+                        <div className="flex items-center justify-between">
+                            <CustomText variant="TitleL" className="font-bold text-[#0E3C42]">
+                                {entityData.name}
+                            </CustomText>
 
-  return (
-    <>
-      <div className="flex flex-col w-full max-w-[1128px]">
-        <div className="flex flex-col gap-8">
-          <EntityEditModal
-            isOpen={isEditModalOpen}
-            entityForm={formData}
-            setEntityForm={setFormData}
-            entityTypes={entityTypes}
-            loading={loading}
-            onClose={() => setIsEditModalOpen(false)}
-            onSubmit={handleSaveEntity}
-          />
+                            <CustomButton
+                                variant="primary"
+                                onClick={() => setShowDeleteModal(true)}
+                                className="px-5 py-3 flex items-center gap-2"
+                            >
+                                <CustomIcon path={ICON_PATHS.delete} size={20} />
+                                <CustomText variant="bodyM" className="font-bold">
+                                    Eliminar Entidad
+                                </CustomText>
+                            </CustomButton>
+                        </div>
 
-          {!isEditModalOpen && (
-            <div className="flex flex-col gap-8">
-              <div className="flex items-center justify-between">
-                <CustomText
-                  variant="TitleL"
-                  className="font-bold text-[#0E3C42]"
-                >
-                  {entityData.name}
-                </CustomText>
+                        {/* INFO GENERAL */}
+                        <div className="bg-white rounded-[24px] border border-[#F3F6F9] shadow-sm p-8">
+                            <div className="flex justify-between mb-6">
+                                <CustomText variant="bodyX" className="font-bold text-[#0E3C42]">
+                                    Información General
+                                </CustomText>
+                                <CustomButton
+                                    variant="primary"
+                                    onClick={() => setIsEditModalOpen(true)}
+                                    className="flex items-center gap-2 px-4 py-2"
+                                >
+                                    <CustomIcon path={ICON_PATHS.pencil} size={16} />
+                                    <CustomText variant="labelL" className="font-bold">
+                                        Editar información
+                                    </CustomText>
+                                </CustomButton>
+                            </div>
 
-                <CustomButton
-                  variant="primary"
-                  onClick={() => setShowDeleteModal(true)}
-                  className="px-5 py-3 flex items-center gap-1"
-                >
-                  <CustomIcon path={ICON_PATHS.delete} size={20} />
-                  <CustomText variant="bodyM" className="font-bold">
-                    Eliminar Entidad
-                  </CustomText>
-                </CustomButton>
-              </div>
+                            <div className="grid md:grid-cols-3 gap-8">
+                                <Info label="NIT" value={entityData.nit} />
+                                <Info
+                                    label="Tipo entidad"
+                                    value={getTypeName(entityData.typeID)}
+                                    icon={<CustomIcon path={getIconPath(entityData.typeID)} size={14} />}
+                                />
+                                <Info label="Asambleístas" value={registries.length} />
+                                <Info label="Ciudad" value={entityData.city} />
+                                <Info label="Dirección" value={entityData.address} />
+                                <Info label="Admin" value={entityData.adminEntity?.name} />
+                                <Info label="Email" value={entityData.adminEntity?.email} />
+                                <Info label="Teléfono" value={entityData.adminEntity?.phone} />
+                            </div>
+                        </div>
 
-              <div className="bg-white rounded-3xl border p-8">
-                <div className="flex justify-between mb-6">
-                  <CustomText variant="bodyX" className="font-bold">
-                    Información General
-                  </CustomText>
+                        {/* SECCIÓN DE ASAMBLEAS */}
+                        {/* 🔥 2. Rutas ajustadas para el entorno del Operador */}
+                        <EntityAssembliesSection
+                            entityId={entityId}
+                            assemblies={assemblies}
+                            createAssemblyRoute={() => router.push(`/operario/${entityId}/crear-asamblea`)}
+                            viewAssemblyRoute={(assemblyId) => router.push(`/operario/${entityId}/${assemblyId}`)}
+                        />
 
-                  <CustomButton
-                    variant="primary"
-                    onClick={() => setIsEditModalOpen(true)}
-                    className="flex items-center gap-1 px-4 py-2"
-                  >
-                    <CustomIcon path={ICON_PATHS.pencil} size={20} />
-                    <CustomText variant="labelL" className="font-bold">
-                      Editar información
-                    </CustomText>
-                  </CustomButton>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-8">
-                  <Info label="NIT" value={entityData.nit} />
-                  <Info
-                    label="Tipo entidad"
-                    value={getTypeName(entityData)}
-                    icon={
-                      <CustomIcon path={getIconPath(entityData)} size={14} />
-                    }
-                  />
-                  <Info label="Asambleístas" value={registries.length} />
-                  <Info label="Ciudad" value={entityData.city} />
-                  <Info label="Dirección" value={entityData.address} />
-                  <Info label="Admin" value={entityData.adminEntity.name} />
-                  <Info label="Email" value={entityData.adminEntity.email} />
-                  <Info label="Teléfono" value={entityData.adminEntity.phone} />
-                </div>
-              </div>
-
-              <EntityAssembliesSection
-                createAssemblyRoute={() => router.push(`/operario/${entityId}/crear-asamblea`)}
-                viewAssemblyRoute={(assemblyId) => router.push(`/operario/${entityId}/${assemblyId}`)}
-                entityId={entityId}
-                assemblies={assemblies}
-              />
-
-              <EntityDatabaseManager
-                entityData={entityData}
-                registries={registries}
-                registriesCreatedAt={registriesCreatedAt}
-                onRefresh={fetchEntityData}
-              />
+                        {/* SECCIÓN DE BASE DE DATOS (EL EXCEL) */}
+                        <EntityDatabaseManager
+                            entityData={entityData}
+                            registries={registries}
+                        />
+                    </div>
+                )}
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* MODAL CONFIRMAR */}
-      <ConfirmationModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleConfirmDeleteEntity}
-        entityForm={entityData}
-        title="Eliminar entidad"
-        message="Esta acción eliminará permanentemente la entidad."
-        confirmText="Eliminar"
-        isLoading={isDeleting}
-      />
+            <ConfirmationModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={handleConfirmDeleteEntity}
+                title="Eliminar entidad"
+                message="Esta acción eliminará permanentemente la entidad y todas sus asambleas."
+                confirmText="Eliminar"
+                isLoading={isDeleting}
+            />
 
-      {/* MODAL ÉXITO */}
-      <SuccessModal
-        isOpen={showSuccessModal}
-        title="Entidad eliminada"
-        message="La entidad fue eliminada correctamente."
-        buttonText="Volver a entidades"
-        onConfirm={() => router.push("/operario/entidades")}
-      />
-    </>
-  );
+            {/* 🔥 3. El modal de éxito ahora regresa al Home del Operador */}
+            <SuccessModal
+                isOpen={showSuccessModal}
+                title="Entidad eliminada"
+                message="La entidad fue eliminada correctamente."
+                buttonText="Volver a Inicio"
+                onConfirm={() => router.push(`/operario`)} 
+            />
+        </>
+    );
 };
 
 const Info = ({ label, value, icon }) => (
-  <div className="flex flex-col gap-1">
-    <CustomText variant="labelM" className="text-gray-500">
-      {label}
-    </CustomText>
-    <div className="flex items-center gap-2 font-bold">
-      {icon}
-      {value || "-"}
+    <div className="flex flex-col gap-1">
+        <CustomText variant="labelM" className="text-gray-500">
+            {label}
+        </CustomText>
+        <div className="flex items-center gap-2 font-bold text-[#0E3C42]">
+            {icon}
+            {value || "-"}
+        </div>
     </div>
-  </div>
 );
 
-export default EntityDetailPage;
+export default OperatorEntityDetailPage;

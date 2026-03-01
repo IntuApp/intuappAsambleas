@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo, useState } from "react";
 import CustomIcon from "../basics/CustomIcon";
-import CustomInput from "../basics/inputs/CustomInput";
+import CustomInput from "../basics/CustomInput";
 import CustomButton from "../basics/CustomButton";
 import CustomText from "../basics/CustomText";
 import { ICON_PATHS } from "@/constans/iconPaths";
@@ -55,9 +55,9 @@ export default function EntitiesSearchBar({
   }, [processedEntities, onChange]);
 
   return (
-    <div className="bg-[#FFFFFF] max-w-[1128px] max-h-[150px] w-full h-full border border-[#F3F6F9] rounded-3xl flex justify-between p-6">
-      <div className="max-w-[770px] w-full flex gap-4">
-        <div className="flex-1 max-w-[416px] w-full relative group">
+    <div className="bg-[#FFFFFF] max-h-[150px] w-full h-full border border-[#F3F6F9] rounded-3xl flex justify-between p-6">
+      <div className="max-w-[70%] w-full flex gap-4">
+        <div className="flex-1 max-w-[716px] w-full relative group">
           <CustomIcon
             path={ICON_PATHS.search}
             size={24}
@@ -67,7 +67,7 @@ export default function EntitiesSearchBar({
             variant="labelL"
             classLabel="text-[#838383]"
             placeholder="Busca por nombre"
-            classInput="max-w-[416px] max-h-[56px] w-full pl-12 pr-4 py-3 rounded-xl border"
+            classInput="max-w-[716px] max-h-[56px] w-full pl-12 pr-4 py-3 rounded-xl border"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />

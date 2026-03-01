@@ -1,22 +1,28 @@
-import { redHatDisplay } from "./font";
-import "./globals.css";
-import { ToastContainer } from "react-toastify";
-<link
-  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
-  rel="stylesheet"
-/>;
+import { cookies } from 'next/headers';
+import { AuthProvider } from '@/context/AuthContext';
+import { Red_Hat_Display } from 'next/font/google';
+import './globals.css';
 
-export const metadata = {
-  title: "Intuapp Asambleas",
-  description: "Plataforma de gestión de asambleas y votaciones en línea",
-};
+// 1. Instanciamos la fuente y creamos una variable CSS
+const redHatDisplay = Red_Hat_Display({
+  subsets: ['latin'],
+  variable: '--font-red-hat-display',
+  display: 'swap', 
+});
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get('session')?.value;
+  const initialSession = sessionCookie ? JSON.parse(sessionCookie) : null;
+
   return (
-    <html lang="es" className={redHatDisplay.className}>
-      <body className="w-full h-full bg-[#F4F7F9]">
-        {children}
-        <ToastContainer />
+    // 2. Inyectamos la variable de la fuente en el HTML
+    <html lang="es" className={`${redHatDisplay.variable}`}>
+      {/* 3. Le decimos al body que use la fuente "sans" de Tailwind y active el antialiasing para que se vea nítida */}
+      <body className="font-sans antialiased bg-gray-50 text-gray-900">
+        <AuthProvider initialSession={initialSession}>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

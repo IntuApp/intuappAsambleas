@@ -6,7 +6,7 @@ import {
   Check,
   Bot,
 } from "lucide-react";
-import { ExcelEditor } from "@/components/basics/ExcelEditor";
+import { ExcelEditor } from "@/components/entities/ExcelEditor";
 import CustomText from "../basics/CustomText";
 import CustomButton from "../basics/CustomButton";
 import CustomIcon from "../basics/CustomIcon";
@@ -28,7 +28,7 @@ export default function EntityExcelUploadStep({
     console.log("Excel data:", excelData);
   }, [excelData]);
   return (
-    <div className="max-w-[1128px] w-full bg-[#FFFFFF] border border-[#F3F6F9] rounded-3xl p-6 flex flex-col gap-5">
+    <div className="w-full bg-[#FFFFFF] border border-[#F3F6F9] rounded-3xl p-6 flex flex-col gap-5">
       <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">
         2. Cargar Base de Datos de Asambleísta{" "}
       </CustomText>

@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo, useState } from "react";
 import CustomIcon from "../basics/CustomIcon";
-import CustomInput from "../basics/inputs/CustomInput";
+import CustomInput from "../basics/CustomInput";
 import CustomButton from "../basics/CustomButton";
 import CustomText from "../basics/CustomText";
 import { ICON_PATHS } from "@/constans/iconPaths";
@@ -51,9 +51,9 @@ export default function OperatorsSearchBar({
   }, [processedOperators, onChange]);
 
   return (
-    <div className="bg-[#FFFFFF] max-w-[1128px] max-h-[150px] w-full h-full border border-[#F3F6F9] rounded-3xl flex justify-between p-6">
-      <div className="max-w-[770px] w-full flex gap-4 items-center">
-        <div className="flex-1 max-w-[416px] flex-start w-full relative group">
+    <div className="bg-[#FFFFFF] max-h-[150px] w-full h-full border border-[#F3F6F9] rounded-3xl flex justify-between p-6">
+      <div className="max-w-[70%] w-full flex gap-4 items-center">
+        <div className="flex-1 flex-start w-full relative group">
           <CustomIcon
             path={ICON_PATHS.search}
             size={24}
@@ -63,7 +63,7 @@ export default function OperatorsSearchBar({
             variant="labelL"
             classLabel="text-[#838383]"
             placeholder="Busca por nombre"
-            classInput="max-w-[416px] max-h-[50px] w-full pl-12 pr-4 py-3 rounded-xl border"
+            classInput="max-w-[516px] max-h-[50px] w-full pl-12 pr-4 py-3 rounded-xl border"
             className="gap-[0px]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -90,7 +90,6 @@ export default function OperatorsSearchBar({
           ))}
         </select>
 
-        {/* Sort */}
         <select
           className="max-w-[152px] max-h-[50px] w-full px-4 py-3 rounded-xl text-[16px] text-[#838383] border appearance-none"
           style={{
@@ -123,7 +122,7 @@ export default function OperatorsSearchBar({
             <CustomText
               variant="labelL"
               className={
-                viewMode === "grid" ? "text-[#4059FF]" : "text-[#3D3D44]"
+                viewMode === "grid" ? "text-[#4059FF] font-medium" : "text-[#3D3D44] font-medium"
               }
             >
               Vista tarjetas
@@ -140,8 +139,8 @@ export default function OperatorsSearchBar({
             <CustomIcon path={ICON_PATHS.viewList} size={16} />
             <CustomText
               variant="labelL"
-              className={
-                viewMode === "list" ? "text-[#4059FF]" : "text-[#3D3D44]"
+              className={ 
+                viewMode === "list" ? "text-[#4059FF] font-medium" : "text-[#3D3D44] font-medium"
               }
             >
               Vista lista

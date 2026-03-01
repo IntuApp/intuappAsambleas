@@ -1,25 +1,24 @@
-"use client";
-import HeaderOperario from "@/components/headers/HeaderOperario";
-import TopBar from "@/components/ui/TopBar";
-import { UserProvider } from "@/context/UserContext";
-import { PageTitleProvider } from "@/context/PageTitleContext";
+import Sidebar from "@/components/layout/Sidebar";
+import Topbar from "@/components/layout/Topbar";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
-const Layout = ({ children }) => {
+// Definimos los links exclusivos del operador (Sin "Suscripción")
+const operatorLinks = [
+  { label: "Inicio", href: "/operario", iconPath: ICON_PATHS.home },
+  { label: "Entidades", href: "/operario/entidades", iconPath: ICON_PATHS.apartament },
+];
+
+export default function OperatorLayout({ children }) {
   return (
-    <UserProvider>
-      <PageTitleProvider>
-        <main className="flex w-full h-full bg-[#F3F6F9]">
-          <HeaderOperario />
-          <div className="flex w-full h-full flex-col justify-center items-center align-center ">
-            <div className=" w-full h-full max-w-[1128px] my-8 flex flex-col gap-8">
-              <TopBar />
-              {children}
-            </div>
-          </div>
-        </main>
-      </PageTitleProvider>
-    </UserProvider>
-  );
-};
+    <div className="flex w-full h-screen bg-[#F3F6F9] overflow-hidden">
+      <Sidebar links={operatorLinks} basePath="/operario" />
 
-export default Layout;
+      <div className="flex-1 flex flex-col overflow-hidden py-6">
+        <Topbar basePath="/operario" />
+        <main className="flex-1 overflow-y-auto px-20 py-5">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}

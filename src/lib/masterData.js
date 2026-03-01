@@ -3,7 +3,7 @@ import { collection, getDocs } from "firebase/firestore";
 
 export async function getEntityTypes() {
   try {
-    const querySnapshot = await getDocs(collection(db, "type-entity"));
+    const querySnapshot = await getDocs(collection(db, "typeEntity"));
     const types = [];
     querySnapshot.forEach((doc) => {
       types.push({ id: doc.id, ...doc.data() });
