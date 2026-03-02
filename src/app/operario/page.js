@@ -90,7 +90,7 @@ const OperatorPage = () => {
             <div className="flex flex-start justify-start flex-wrap gap-6 w-full">
                 {/* Total Entidades del Operador */}
                 <StatCard
-                    iconPath={ICON_PATHS.groupPeople}
+                    iconPath={ICON_PATHS.apartament}
                     label="Total Entidades"
                     value={entities.length}
                     classIcon="text-[#6A7EFF] w-[40px] h-[40px]"
@@ -98,7 +98,6 @@ const OperatorPage = () => {
                     className="w-full h-full max-w-[360px] max-h-[104px] rounded-[16px] border-[#F3F6F9] p-6"
                 />
 
-                {/* Total Asambleas Agendadas (Próximas) de este Operador */}
                 <StatCard
                     iconPath={ICON_PATHS.calendarTime}
                     label="Asambleas Agendadas"
@@ -109,10 +108,9 @@ const OperatorPage = () => {
                 />
             </div>
 
-            <section className="grid grid-cols-2  gap-5 justify-between">
+            <section className="w-full h-full flex flex-wrap gap-5 justify-between">
 
-                {/* --- COLUMNA IZQUIERDA: Entidades del Operador --- */}
-                <div className="space-y-8 max-w-[552px] w-full">
+                <div className="space-y-8 max-w-[48%] w-full max-h-[424px]">
                     <SectionCard
                         title="Entidades"
                         className="border-[#F3F6F9] rounded-[24px] p-6 gap-6"
@@ -130,10 +128,9 @@ const OperatorPage = () => {
                                     key={entity.id}
                                     entity={entity}
                                     title={entity.name}
-                                    subtitle={`${entity.totalRegistries || 0} registros`} // Ajusta según tu DB
                                     showNextAssembly={true}
                                     onClick={() => router.push(`/operario/${entity.id}`)}
-                                    classContainer="max-w-[504px] w-full h-[72px] rounded-2xl shadow-sm border border-[#F3F6F9] hover:shadow-md transition-shadow py-3 px-4 gap-4 cursor-pointer"
+                                    classContainer="w-full h-[72px] rounded-2xl shadow-soft border border-[#F3F6F9] hover:shadow-md transition-shadow py-3 px-4 gap-4 cursor-pointer"
                                 />
                             ))}
                             {entities.length === 0 && (
@@ -145,32 +142,30 @@ const OperatorPage = () => {
                     </SectionCard>
                 </div>
 
-                {/* --- COLUMNA DERECHA: Asambleas --- */}
-                <div className="space-y-8 w-full">
+                <div className="space-y-8 max-w-[45%] w-full">
 
-                    {/* 1. Asambleas en curso (En vivo) */}
                     <SectionCard
                         title="Asambleas en curso"
                         className="border-[#F3F6F9] rounded-[24px] p-6 gap-6 max-h-[264px]"
-                        contentClassName="max-w-[502px] max-h-[160px] overflow-y-auto w-full pb-2 no-scrollbar"
+                        contentClassName="max-h-[200px] overflow-y-auto w-full pb-2 no-scrollbar"
                     >
                         <div className="flex flex-col gap-3 mt-4">
                             {liveAssemblies.length > 0 ? (
                                 liveAssemblies.map((assembly) => {
-                                    // Buscamos el nombre de la entidad en el array de entidades pobladas
                                     const entityName = entities.find(e => e.id === assembly.entityId)?.name || "Entidad";
                                     return (
                                         <ListItem
                                             key={assembly.id}
                                             title={`${entityName} · ${assembly.name}`}
                                             subtitle={`Inició a las ${assembly.hour || "00:00"}`}
-                                            classContainer="max-w-[502px] w-full h-[72px] rounded-2xl shadow-sm border border-[#F3F6F9] hover:shadow-md transition-shadow py-3 px-4 gap-4 cursor-pointer"
+                                            classContainer="w-full h-[72px] rounded-2xl shadow-soft hover:shadow-md border border-[#F3F6F9] py-3 px-4 gap-4 cursor-pointer"
                                             status={{
                                                 text: "En vivo",
-                                                color: "bg-red-100 text-red-600",
+                                                color: "bg-[#FACCCD] text-[#930002]",
                                                 dot: true,
                                             }}
                                             onClick={() => router.push(`/operario/${assembly.entityId}/${assembly.id}`)}
+                                            iconArrow={true}
                                         />
                                     );
                                 })

@@ -23,7 +23,7 @@ export default function StatCard({
         <CustomText variant="labelM" className="font-medium text-[#3D3D44]">
           {label}
         </CustomText>
-        <CustomText variant="labelM" className="text-[#1F1F23] font-bold">
+        <CustomText variant="bodyX" className="text-[#1F1F23] font-bold">
           {" "}
           {value}
         </CustomText>

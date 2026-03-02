@@ -3,13 +3,14 @@ import { ICON_PATHS } from "@/constans/iconPaths";
 import CustomIcon from "@/components/basics/CustomIcon";
 import CustomText from "../basics/CustomText";
 import AssemblyStatus from "../assemblies/CustomStates";
+import { getIconPath, getTypeName } from "@/lib/utils";
 
 export default function ListItem({
-  overline, // Top small text
-  title, // Main text
-  subtitle, // Bottom text
-  entity, // Entity object (alternative to title/subtitle)
-  status, // { text, color, dot }
+  overline,
+  title,
+  subtitle, 
+  entity, 
+  status, 
   date,
   onClick,
   isAssamblea,
@@ -17,24 +18,10 @@ export default function ListItem({
   classContainer = "",
   iconArrow = false,
 }) {
-  const getIconPath = () => {
-    const type = (entity?.typeName || entity?.typeId || "").toLowerCase();
 
-    if (
-      type.includes("propiedad") ||
-      type.includes("horizontal") ||
-      type.includes("residencial") ||
-      type.includes("conjunto")
-    )
-      return ICON_PATHS.conjunto;
-
-    if (type.includes("sindicato")) return ICON_PATHS.sindicato;
-    if (type.includes("empresa")) return ICON_PATHS.empresa;
-    if (type.includes("cooperativa")) return ICON_PATHS.cooperativa;
-
-    return null;
-  };
-
+  const typeEntityIcon = getIconPath(entity?.typeID);
+  const typeName = getTypeName(entity?.typeID);
+  
   const formatDate = (dateString) => {
     if (!dateString || typeof dateString !== "string") return dateString;
 
@@ -70,11 +57,11 @@ export default function ListItem({
   return (
     <div onClick={onClick} className={`flex items-center ${classContainer}`}>
       <div className="flex items-center gap-4 flex-1 ">
-        {getIconPath() && (
+        {typeEntityIcon && (
           <div className="w-14 h-14 p-2 rounded-lg bg-[#EEF0FF] flex items-center justify-center shrink-0 overflow-hidden">
-            {getIconPath() ? (
+            {typeEntityIcon ? (
               <CustomIcon
-                path={getIconPath()}
+                path={typeEntityIcon}
                 size={40}
                 className="text-[#6A7EFF]"
               />
@@ -93,9 +80,9 @@ export default function ListItem({
             {entity?.name || title}
           </CustomText>
 
-          {(entity?.typeName || entity?.type || subtitle) && (
+          {(typeName || subtitle) && (
             <CustomText variant="labelM" className="text-[#3D3D44] font-medium truncate">
-              {entity?.typeName || entity?.type || subtitle}
+              {typeName || subtitle}
               {showNextAssembly && (
                 <>
                   {entity?.nextAssembly?.date ? (
@@ -116,7 +103,7 @@ export default function ListItem({
       <div className="flex items-center gap-3 pl-2">
         {status && !isAssamblea && (
           <span
-            className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 bg-[#FACCCD]`}
+            className={`px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 bg-[#FACCCD]`}
           >
             <CustomIcon path={ICON_PATHS.record} size={16} color="#930002" />
 
