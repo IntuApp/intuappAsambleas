@@ -1,12 +1,17 @@
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 import { ICON_PATHS } from "@/constans/iconPaths";
+import { logoutUser } from "@/lib/auth";
 
 // Definimos los links exclusivos del operador (Sin "Suscripción")
 const operatorLinks = [
   { label: "Inicio", href: "/operario", iconPath: ICON_PATHS.home },
   { label: "Entidades", href: "/operario/entidades", iconPath: ICON_PATHS.apartament },
-];
+  {
+    label: "Salir",
+    action: logoutUser,
+    iconPath: ICON_PATHS.exit
+  }];
 
 export default function OperatorLayout({ children }) {
   return (

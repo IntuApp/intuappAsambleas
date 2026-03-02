@@ -71,8 +71,8 @@ export const ExcelEditor = ({
   return (
     <div className="w-full">
       {/* TABLE */}
-      <div className="max-w-[1040px] overflow-x-auto border border-gray-200 rounded-lg">
-        <table className="max-w-[1040px] text-left border-collapse">
+      <div className="overflow-x-auto border border-gray-200 rounded-lg">
+        <table className="text-left border-collapse">
           <thead>
             <tr>
               {headers.map((header, index) => (
