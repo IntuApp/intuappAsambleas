@@ -34,7 +34,7 @@ export default function EntityDatabaseManager({ entityData, registries = [] }) {
     const currentData = registries.slice(startIndex, startIndex + itemsPerPage);
 
     return (
-        <div className="bg-[#FFFFFF] max-w-[1128px] rounded-3xl border border-[#F3F6F9] p-8">
+        <div className="bg-[#FFFFFF] rounded-3xl border border-[#F3F6F9] p-8">
             <div className="flex items-center justify-between">
                 <CustomText variant="bodyX" as="h5" className="font-bold text-[#0E3C42]">
                     Base de Datos de Asambleístas

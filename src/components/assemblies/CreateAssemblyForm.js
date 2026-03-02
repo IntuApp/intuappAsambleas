@@ -132,7 +132,7 @@ export default function CreateAssemblyForm({ entityName, entityId, registries, o
     };
 
     return (
-        <div className="flex flex-col w-full max-w-[1128px] gap-5 pb-6">
+        <div className="flex flex-col w-full gap-5 pb-6">
             {/* HEADER */}
             <div>
                 <CustomText variant="TitleL" as="h3" className="text-[#0E3C42] font-bold">Crear Asamblea</CustomText>
@@ -149,10 +149,10 @@ export default function CreateAssemblyForm({ entityName, entityId, registries, o
                         onChange={(val) => { onInputChange("hour", val.hour); onInputChange("minute", val.minute); onInputChange("ampm", val.ampm); }} />
                 </div>
                 <CustomOptionSelect label="Tipo de asamblea" value={formData.type} onChange={(v) => onInputChange("type", v)}
-                    options={[{ label: "Presencial", value: "Presencial" }, { label: "Virtual", value: "Virtual" }, { label: "Mixta", value: "Mixta" }]} classContentOptions="flex-row"/>
+                    options={[{ label: "Presencial", value: "Presencial" }, { label: "Virtual", value: "Virtual" }, { label: "Mixta", value: "Mixta" }]} classContentOptions="flex flex-col md:flex-row" />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <CustomInput label="Link de videollamada" disabled={formData.type === "Presencial"} value={formData.meetLink} onChange={(e) => onInputChange("meetLink", e.target.value)} classLabel="text-[#333333] font-bold" classInput="pl-4 pr-4 py-3 rounded-lg border" />
-                    <CustomOptionSelect label="Soporte por WhatsApp" value={formData.hasWppSupport} onChange={(v) => onInputChange("hasWppSupport", v)} options={[{ label: "Sí", value: true }, { label: "No", value: false }]} classContentOptions="flex-row"/>
+                    <CustomOptionSelect label="Soporte por WhatsApp" value={formData.hasWppSupport} onChange={(v) => onInputChange("hasWppSupport", v)} options={[{ label: "Sí", value: true }, { label: "No", value: false }]} classContentOptions="flex flex-col md:flex-row" />
                     <CustomInput label="Número de WhatsApp" disabled={!formData.hasWppSupport} value={formData.wppPhone} onChange={(e) => onInputChange("wppPhone", e.target.value)} classLabel="text-[#333333] font-bold" classInput="pl-4 pr-4 py-3 rounded-lg border" />
                 </div>
             </div>
@@ -163,15 +163,17 @@ export default function CreateAssemblyForm({ entityName, entityId, registries, o
                 <CustomMultiSelect label="Solicitar información adicional" value={[formData.requireFullName && "name", formData.requireEmail && "email", formData.requirePhone && "phone"].filter(Boolean)}
                     onChange={(v) => { onInputChange("requireFullName", v.includes("name")); onInputChange("requireEmail", v.includes("email")); onInputChange("requirePhone", v.includes("phone")); }}
                     options={[{ label: "Nombre completo", value: "name" }, { label: "Email", value: "email" }, { label: "Teléfono", value: "phone" }]} />
-                <CustomOptionSelect label="¿Puede añadir otras representaciones?" value={formData.canAddOtherRepresentatives} onChange={(v) => onInputChange("canAddOtherRepresentatives", v)} options={[{ label: "Sí", value: true }, { label: "No", value: false }]} classContentOptions="flex-row"/>
+                <CustomOptionSelect label="¿Puede añadir otras representaciones?" value={formData.canAddOtherRepresentatives} onChange={(v) => onInputChange("canAddOtherRepresentatives", v)} options={[{ label: "Sí", value: true }, { label: "No", value: false }]} classContentOptions="grid grid-cols-3 md:flex-row" />
             </div>
 
             {/* 3. PODERES */}
             <div className="w-full bg-white border border-[#F3F6F9] rounded-3xl p-6 flex flex-col gap-5 shadow-sm">
                 <CustomText variant="bodyX" as="h5" className="text-[#0E3C42] font-bold">3. Poderes</CustomText>
-                <CustomSelect label="Límite de Poderes" value={formData.powerLimit} onChange={(e) => onInputChange("powerLimit", e.target.value)} classLabel="text-[#000000] font-bold">
-                    <option value="" className="text-[#333333]">Sin límite</option><option value="1" className="text-[#333333] ">1</option><option value="2" className="text-[#333333] ">2</option><option value="3" className="text-[#333333] ">3</option>
-                </CustomSelect>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <CustomSelect label="Límite de Poderes" value={formData.powerLimit} onChange={(e) => onInputChange("powerLimit", e.target.value)} classLabel="text-[#000000] font-bold" >
+                        <option value="" className="text-[#333333]">Sin límite</option><option value="1" className="text-[#333333] ">1</option><option value="2" className="text-[#333333] ">2</option><option value="3" className="text-[#333333] ">3</option><option value="4" className="text-[#333333] ">4</option><option value="5" className="text-[#333333] ">5</option><option value="6" className="text-[#333333] ">6</option><option value="7" className="text-[#333333] ">7</option><option value="8" className="text-[#333333] ">8</option><option value="9" className="text-[#333333] ">9</option><option value="10" className="text-[#333333] ">10</option>
+                    </CustomSelect>
+                </div>
             </div>
 
             {/* 4. RESTRICCIÓN DE VOTO */}

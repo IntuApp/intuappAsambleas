@@ -34,7 +34,7 @@ const NavItem = ({ id, icon, label, activeTab, setActiveTab }) => (
   <button
     onClick={() => setActiveTab(id)}
     className={`w-full flex flex-col items-center gap-1 p-3 rounded-2xl transition-all ${activeTab === id
-      ? "bg-[#8B9DFF] text-[#0E3C42]"
+      ? "bg-[#EEF0FF] text-[#0E3C42]"
       : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
       }`}
   >
@@ -193,7 +193,7 @@ export default function AsambleistaLobbyPage() {
       <main className="flex-1 flex flex-col overflow-y-auto px-16 py-8 bg-[#F3F6F9]">
 
         {/* HEADER SUPERIOR ORIGINAL */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4 px-10">
           <div className=" bg-white rounded-full p-2 flex items-center gap-2 px-4 shadow-sm border border-gray-100">
             <CustomIcon path={ICON_PATHS.home} className="text-[#000000]" size={20} />
             {activeTab !== "inicio" && <CustomText variant="labelM" className="text-black font-bold pt-0.5">{">"}</CustomText>}
@@ -202,7 +202,7 @@ export default function AsambleistaLobbyPage() {
             {activeTab === "ayuda" && <CustomText variant="labelM" className="text-black font-bold">Ayuda</CustomText>}
           </div>
 
-          <div className="border-[#1D7D89] border flex items-center bg-[#1D7D89] justify-between gap-2 py-1 px-2 rounded-full shadow-sm">
+          <div className="border-[#1D7D89] border flex items-center bg-[#0E3C42] justify-between gap-2 py-1 px-2 rounded-full shadow-sm">
             <CustomText variant="labelM" className="font-bold text-white">{currentUser?.mainDocument}</CustomText>
             <div className="w-8 h-8 rounded-full bg-[#ABE7E5] flex items-center justify-center">
               <CustomIcon path={ICON_PATHS.person} className="text-[#1C6168]" size={24} />
@@ -227,7 +227,7 @@ export default function AsambleistaLobbyPage() {
 
         {/* ---------------- PESTAÑA: RESULTADOS ---------------- */}
         {activeTab === "resultados" && (
-          <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+          <div className="flex flex-col gap-6 animate-in fade-in duration-300 px-10">
             {/* TABS INTERNOS */}
             <div className="w-full bg-[#FFFFFF] rounded-full p-2 border border-[#F3F6F9] flex flex-row gap-2 shadow-sm">
               <CustomButton onClick={() => setResultSubTab("global")} className={`flex-1 py-3 ${resultSubTab === "global" ? "bg-[#D5DAFF] border-none" : "bg-white border-none"}`}>
@@ -268,7 +268,7 @@ export default function AsambleistaLobbyPage() {
             {/* TAB MIS VOTOS (MINE) */}
             {resultSubTab === "mine" && (
               <div className="flex flex-col gap-6">
-                <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col gap-4">
+                <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col gap-4 w-full">
                   <div>
                     <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">Preferencia de Votación</CustomText>
                     <CustomText variant="labelL" className="text-[#0E3C42] font-regular">Selecciona cómo quieres responder las votaciones de esta asamblea. Podrás cambiarlo si no has votado.</CustomText>

@@ -15,7 +15,7 @@ export default function AdminLayout({ children }) {
       
       <div className="flex-1 flex flex-col overflow-hidden py-6">
         <Topbar basePath="/admin" />
-        <main className="flex-1 overflow-y-auto px-30 py-5">
+        <main className="flex-1 overflow-y-auto px-20 py-5">
           {children}
         </main>
       </div>

@@ -13,14 +13,14 @@ import CustomQuestionStatus from "./CustomQuestionStatus";
 
 const QuestionCard = ({
   q,
-  registries = [], 
+  registries = [],
   votes = [],
   isAdmin = false,
   onEdit,
   onToggleStatus,
   onCancel,
   onViewVoters,
-  assembyStatus, 
+  assembyStatus,
 }) => {
   const parseCoef = (val) =>
     parseFloat(String(val || 0).replace(",", ".")) || 0;
@@ -56,7 +56,7 @@ const QuestionCard = ({
 
   return (
     <div className="bg-[#FFFFFF] p-8 flex flex-col gap-6 rounded-3xl border border-[#E5E7EB] shadow-sm">
-      
+
       {/* ---------------- TOP ---------------- */}
       <div className="flex justify-between items-start">
         <CustomText variant="bodyX" className="font-bold text-[#0E3C42]">
@@ -66,27 +66,25 @@ const QuestionCard = ({
           <CustomButton
             onClick={() => onEdit?.(q)}
             variant="primary"
-            className="p-2 bg-[#D5DAFF] text-[#4059FF] hover:bg-[#C2CAFF] border-none"
+            className="p-2"
           >
             <CustomIcon path={ICON_PATHS.pencil} size={24} />
           </CustomButton>
         )}
       </div>
 
-      {/* ---------------- MIDDLE ---------------- */}
       <div className="flex items-center justify-between">
         {shouldShowResults && (
           <div className="flex items-center gap-1">
             <CustomText variant="bodyX" className="font-medium text-[#1F1F23]">
               Quórum de votación:
             </CustomText>
+            {/* 🔥 Aquí mostramos la suma directa de los coeficientes votados */}
             <CustomText variant="bodyX" className="font-bold text-[#1F1F23]">
-              {quorumVoting.toFixed(2) === "0.00"
-                ? `0%`
-                : `${quorumVoting.toFixed(2)}%`}
+              {totalVotedCoef.toFixed(2)}
             </CustomText>
             <CustomIcon
-              path={ICON_PATHS.error}
+              path={ICON_PATHS.error} // Ojo, este ícono parece de error, podrías querer cambiarlo a info o similar
               size={24}
               className="text-[#0E3C42] m-2"
             />
@@ -94,8 +92,8 @@ const QuestionCard = ({
         )}
 
         <div className="flex items-center gap-4 ml-auto">
-          <CustomQuestionStatus status={q.statusId} /> 
-          
+          <CustomQuestionStatus status={q.statusId} />
+
           {isAdmin &&
             (q.statusId === QUESTION_STATUSES.LIVE ||
               q.statusId === QUESTION_STATUSES.FINISHED) && (
@@ -146,14 +144,13 @@ const QuestionCard = ({
                   <div key={opt.id || i} className="flex flex-col gap-2">
                     {/* Renderizamos opt.text */}
                     <CustomText className="font-regular text-[#1F1F23] text-[20px]">
-                      {opt.text} 
+                      {opt.text}
                     </CustomText>
 
                     <div className="flex items-center gap-3">
                       <div
-                        className={`flex-1 h-5 rounded-full overflow-hidden ${
-                          isCreated ? "bg-[#F5F5F5]" : "bg-[#F2F4F7]"
-                        }`}
+                        className={`flex-1 h-5 rounded-full overflow-hidden ${isCreated ? "bg-[#F5F5F5]" : "bg-[#F2F4F7]"
+                          }`}
                       >
                         {!isCreated && (
                           <div
@@ -242,21 +239,21 @@ const QuestionCard = ({
               variant={
                 q.statusId === QUESTION_STATUSES.CREATED ? "success"
                   : q.statusId === QUESTION_STATUSES.LIVE ? "warning"
-                  : "success"
+                    : "success"
               }
             >
               <CustomIcon
                 path={
                   q.statusId === QUESTION_STATUSES.CREATED ? ICON_PATHS.playArrow
                     : q.statusId === QUESTION_STATUSES.LIVE ? ICON_PATHS.taskAlt
-                    : ICON_PATHS.inPerson
+                      : ICON_PATHS.inPerson
                 }
                 size={20}
               />
               <CustomText variant="bodyM" className="font-bold">
                 {q.statusId === QUESTION_STATUSES.CREATED ? "Iniciar votación"
                   : q.statusId === QUESTION_STATUSES.LIVE ? "Finalizar Votación"
-                  : "Reabrir Votación"}
+                    : "Reabrir Votación"}
               </CustomText>
             </CustomButton>
           )}

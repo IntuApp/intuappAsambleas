@@ -9,7 +9,7 @@ import CustomIcon from "../basics/CustomIcon";
 import { ICON_PATHS } from "@/constans/iconPaths";
 import { getTypeName } from "@/lib/utils";
 
-export default function EntitiesList({ entities = [], operatorId }) {
+export default function EntitiesList({ entities = [], operatorId, isOperator }) {
   const router = useRouter();
   const [viewMode, setViewMode] = useState("grid");
   const [processedEntities, setProcessedEntities] = useState(entities);
@@ -56,8 +56,8 @@ export default function EntitiesList({ entities = [], operatorId }) {
               <EntityCard
                 key={entity.id}
                 entity={cardProps}
-                onManage={() => router.push(`/admin/operadores/${operatorId}/${entity.id}`)}
-                onCreateAssembly={() => router.push(`/admin/operadores/${operatorId}/${entity.id}/crear-asamblea`)}
+                onManage={() => isOperator ? router.push(`/operario/${entity.id}`) : router.push(`/admin/operadores/${operatorId}/${entity.id}`)}
+                onCreateAssembly={() => isOperator ? router.push(`/operario/${entity.id}/crear-asamblea`) : router.push(`/admin/operadores/${operatorId}/${entity.id}/crear-asamblea`)}
                 onViewAssembly={() => {
                   const targetAssemblyId = cardProps.activeAssembly?.id || "default";
                   router.push(`/admin/operadores/${operatorId}/${entity.id}/${targetAssemblyId}`);

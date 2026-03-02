@@ -16,9 +16,9 @@ export default function AssemblySearchBar({
   console.log(typeFilter);
   console.log(statusFilter);
   return (
-    <div className="bg-white w-full flex gap-4 w-[1080px]">
+    <div className="bg-white w-full flex gap-4">
       {/* Buscar */}
-      <div className="flex-1 relative max-w-[726px] max-h-[56px] w-full h-full">
+      <div className="flex-1 relative max-h-[56px] w-full h-full">
         <CustomIcon
           path={ICON_PATHS.search}
           size={24}

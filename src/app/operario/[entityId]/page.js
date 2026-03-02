@@ -141,7 +141,7 @@ const OperatorEntityDetailPage = () => {
 
     return (
         <>
-            <div className="flex flex-col w-full max-w-[1128px] gap-8">
+            <div className="flex flex-col w-full gap-8">
                 
                 {/* MODAL DE EDICIÓN */}
                 <EntityEditModal

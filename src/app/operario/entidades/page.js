@@ -76,7 +76,8 @@ const EntidadesPage = () => {
                     <EntitiesList
                         entities={filteredEntities}
                         operatorId={operatorId}
-                        viewMode={viewMode} // 🔥 Le pasamos el modo de vista a la lista
+                        viewMode={viewMode} 
+                        isOperator={true}
                     />
                 ) : (
                     <div className="bg-white rounded-3xl p-12 flex flex-col items-center justify-center border border-dashed border-gray-200 text-center">

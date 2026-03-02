@@ -14,6 +14,7 @@ import CustomSelect from "../basics/CustomSelect"; // Corregida la ruta
 import CustomIcon from "../basics/CustomIcon";
 import { ICON_PATHS } from "@/constans/iconPaths";
 import QuestionCard from "./QuestionCard";
+import VotersModal from "./VotersModal"; // 🔥 NUEVO IMPORT
 
 const QUESTION_TYPES = { UNIQUE: "1", MULTIPLE: "2", YES_NO: "3", OPEN: "4" };
 const QUESTION_STATUSES = { CREATED: "1", LIVE: "2", FINISHED: "3", CANCELED: "4" };
@@ -24,6 +25,7 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
     const [registries, setRegistries] = useState([]); // 🔥 NUEVO: Estado de Registros (Aplanados)
     const [isCreating, setIsCreating] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [viewingVotersForQuestion, setViewingVotersForQuestion] = useState(null);
 
     // Form State
     const [newQuestion, setNewQuestion] = useState({
@@ -162,8 +164,6 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
 
     // 4. Acciones de las tarjetas
     const handleCancelQuestion = async (questionId) => {
-        if (!isConfirmed) return;
-
         try {
             await cancelAssemblyQuestion(assemblyId, questionId);
             toast.success("Votación cancelada");
@@ -227,7 +227,7 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
                         Crear pregunta
                     </CustomText>
 
-                    <div className={`flex w-full ${newQuestion.type === QUESTION_TYPES.MULTIPLE ? "justify-between gap-4" : "gap-4 justify-start"}`}>
+                    <div className="grid grid-cols-2 gap-4">
                         <CustomInput
                             label="Título de la pregunta"
                             variant="labelM"
@@ -239,35 +239,37 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
                             onChange={(e) => setNewQuestion({ ...newQuestion, title: e.target.value })}
                         />
 
-                        <CustomSelect
-                            className="w-[200px]"
-                            label="Tipo de encuesta"
-                            variant="labelM"
-                            classLabel="text-[#333333] font-bold"
-                            value={newQuestion.type}
-                            onChange={(e) => setNewQuestion({ ...newQuestion, type: e.target.value })}
-                        >
-                            <option value={QUESTION_TYPES.UNIQUE}>Selección única</option>
-                            <option value={QUESTION_TYPES.MULTIPLE}>Selección múltiple</option>
-                            <option value={QUESTION_TYPES.YES_NO}>Sí / No</option>
-                            <option value={QUESTION_TYPES.OPEN}>Abierta</option>
-                        </CustomSelect>
-
-                        {/* Mínimo de votos */}
-                        {newQuestion.type === QUESTION_TYPES.MULTIPLE && (
+                        <div className="grid grid-cols-2 gap-10">
                             <CustomSelect
                                 className=""
-                                label="Mínimo de votos"
+                                label="Tipo de encuesta"
                                 variant="labelM"
                                 classLabel="text-[#333333] font-bold"
-                                value={newQuestion.minSelections}
-                                onChange={(e) => setNewQuestion({ ...newQuestion, minSelections: parseInt(e.target.value) })}
+                                value={newQuestion.type}
+                                onChange={(e) => setNewQuestion({ ...newQuestion, type: e.target.value })}
                             >
-                                {Array.from({ length: newQuestion.options.length }, (_, i) => i + 1).map((v) => (
-                                    <option key={v} value={v}>{v}</option>
-                                ))}
+                                <option value={QUESTION_TYPES.UNIQUE}>Selección única</option>
+                                <option value={QUESTION_TYPES.MULTIPLE}>Selección múltiple</option>
+                                <option value={QUESTION_TYPES.YES_NO}>Sí / No</option>
+                                <option value={QUESTION_TYPES.OPEN}>Abierta</option>
                             </CustomSelect>
-                        )}
+
+                            {/* Mínimo de votos */}
+                            {newQuestion.type === QUESTION_TYPES.MULTIPLE && (
+                                <CustomSelect
+                                    className=""
+                                    label="Mínimo de votos"
+                                    variant="labelM"
+                                    classLabel="text-[#333333] font-bold"
+                                    value={newQuestion.minSelections}
+                                    onChange={(e) => setNewQuestion({ ...newQuestion, minSelections: parseInt(e.target.value) })}
+                                >
+                                    {Array.from({ length: newQuestion.options.length }, (_, i) => i + 1).map((v) => (
+                                        <option key={v} value={v}>{v}</option>
+                                    ))}
+                                </CustomSelect>
+                            )}
+                        </div>
                     </div>
 
                     {/* OPCIONES DINÁMICAS */}
@@ -351,6 +353,8 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
                             assembyStatus={assemblyData?.statusID}
                             onToggleStatus={handleToggleStatus}
                             onCancel={handleCancelQuestion}
+                            // 🔥 CONECTAMOS LA FUNCIÓN
+                            onViewVoters={(questionData) => setViewingVotersForQuestion(questionData)}
                         />
                     ))}
 
@@ -360,6 +364,13 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
                     </div>
                 )}
             </div>
+            <VotersModal
+                isOpen={!!viewingVotersForQuestion}
+                onClose={() => setViewingVotersForQuestion(null)}
+                question={viewingVotersForQuestion}
+                votes={votes}
+                registries={registries}
+            />
         </div>
     );
 }

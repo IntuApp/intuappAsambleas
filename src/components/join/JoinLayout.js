@@ -14,12 +14,8 @@ export default function JoinLayout({
 }) {
     return (
         <div className="min-h-screen w-full flex items-center justify-center bg-[#F8F9FB] p-4 md:p-6 font-sans">
-            {/* CONTENEDOR MAESTRO (Igual al de LoginMember) */}
-            <div className="w-full max-w-[70%] min-h-[650px] bg-white rounded-3xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] p-6 md:p-12 flex flex-col relative overflow-hidden">
-
-                {/* HEADER DE NAVEGACIÓN */}
+            <div className="w-full max-w-[70%]  bg-white rounded-3xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] p-6 md:p-12 flex flex-col relative overflow-hidden">
                 <div className="w-full flex items-center justify-between mb-10">
-                    {/* Botón Volver */}
                     <CustomButton
                         onClick={onBack}
                         className="p-2 bg-transparent hover:bg-slate-50 border-none rounded-full transition-colors"

@@ -151,22 +151,22 @@ export default function AssemblyLiveManager({
       </div>
 
       {/* 2. CARDS DE ACCESO */}
-      <div className="flex flex-row gap-8">
+      <div className="grid grid-cols-3 gap-8">
         {/* Acceso Asambleístas */}
-        <div className="max-w-[365px] w-full flex flex-col gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-100">
+        <div className="w-full flex flex-col gap-5 p-4 bg-white rounded-2xl shadow-sm border border-gray-100">
           <CustomText variant="bodyL" as="h6" className="font-bold text-[#0E3C42]">Acceso a Asambleistas</CustomText>
           <div className="relative flex items-center justify-between gap-2 border border-[#94A2FF] rounded-lg px-3 py-2 w-full">
-            <CustomText variant="labelM" className="font-medium text-[#3D3D44] truncate max-w-[200px]">{publicUrl}</CustomText>
+            <CustomText variant="labelM" className="font-medium text-[#3D3D44] truncate">{publicUrl}</CustomText>
             <CustomButton onClick={() => copyToClipboard(publicUrl)} className="shrink-0 bg-transparent border-none hover:bg-transparent">
               <CustomIcon path={ICON_PATHS.copy} size={14} />
             </CustomButton>
           </div>
           <div className="flex items-center gap-2">
-            <CustomButton variant="secondary" onClick={() => setShowQrModal(true)} className="flex-1 flex items-center justify-center gap-2 py-2 px-2">
+            <CustomButton variant="secondary" onClick={() => setShowQrModal(true)} className="flex-1 flex items-center justify-center gap-2 py-3 px-2">
               <CustomIcon path={ICON_PATHS.qr} size={16} />
               <CustomText variant="labelM" className="font-bold">Ver QR</CustomText>
             </CustomButton>
-            <CustomButton variant="primary" onClick={handleDownloadDirectQr} className="flex-1 flex items-center justify-center gap-2 py-2 px-2">
+            <CustomButton variant="primary" onClick={handleDownloadDirectQr} className="flex-1 flex items-center justify-center gap-2 py-3 px-2">
               <CustomIcon path={ICON_PATHS.download} size={16} />
               <CustomText variant="labelM" className="font-bold">Descargar QR</CustomText>
             </CustomButton>
@@ -174,13 +174,13 @@ export default function AssemblyLiveManager({
         </div>
 
         {/* Acceso Funcionario */}
-        <div className="max-w-[365px] w-full flex flex-col justify-between p-4 bg-white rounded-2xl shadow-sm border border-gray-100">
+        <div className="w-full flex flex-col justify-between p-4 bg-white rounded-2xl shadow-sm border border-gray-100">
           <div>
             <CustomText variant="bodyL" as="h5" className="text-[#0E3C42] font-bold">Acceso al administrador</CustomText>
             <CustomText variant="labelL" className="text-[#0E3C42] font-medium mt-1">Aquí podrá ver la asistencia en tiempo real.</CustomText>
           </div>
           <div className="relative flex items-center justify-between gap-2 border border-[#94A2FF] rounded-lg px-3 py-2 w-full mt-4">
-            <CustomText variant="labelM" className="font-medium text-[#3D3D44] truncate max-w-[200px]">{`${publicUrl}/funcionario`}</CustomText>
+            <CustomText variant="labelM" className="font-medium text-[#3D3D44] truncate ">{`${publicUrl}/funcionario`}</CustomText>
             <CustomButton onClick={() => copyToClipboard(`${publicUrl}/funcionario`)} className="shrink-0 bg-transparent border-none hover:bg-transparent">
               <CustomIcon path={ICON_PATHS.copy} size={14} />
             </CustomButton>
@@ -226,9 +226,9 @@ export default function AssemblyLiveManager({
       </div>
 
       {/* 4. SECCIÓN DE ESTADÍSTICAS */}
-      <div className="w-full flex flex-row justify-between gap-6">
+      <div className="w-full grid grid-cols-2 justify-between gap-10 ">
         {/* Quórum */}
-        <div className="max-w-[552px] w-full bg-[#FFFFFF] rounded-3xl p-6 gap-6 border border-[#F3F6F9] flex flex-col shadow-soft">
+        <div className="w-full bg-[#FFFFFF] rounded-3xl p-6 gap-6 border border-[#F3F6F9] flex flex-col shadow-soft">
           <div className="flex justify-between items-start mb-4">
             <CustomText variant="bodyX" as="h5" className="font-bold text-[#0E3C42]">Quórum</CustomText>
             <CustomIcon path={ICON_PATHS.error} size={24} />
@@ -239,7 +239,7 @@ export default function AssemblyLiveManager({
         </div>
 
         {/* Asambleístas Boxes */}
-        <div className="max-w-[552px] w-full bg-[#FFFFFF] rounded-3xl p-6 gap-6 border border-[#F3F6F9] flex flex-col shadow-soft">
+        <div className="w-full bg-[#FFFFFF] rounded-3xl p-6 gap-6 border border-[#F3F6F9] flex flex-col shadow-soft">
           <CustomText variant="bodyX" as="h5" className="font-bold text-[#0E3C42]">Asambleístas</CustomText>
           <AssemblyStatsBoxes
             registeredCount={registeredPropertiesCount}

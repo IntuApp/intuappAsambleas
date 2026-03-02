@@ -31,6 +31,9 @@ export default function EntityCard({
   } = entity;
 
   console.log("entityCard", entity);
+  const typeAssembly = getIconPath(entity.typeID);
+  console.log("typeAssembly", typeAssembly);
+
 
   return (
     <div className="max-w-full max-h-[312px] w-full h-full rounded-3xl border border-[#F3F6F9] bg-[#FFFFFF] p-6 flex flex-col gap-5 hover:shadow-soft transition-all">
@@ -40,8 +43,7 @@ export default function EntityCard({
           {name}
         </CustomText>
         <div className="w-10 h-10 rounded-full bg-[#D5DAFF] flex items-center justify-center shrink-0">
-          {/* Tu función de icono */}
-          <CustomIcon path={getIconPath(entity.typeID)} size={24} color="#0000" />
+          <CustomIcon path={typeAssembly} size={24}/>
         </div>
       </div>
 

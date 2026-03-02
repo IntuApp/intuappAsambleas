@@ -153,10 +153,9 @@ export default function LoginPage() {
             alt="Fondo Login"
             className="w-full h-full rounded-[56px] object-cover shadow-xl"
           />
-          {/* Overlay con el logo centrado sobre la imagen */}
           <div className="absolute flex flex-col items-center text-center gap-4">
             <img
-              src="/logos/logo-intuapp/component.png"
+              src="/logos/logoIntuapp/component.png"
               alt="Logo Intuapp"
               className="w-[200px] object-contain"
             />

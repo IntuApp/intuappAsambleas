@@ -51,8 +51,10 @@ export default function CustomTimeInput({
           <span className="text-[10px] text-[#333333] mt-1 text-center font-medium">Hora</span>
         </div>
 
-        <div className="flex items-center justify-center h-[56px] pt-1">
-          <CustomText variant="TitleX" className="text-[#333333] font-bold">:</CustomText>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-center h-[56px]">
+            <CustomText variant="TitleX" className="text-[#333333] font-bold">:</CustomText>
+          </div>
         </div>
 
         {/* Minuto */}
@@ -70,23 +72,23 @@ export default function CustomTimeInput({
         </div>
 
         {/* AM / PM Selector */}
-        <div className="flex flex-col h-[56px]">
-          {["AM", "PM"].map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => handleUpdate({ ampm: p })}
-              className={`flex-1 px-3 text-[10px] font-bold transition-colors ${
-                p === "AM" ? "rounded-t-lg border-b-0" : "rounded-b-lg"
-              } ${
-                value.ampm === p
-                  ? "bg-[#94A2FF] text-[#00093F]"
-                  : "bg-[#EEF0FF] text-[#838383]"
-              } border border-[#D3DAE0]`}
-            >
-              {p}
-            </button>
-          ))}
+        <div className="flex flex-col h-full">
+          <div className="flex flex-col flex-start items-start h-[56px]">
+            {["AM", "PM"].map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => handleUpdate({ ampm: p })}
+                className={`flex-1 px-3 text-[10px] font-bold transition-colors ${p === "AM" ? "rounded-t-lg border-b-0" : "rounded-b-lg"
+                  } ${value.ampm === p
+                    ? "bg-[#94A2FF] text-[#00093F]"
+                    : "bg-[#EEF0FF] text-[#838383]"
+                  } border border-[#D3DAE0]`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

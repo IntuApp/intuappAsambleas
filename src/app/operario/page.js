@@ -108,7 +108,7 @@ const OperatorPage = () => {
                 />
             </div>
 
-            <section className="w-full h-full flex flex-wrap gap-5 justify-between">
+            <section className="w-full h-full flex flex-wrap gap-5 justify-between mb-8">
 
                 <div className="space-y-8 max-w-[48%] w-full max-h-[424px]">
                     <SectionCard
@@ -213,7 +213,7 @@ const OperatorPage = () => {
                                                 <CustomButton
                                                     variant="secondary"
                                                     onClick={() => openQrModal(assembly)}
-                                                    className="px-4 py-2 border-[2px] border-[#0E3C42] rounded-sm hover:bg-gray-50 !text-[#000000] transition-colors flex items-center justify-center"
+                                                    className="px-4 py-2 border-[2px] border-[#0E3C42] rounded-full !text-[#000000] transition-colors flex items-center justify-center"
                                                 >
                                                     <QrCode size={20} />
                                                 </CustomButton>

@@ -88,7 +88,7 @@ const EntityAssembliesSection = ({ entityId, assemblies, createAssemblyRoute, vi
 
   return (
     <>
-      <div className="bg-[#FFFFFF] max-w-[1128px] rounded-3xl border border-[#F3F6F9] p-8">
+      <div className="bg-[#FFFFFF]  rounded-3xl border border-[#F3F6F9] p-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <CustomText

@@ -214,22 +214,47 @@ export default function QuestionItem({
           <div className="absolute inset-0  backdrop-blur-sm" />
 
           {/* 🔥 CORRECCIÓN 2: w-full y max-w-[850px] para que tenga el ancho exacto de tu imagen, y redondeado solo arriba */}
-          <div className="bg-[#F3F6F9] w-full max-w-[850px] rounded-t-[32px] shadow-[0_-8px_30px_rgba(0,0,0,0.1)] relative flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300 z-10 overflow-hidden">
+          <div className="bg-[#F3F6F9] w-full rounded-t-[32px] shadow-[0_-8px_30px_rgba(0,0,0,0.1)] relative flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300 z-10 overflow-hidden">
 
             {showSuccess ? (
               // PANTALLA DE ÉXITO
-              <div className="relative overflow-hidden bg-white p-12 flex flex-col items-center justify-center min-h-[400px] w-full m-auto text-center">
-                <div className="absolute -top-20 -left-20 w-64 h-64 bg-[#36C5C5] opacity-20 blur-[80px] rounded-full pointer-events-none" />
-                <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-[#94A2FF] opacity-50 blur-[100px] rounded-full pointer-events-none" />
-                <div className="relative z-10  w-[350px] ">
-                  <div className="flex items-center justify-center w-full mb-6">
-                    <img src="/logos/logo-intuapp/symbole.png" alt="Check" className="h-16 w-auto" />
+              <div className="my-6 relative overflow-hidden bg-white p-10 md:p-12 flex flex-col items-center justify-center min-h-[380px] w-full max-w-[550px] mx-auto rounded-[32px] shadow-xl">
+
+                {/* --- EFECTO DE FONDO (MESH GRADIENT) --- */}
+                {/* 1. Mancha morada principal (Arriba Izquierda) */}
+                <div className="absolute -top-12 -left-16 w-[300px] h-[300px] bg-[#94A2FF] opacity-80 blur-[90px] rounded-full pointer-events-none" />
+
+                {/* 2. Mancha verde (Arriba Centro/Derecha) */}
+                <div className="absolute top-1/4 -left-16 w-[200px] h-[300px] bg-[#ABE7E5] opacity-80 blur-[90px] rounded-full pointer-events-none" />
+
+                {/* 3. Mancha morada secundaria (Centro Izquierda bajando) */}
+                <div className="absolute -top-10 right-30 w-[150px] h-[300px] bg-[#ABE7E5] opacity-90 blur-[100px] rounded-full pointer-events-none" />
+
+                {/* 4. Mancha verde de mezcla (Centro) */}
+                <div className="absolute top-1/4 right-1/3 w-[250px] h-[300px] bg-[#94A2FF] opacity-50 blur-[100px] rounded-full pointer-events-none" />
+
+                <div className="relative z-10 w-full flex flex-col text-left">
+                  <div className="flex items-start w-full mb-6">
+                    {/* Ajusta la ruta de tu logo si es necesario */}
+                    <img src="/logos/logo-intuapp/symbole.png" alt="Logo" className="h-14 w-auto" />
                   </div>
-                  <div className="flex flex-col items-center justify-center ">
-                    <CustomText variant="TitleL" className="font-black text-[#0E3C42] mb-2">Tu votación fue exitosa!</CustomText>
-                    <CustomText variant="bodyM" className="text-gray-500 mb-8">Podrás ver tus votos y el resultado de las votaciones en la opción “Resultados” del menú inferior</CustomText>
+
+                  <div className="flex flex-col items-start w-full mb-8">
+                    <CustomText variant="TitleL" className="font-black text-[#0E3C42] mb-3 text-2xl md:text-3xl">
+                      Tu votación fue exitosa!
+                    </CustomText>
+                    <CustomText variant="bodyM" className="text-[#0E3C42] font-medium leading-relaxed pr-4">
+                      Podrás ver tus votos y el resultado de las votaciones en la opción “Resultados” del menú inferior
+                    </CustomText>
                   </div>
-                  <CustomButton onClick={() => setShowSuccess(false)} className=" py-3.5 px-6" variant="primary">Aceptar</CustomButton>
+
+                  <CustomButton
+                    onClick={() => setShowSuccess(false)}
+                    className="py-4 px-6 w-full shadow-lg shadow-[#94A2FF]/30 transition-transform active:scale-[0.98]"
+                    variant="primary"
+                  >
+                    <CustomText variant="bodyM" className="font-bold">Aceptar</CustomText>
+                  </CustomButton>
                 </div>
               </div>
             ) : (
@@ -242,12 +267,6 @@ export default function QuestionItem({
                     <div className="bg-[#FFEDDD] border border-[#F98A56] rounded-xl py-3 px-4 max-w-[564px] w-full flex items-start gap-2 mb-6 shrink-0">
                       <CustomIcon path={ICON_PATHS.warning} size={18} className="text-[#F98A56] mt-0.5" />
                       <CustomText variant="bodyS" className="text-[#1F1F23] font-bold">Recuerda que vas a votar individualmente por cada propiedad.</CustomText>
-                    </div>
-                  )}
-                  {mode === "block" && activeRegistries.length > 1 && (
-                    <div className="bg-[#FFEDDD] border border-[#F98A56] rounded-xl py-3 px-4 max-w-[564px] w-full flex items-start gap-2 mb-6 shrink-0">
-                      <CustomIcon path={ICON_PATHS.warning} size={18} className="text-[#F98A56] mt-0.5" />
-                      <CustomText variant="bodyS" className="text-[#1F1F23] font-bold">Recuerda que vas a votar una sola vez por todas las propiedades que tienes.</CustomText>
                     </div>
                   )}
 

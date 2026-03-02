@@ -7,12 +7,12 @@ export default function Step7Terms({ onAccept, loading }) {
   const [accepted, setAccepted] = useState(false);
 
   return (
-    <div className="flex flex-col items-center text-center max-w-[455px] w-full gap-6">
+    <div className="flex flex-col items-center text-center max-w-[455px] w-full gap-4">
       <CustomText variant="TitleL" className="text-[#0E3C42] font-bold">
         Términos y condiciones
       </CustomText>
 
-      <div className="p-6 rounded-2xl border shadow-sm text-start gap-4 flex flex-col">
+      <div className="p-6 rounded-2xl border border-[#F3F6F9] shadow-soft text-start gap-4 flex flex-col">
         <CustomText variant="bodyX" className="font-bold text-[#0E3C42]">
           Términos de uso de IntuApp
         </CustomText>

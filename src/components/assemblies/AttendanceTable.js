@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from "react";
 import { Search, Trash2, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import CustomText from "../basics/CustomText";
+import CustomButton from "../basics/CustomButton";
+import CustomIcon from "../basics/CustomIcon";
+import { ICON_PATHS } from "@/constans/iconPaths";
 
 const AttendanceTable = ({
     assembly,
@@ -147,7 +150,7 @@ const AttendanceTable = ({
         <div className="w-full bg-white border border-[#F3F6F9] rounded-3xl p-6 flex flex-col gap-6 shadow-soft mt-8">
 
             {/* HEADER Y PESTAÑAS */}
-            <div className="flex flex-col gap-4 mb-6">
+            <div className="flex flex-col gap-4">
                 <CustomText variant="TitleM" className="font-bold text-[#0E3C42]">Asistencia</CustomText>
                 <div className="flex flex-wrap gap-2">
                     {["Registrados", "Pendientes", "Registros eliminados"].map((tab) => (
@@ -163,7 +166,7 @@ const AttendanceTable = ({
                         </button>
                     ))}
                 </div>
-                <CustomText variant="bodyS" className="text-[#838383]">
+                <CustomText variant="bodyM" className="text-[#838383]">
                     {activeTab === "Registrados" ? "Aquí puedes ver las unidades que ya confirmaron su asistencia." :
                         activeTab === "Pendientes" ? "Unidades que aún no se han registrado en la asamblea." :
                             "Historial de registros eliminados o anulados."}
@@ -171,7 +174,7 @@ const AttendanceTable = ({
             </div>
 
             {/* BUSCADOR */}
-            <div className="relative mb-6">
+            <div className="relative ">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
                     type="text"
@@ -236,16 +239,16 @@ const AttendanceTable = ({
 
                                 {activeTab !== "Pendientes" && (
                                     <td className="py-4 px-6 text-center">
-                                        <button
+                                        <CustomButton
                                             onClick={() => onAction && onAction(item, activeTab === "Registrados" ? "delete" : "restore")}
                                             className={`p-2 rounded-full transition ${activeTab === "Registrados"
-                                                    ? "bg-red-50 text-red-500 hover:bg-red-100"
-                                                    : "bg-green-50 text-green-500 hover:bg-green-100"
+                                                    ? ""
+                                                    : ""
                                                 }`}
                                             title={activeTab === "Registrados" ? "Eliminar registro" : "Restaurar registro"}
                                         >
-                                            {activeTab === "Registrados" ? <Trash2 size={18} /> : <RefreshCw size={18} />}
-                                        </button>
+                                            <CustomIcon path={activeTab === "Registrados" ? ICON_PATHS.delete : ICON_PATHS.refresh} size={20} />
+                                        </CustomButton>
                                     </td>
                                 )}
                             </tr>

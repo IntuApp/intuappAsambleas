@@ -22,8 +22,8 @@ export default function LoginMember({ assembly, entity, onLogin }) {
       <div className="w-full min-h-screen h-full rounded-[40px] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] overflow-hidden flex flex-row justify-center">
 
         {/* LADO IZQUIERDO: INFORMACIÓN Y ACCESO */}
-        <div className="w-1/2 p-8 md:p-16 flex flex-col justify-center items-center">
-          <div className="w-full max-w-[500px] mx-auto flex flex-col gap-8 rounded-3xl p-7 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)]">
+        <div className=" p-8 md:p-16 flex flex-col justify-center items-center">
+          <div className="w-full flex flex-col gap-8 rounded-3xl p-7">
 
             <div className="w-full gap-2 flex flex-col">
               <CustomText
@@ -42,7 +42,7 @@ export default function LoginMember({ assembly, entity, onLogin }) {
                 </CustomText>
               )}
             </div>
-            <div className="p-7 relative overflow-hidden">
+            <div className="relative overflow-hidden">
               <div className="relative z-10 flex flex-col gap-2 p-3 bg-white rounded-3xl shadow-sm border border-[#F3F6F9]">
                 <CustomText
                   as="h5"
@@ -79,7 +79,7 @@ export default function LoginMember({ assembly, entity, onLogin }) {
             </div>
 
             {/* ZONA DE INTERACCIÓN DINÁMICA */}
-            <div className="w-full">
+            <div className="max-w-[455px]">
               {isFinalized ? (
                 <div className="bg-white border border-[#F0F0F0] p-6 rounded-2xl flex gap-4 items-center shadow-sm">
                   <div className="bg-[#EEF0FF] p-2 rounded-lg">
@@ -111,9 +111,9 @@ export default function LoginMember({ assembly, entity, onLogin }) {
                       <CustomIcon
                         path={ICON_PATHS.warning}
                         size={16}
-                        className="text-[#F98A56] shrink-0 mt-0.5"
+                        className="text-[#F98A56] shrink-0"
                       />
-                      <div className="flex flex-col gap-0.5">
+                      <div className="flex flex-col gap-1">
                         <CustomText
                           variant="bodyS"
                           className="font-bold text-[#0E3C42]"
@@ -151,20 +151,19 @@ export default function LoginMember({ assembly, entity, onLogin }) {
           </div>
         </div>
 
-        {/* LADO DERECHO: BRANDING (Diseño Mesh Gradient) */}
-        <div className=" w-1/2 p-6 bg-[#F8F9FB]">
+        <div className=" max-w-[652px] w-full p-6 py-10 bg-[#F8F9FB]">
           <div className="w-full h-full relative rounded-[32px] overflow-hidden flex flex-col items-center justify-center shadow-inner">
-            <img src="/bg/bg.png" alt="Branding" className="absolute inset-0 w-full h-full max-h-[400px] object-cover rounded-3xl" />
+            <img src="/bg/bg.png" alt="Branding" className="absolute inset-0 w-full h-full object-cover rounded-3xl" />
             <div className="absolute inset-0 bg-gradient-to-tr from-[#BFE6E2]/40 via-transparent to-[#C9CDF4]/40" />
 
-            <div className="relative z-10 flex flex-col items-center gap-2 bg-white/20 backdrop-blur-xl p-12 rounded-[50px] shadow-2xl max-w-[80%]">
+            <div className="relative z-10 flex flex-col items-center gap-2  max-w-[80%]">
               <img
                 src="/logos/assambly/iconLoginAssambly.png"
                 alt="IntuApp"
                 className="w-30 drop-shadow-md"
               />
               <div className="flex flex-col gap-2 items-center">
-                <CustomText variant="bodyX" className="text-[#0E3C42] font-bold text-center uppercase tracking-[0.2em]">
+                <CustomText variant="bodyX" className="text-[#0E3C42] font-medium text-center">
                   Lo complejo hecho simple
                 </CustomText>
               </div>

@@ -61,6 +61,7 @@ const OperadorCrearAsambleaPage = () => {
                 entityId={entityId}
                 registries={registries}
                 onCancel={() => router.back()}
+                isOperator={true}
             />
         </div>
     );
