@@ -4,7 +4,7 @@ import CustomButton from "../basics/CustomButton";
 
 export default function HelpFullBanner({ className = "" }) {
   return (
-    <div className="relative w-full rounded-3xl border border-[#F3F6F9] flex items-center  max-h-[100px] pt-5">
+    <div className="relative w-full rounded-3xl border border-[#F3F6F9] flex items-center  max-h-[100px] mt-5 pt-5">
       <img
         src="/bg/bgHelp.png"
         alt="Login"
