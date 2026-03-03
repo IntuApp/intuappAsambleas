@@ -149,17 +149,17 @@ export default function LoginPage() {
 
         <div className="hidden lg:flex relative w-full max-w-[552px] h-[600px] justify-center items-center">
           <img
-            src="/backgroundLogin.png"
+            src="/bg/bg.png" 
             alt="Fondo Login"
             className="w-full h-full rounded-[56px] object-cover shadow-xl"
           />
           <div className="absolute flex flex-col items-center text-center gap-4">
             <img
-              src="/logos/logoIntuapp/component.png"
+              src="/logos/logo/component.png" 
               alt="Logo Intuapp"
-              className="w-[200px] object-contain"
+              className="w- object-contain"
             />
-            <CustomText variant="TitleL" as="h4" className="text-[#0E3C42]">
+            <CustomText variant="TitleM" as="h4" className="text-[#0E3C42] font-medium">
               Lo complejo hecho simple
             </CustomText>
           </div>

@@ -236,7 +236,7 @@ export default function QuestionItem({
                 <div className="relative z-10 w-full flex flex-col text-left">
                   <div className="flex items-start w-full mb-6">
                     {/* Ajusta la ruta de tu logo si es necesario */}
-                    <img src="/logos/logo-intuapp/symbole.png" alt="Logo" className="h-14 w-auto" />
+                    <img src="/logos/logo/symbole.png" alt="Logo" className="h-14 w-auto" />
                   </div>
 
                   <div className="flex flex-col items-start w-full mb-8">
