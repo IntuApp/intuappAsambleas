@@ -149,7 +149,7 @@ export default function LoginPage() {
 
         <div className="hidden lg:flex relative w-full max-w-[552px] h-[600px] justify-center items-center">
           <img
-            src="/bg/bg.png"
+            src="/backgroundLogin.png"
             alt="Fondo Login"
             className="w-full h-full rounded-[56px] object-cover shadow-xl"
           />
