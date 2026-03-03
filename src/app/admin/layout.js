@@ -1,6 +1,7 @@
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 import { ICON_PATHS } from "@/constans/iconPaths";
+import { logoutUser } from "@/lib/auth";
 
 const adminLinks = [
   { label: "Inicio", href: "/admin", iconPath: ICON_PATHS.home },
