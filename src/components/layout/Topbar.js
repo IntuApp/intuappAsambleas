@@ -107,12 +107,12 @@ export default function Topbar({ basePath }) {
       </div>
 
       {/* Perfil del Usuario */}
-      <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100 shrink-0">
-        <CustomText variant="labelS" className="font-bold text-[#1F1F23]">
+      <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 shrink-0">
+        <CustomText variant="labelM" className="font-bold text-[#1F1F23]">
           {user?.name || user?.firstName || "Usuario"}
         </CustomText>
         <div className="w-[1px] h-5 bg-gray-200"></div>
-        <CustomText variant="labelS" className="text-[#3D3D44] font-medium hidden sm:block">
+        <CustomText variant="labelM" className="text-[#3D3D44] font-medium hidden sm:block">
           {user?.role === "1" ? "Super administrador" : "Operador"}
         </CustomText>
         <div className="w-8 h-8 rounded-full bg-[#ABE7E5] flex items-center justify-center text-white shadow-inner">

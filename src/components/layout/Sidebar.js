@@ -17,7 +17,7 @@ export default function Sidebar({ links, basePath }) {
         </div>
 
         {/* Navegación */}
-        <nav className="flex flex-col items-center w-full gap-4 px-4">
+        <nav className="flex flex-col items-center w-full gap-4 px-2">
           {links.map((link) => {
 
             // 1. SI ES UN BOTÓN DE ACCIÓN (Ej: Salir)
@@ -38,14 +38,19 @@ export default function Sidebar({ links, basePath }) {
             }
 
             // 2. SI ES UN ENLACE DE NAVEGACIÓN NORMAL (Ej: Inicio, Entidades)
-            const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+            // Lógica inteligente para evitar que el Inicio se quede marcado
+            const isBaseLink = link.href === basePath;
+            const isActive = isBaseLink 
+              ? pathname === link.href 
+              : pathname === link.href || pathname.startsWith(`${link.href}/`);
 
             return (
               <Link
                 key={link.label} // Usamos el label como llave única
                 href={link.href}
-                className={`flex flex-col items-center justify-center gap-1 p-2 w-full rounded-xl transition-colors ${isActive ? "bg-indigo-50" : "hover:bg-gray-50"
-                  }`}
+                className={`flex flex-col items-center justify-center gap-1 p-2 w-full rounded-xl transition-colors ${
+                  isActive ? "bg-indigo-50" : "hover:bg-gray-50"
+                }`}
               >
                 <CustomIcon
                   path={link.iconPath}
