@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Search, Trash2, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import CustomText from "../basics/CustomText";
 import CustomButton from "../basics/CustomButton";
 import CustomIcon from "../basics/CustomIcon";
@@ -9,12 +9,19 @@ const AttendanceTable = ({
     assembly,
     registrations = [],
     masterList = {},
-    onAction // Función que recibirá el item a eliminar
+    blockedProperties = [], // 🔥 NUEVO: Recibe el array de IDs bloqueados
+    mode = "operador",      // 🔥 NUEVO: Define el modo de la tabla ('operador' o 'funcionario')
+    onAction
 }) => {
     const [activeTab, setActiveTab] = useState("Registrados");
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+
+    // Dependiendo del modo, mostramos unas pestañas u otras
+    const availableTabs = mode === "funcionario"
+        ? ["Registrados", "Pendientes"]
+        : ["Registrados", "Pendientes", "Registros eliminados"];
 
     // --- 1. PROCESAMIENTO Y APLANAMIENTO DE DATOS ---
     const { registrados, pendientes, eliminados } = useMemo(() => {
@@ -25,9 +32,8 @@ const AttendanceTable = ({
 
         // A. Procesar Registrados (Aplanamos el array representedProperties)
         registrations?.forEach((userReg, userIndex) => {
-            // Si el usuario completo está marcado como eliminado (soft delete opcional)
             if (userReg.isDeleted) {
-                elim.push(userReg); // Lógica base para eliminados
+                elim.push(userReg);
                 return;
             }
 
@@ -36,26 +42,22 @@ const AttendanceTable = ({
                 occupiedIds.add(prop.ownerId);
 
                 reg.push({
-                    // Datos de la lista maestra
                     ...masterInfo,
                     id: prop.ownerId,
                     tipo: masterInfo.Tipo || masterInfo.tipo,
                     grupo: masterInfo.Grupo || masterInfo.grupo,
                     propiedad: masterInfo.Propiedad || masterInfo.propiedad,
                     coeficiente: prop.coefi || masterInfo.Coeficiente || masterInfo.coeficiente,
-                    documento: masterInfo.Documento || masterInfo.documento, // Normalizamos el documento del excel
-                    // Datos del usuario que registró la propiedad
+                    documento: masterInfo.Documento || masterInfo.documento,
                     mainDocument: userReg.mainDocument,
                     firstName: userReg.firstName,
                     lastName: userReg.lastName,
-                    // Datos específicos de la representación
                     role: prop.role,
                     power: prop.power,
                     addedByUser: prop.addedByUser,
-                    // Índices para facilitar la eliminación en el array original
                     userIndex,
                     propIndex,
-                    registrationId: userReg.mainDocument // Identificador para buscarlo en DB
+                    registrationId: userReg.mainDocument
                 });
             });
         });
@@ -70,7 +72,7 @@ const AttendanceTable = ({
                     grupo: data.Grupo || data.grupo,
                     propiedad: data.Propiedad || data.propiedad,
                     coeficiente: data.Coeficiente || data.coeficiente,
-                    documento: data.Documento || data.documento // Normalizamos el documento del excel
+                    documento: data.Documento || data.documento
                 });
             }
         });
@@ -106,7 +108,6 @@ const AttendanceTable = ({
     const renderPoder = (item) => {
         if (activeTab !== "Registrados") return "-";
 
-        // Si es propietario, nunca sube poder
         if (item.role === "owner") {
             return (
                 <span className="px-4 py-1 rounded-full border border-gray-200 text-[#0E3C42] text-xs font-bold bg-gray-50">
@@ -115,7 +116,6 @@ const AttendanceTable = ({
             );
         }
 
-        // Si es asamblea presencial (typeId === "1")
         if (String(assembly?.typeId) === "1") {
             return (
                 <span className="px-4 py-1 rounded-full border border-gray-200 text-[#0E3C42] text-xs font-bold bg-gray-50">
@@ -124,7 +124,6 @@ const AttendanceTable = ({
             );
         }
 
-        // Si es asamblea virtual/mixta (typeId === "2" u otro)
         if (item.power) {
             return (
                 <a
@@ -153,13 +152,14 @@ const AttendanceTable = ({
             <div className="flex flex-col gap-4">
                 <CustomText variant="TitleM" className="font-bold text-[#0E3C42]">Asistencia</CustomText>
                 <div className="flex flex-wrap gap-2">
-                    {["Registrados", "Pendientes", "Registros eliminados"].map((tab) => (
+                    {/* Renderizamos solo las pestañas permitidas por el modo */}
+                    {availableTabs.map((tab) => (
                         <button
                             key={tab}
                             onClick={() => { setActiveTab(tab); setCurrentPage(1); }}
                             className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all ${activeTab === tab
-                                    ? "bg-[#E0E7FF] text-[#0E3C42] shadow-sm"
-                                    : "bg-transparent text-gray-500 hover:bg-gray-50"
+                                ? "bg-[#E0E7FF] text-[#0E3C42] shadow-sm"
+                                : "bg-transparent text-gray-500 hover:bg-gray-50"
                                 }`}
                         >
                             {tab}
@@ -174,7 +174,7 @@ const AttendanceTable = ({
             </div>
 
             {/* BUSCADOR */}
-            <div className="relative ">
+            <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
                     type="text"
@@ -196,18 +196,21 @@ const AttendanceTable = ({
                             <th className="py-4 px-6">Coeficiente</th>
                             <th className="py-4 px-6">Documento</th>
 
-                            {/* Condicional: Nombre */}
                             {assembly?.requireFullName && activeTab === "Registrados" && (
                                 <th className="py-4 px-6">Nombre</th>
                             )}
 
-                            {/* Condicional: Poder (Solo en Registrados) */}
                             {activeTab === "Registrados" && (
                                 <th className="py-4 px-6 text-center">Poder</th>
                             )}
 
-                            {/* Acción */}
-                            {activeTab !== "Pendientes" && (
+                            {/* 🔥 NUEVO: Columna de Voto Bloqueado para Funcionario */}
+                            {mode === "funcionario" && activeTab === "Registrados" && (
+                                <th className="py-4 px-6 text-center ">Voto Bloqueado</th>
+                            )}
+
+                            {/* Columna de Acción original (Oculta para el Funcionario) */}
+                            {mode !== "funcionario" && activeTab !== "Pendientes" && (
                                 <th className="py-4 px-6 text-center">Acción</th>
                             )}
                         </tr>
@@ -220,7 +223,6 @@ const AttendanceTable = ({
                                 <td className="py-4 px-6 font-bold">{item.propiedad || "-"}</td>
                                 <td className="py-4 px-6 font-medium text-gray-500">{item.coeficiente || "0"}%</td>
 
-                                {/* LÓGICA DE DOCUMENTO APLICADA AQUÍ */}
                                 <td className="py-4 px-6 font-medium">
                                     {activeTab === "Registrados" ? (item.mainDocument || "-") : (item.documento || "-")}
                                 </td>
@@ -237,14 +239,23 @@ const AttendanceTable = ({
                                     </td>
                                 )}
 
-                                {activeTab !== "Pendientes" && (
+                                {/* 🔥 NUEVO: Mostrar si está bloqueado o no en el modo Funcionario */}
+                                {mode === "funcionario" && activeTab === "Registrados" && (
+                                    <td className="py-4 px-6 text-center font-bold">
+                                        {blockedProperties.includes(item.id) ? (
+                                            <span className="text-red-500 bg-red-50 px-3 py-1 rounded-md">Sí</span>
+                                        ) : (
+                                            <span className="text-gray-500">No</span>
+                                        )}
+                                    </td>
+                                )}
+
+                                {/* Celda de Acción original */}
+                                {mode !== "funcionario" && activeTab !== "Pendientes" && (
                                     <td className="py-4 px-6 text-center">
                                         <CustomButton
                                             onClick={() => onAction && onAction(item, activeTab === "Registrados" ? "delete" : "restore")}
-                                            className={`p-2 rounded-full transition ${activeTab === "Registrados"
-                                                    ? ""
-                                                    : ""
-                                                }`}
+                                            className="p-2 rounded-full transition"
                                             title={activeTab === "Registrados" ? "Eliminar registro" : "Restaurar registro"}
                                         >
                                             <CustomIcon path={activeTab === "Registrados" ? ICON_PATHS.delete : ICON_PATHS.refresh} size={20} />
@@ -280,8 +291,8 @@ const AttendanceTable = ({
                             key={i}
                             onClick={() => setCurrentPage(i + 1)}
                             className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${currentPage === i + 1
-                                    ? "bg-[#D9E9E9] text-[#0E3C42]"
-                                    : "bg-transparent text-gray-500 hover:bg-gray-100"
+                                ? "bg-[#D9E9E9] text-[#0E3C42]"
+                                : "bg-transparent text-gray-500 hover:bg-gray-100"
                                 }`}
                         >
                             {i + 1}

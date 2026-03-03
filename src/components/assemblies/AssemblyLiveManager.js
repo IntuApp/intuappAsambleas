@@ -225,6 +225,8 @@ export default function AssemblyLiveManager({
         </CustomButton>
       </div>
 
+      {/* 4. ESTOS SON LSO QUE SE VEN EN FUNCIONARIO. EL QOURUM Y LOS DOS CUADROS DE REGISTRADOS Y BLOQUEADOS */}
+
       {/* 4. SECCIÓN DE ESTADÍSTICAS */}
       <div className="w-full grid grid-cols-2 justify-between gap-10 ">
         {/* Quórum */}
