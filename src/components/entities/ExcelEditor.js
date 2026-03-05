@@ -72,7 +72,7 @@ export const ExcelEditor = ({
     <div className="w-full">
       {/* TABLE */}
       <div className="overflow-x-auto border border-gray-200 rounded-lg">
-        <table className="text-left border-collapse">
+        <table className="text-left border-collapse w-full">
           <thead>
             <tr>
               {headers.map((header, index) => (

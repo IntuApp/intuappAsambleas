@@ -20,6 +20,7 @@ export default function QuestionItem({
   forceModalOnly = false,
   hideModal = false,
   userVotes = [],
+  masterList,
   blockedProperties = [],
 }) {
 
@@ -389,67 +390,73 @@ export default function QuestionItem({
 
                         /* MODO INDIVIDUAL */
                         <div className="space-y-6 w-full">
-                          {activeRegistries.map((reg) => (
-                            <div key={reg.ownerId} className="bg-white rounded-[24px] p-6 flex flex-col gap-5 border border-gray-100 shadow-sm">
-                              <CustomText variant="bodyX" className="font-black text-[#0E3C42]">
-                                Propiedad: {reg.ownerId}
-                              </CustomText>
+                          {activeRegistries.map((reg) => {
+                            const excelInfo = masterList[reg.ownerId] || {};
+                            const tipo = excelInfo.Tipo || excelInfo.tipo || "";
+                            const grupo = excelInfo.Grupo || excelInfo.grupo || "";
+                            const propiedadNombre = excelInfo.Propiedad || excelInfo.propiedad || reg.ownerId;
+                            return (
+                              <div key={reg.ownerId} className="bg-white rounded-[24px] p-6 flex flex-col gap-5 border border-gray-100 shadow-sm">
+                                <CustomText variant="bodyX" className="font-black text-[#0E3C42]">
+                                 {tipo} {grupo} {propiedadNombre}
+                                </CustomText>
 
-                              {q.typeId === QUESTION_TYPES.OPEN ? (
-                                <textarea
-                                  placeholder="Escribe tu respuesta aquí..."
-                                  className="w-full border-[1.5px] border-[#E5E9F0] rounded-xl p-4 min-h-[100px] focus:outline-none focus:border-[#4059FF] resize-none text-[#0E3C42]"
-                                  value={individualVotes[reg.ownerId]?.answerText || ""}
-                                  onChange={(e) => setIndividualVotes(p => ({ ...p, [reg.ownerId]: { answerText: e.target.value } }))}
-                                />
-                              ) : (
-                                <div className="flex flex-col gap-3">
-                                  {q.options.map((opt) => {
-                                    const isMultiple = q.typeId === QUESTION_TYPES.MULTIPLE;
-                                    const isSelected = isMultiple
-                                      ? individualVotes[reg.ownerId]?.optionIds?.includes(opt.id)
-                                      : individualVotes[reg.ownerId]?.optionId === opt.id;
+                                {q.typeId === QUESTION_TYPES.OPEN ? (
+                                  <textarea
+                                    placeholder="Escribe tu respuesta aquí..."
+                                    className="w-full border-[1.5px] border-[#E5E9F0] rounded-xl p-4 min-h-[100px] focus:outline-none focus:border-[#4059FF] resize-none text-[#0E3C42]"
+                                    value={individualVotes[reg.ownerId]?.answerText || ""}
+                                    onChange={(e) => setIndividualVotes(p => ({ ...p, [reg.ownerId]: { answerText: e.target.value } }))}
+                                  />
+                                ) : (
+                                  <div className="flex flex-col gap-3">
+                                    {q.options.map((opt) => {
+                                      const isMultiple = q.typeId === QUESTION_TYPES.MULTIPLE;
+                                      const isSelected = isMultiple
+                                        ? individualVotes[reg.ownerId]?.optionIds?.includes(opt.id)
+                                        : individualVotes[reg.ownerId]?.optionId === opt.id;
 
-                                    return (
-                                      <button
-                                        key={opt.id}
-                                        onClick={() => {
-                                          if (isMultiple) {
-                                            setIndividualVotes((prev) => {
-                                              const regVote = prev[reg.ownerId] || {};
-                                              const currentOpts = regVote.optionIds || [];
-                                              const isSel = currentOpts.includes(opt.id);
-                                              let newOpts;
-                                              if (isSel) newOpts = currentOpts.filter((id) => id !== opt.id);
-                                              else newOpts = [...currentOpts, opt.id];
-                                              return { ...prev, [reg.ownerId]: { ...regVote, optionIds: newOpts } };
-                                            });
-                                          } else {
-                                            setIndividualVotes((p) => ({ ...p, [reg.ownerId]: { optionId: opt.id } }));
-                                          }
-                                        }}
-                                        className={`p-4 rounded-xl border-[1.5px] flex flex-row gap-4 items-center transition-all ${isSelected ? "border-[#4059FF] bg-indigo-50/30" : "bg-white border-[#E5E9F0] hover:border-gray-300"}`}
-                                      >
-                                        {/* Icono Condicional Redondo o Cuadrado */}
-                                        {isMultiple ? (
-                                          <div className={`w-5 h-5 shrink-0 rounded-[6px] border-2 flex items-center justify-center ${isSelected ? "border-[#4059FF] bg-[#4059FF]" : "border-gray-300"}`}>
-                                            {isSelected && <Check size={14} className="text-white" strokeWidth={4} />}
-                                          </div>
-                                        ) : (
-                                          <div className={`w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center ${isSelected ? "border-[#4059FF]" : "border-gray-300"}`}>
-                                            {isSelected && <div className="w-2.5 h-2.5 bg-[#4059FF] rounded-full" />}
-                                          </div>
-                                        )}
-                                        <CustomText variant="bodyM" className={`text-[#0E3C42] text-left ${isSelected ? "font-bold" : "font-medium"}`}>
-                                          {opt.text}
-                                        </CustomText>
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          ))}
+                                      return (
+                                        <button
+                                          key={opt.id}
+                                          onClick={() => {
+                                            if (isMultiple) {
+                                              setIndividualVotes((prev) => {
+                                                const regVote = prev[reg.ownerId] || {};
+                                                const currentOpts = regVote.optionIds || [];
+                                                const isSel = currentOpts.includes(opt.id);
+                                                let newOpts;
+                                                if (isSel) newOpts = currentOpts.filter((id) => id !== opt.id);
+                                                else newOpts = [...currentOpts, opt.id];
+                                                return { ...prev, [reg.ownerId]: { ...regVote, optionIds: newOpts } };
+                                              });
+                                            } else {
+                                              setIndividualVotes((p) => ({ ...p, [reg.ownerId]: { optionId: opt.id } }));
+                                            }
+                                          }}
+                                          className={`p-4 rounded-xl border-[1.5px] flex flex-row gap-4 items-center transition-all ${isSelected ? "border-[#4059FF] bg-indigo-50/30" : "bg-white border-[#E5E9F0] hover:border-gray-300"}`}
+                                        >
+                                          {/* Icono Condicional Redondo o Cuadrado */}
+                                          {isMultiple ? (
+                                            <div className={`w-5 h-5 shrink-0 rounded-[6px] border-2 flex items-center justify-center ${isSelected ? "border-[#4059FF] bg-[#4059FF]" : "border-gray-300"}`}>
+                                              {isSelected && <Check size={14} className="text-white" strokeWidth={4} />}
+                                            </div>
+                                          ) : (
+                                            <div className={`w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center ${isSelected ? "border-[#4059FF]" : "border-gray-300"}`}>
+                                              {isSelected && <div className="w-2.5 h-2.5 bg-[#4059FF] rounded-full" />}
+                                            </div>
+                                          )}
+                                          <CustomText variant="bodyM" className={`text-[#0E3C42] text-left ${isSelected ? "font-bold" : "font-medium"}`}>
+                                            {opt.text}
+                                          </CustomText>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })}
                           <CustomButton
                             onClick={submitIndividualVotes}
                             disabled={Object.keys(individualVotes).length < activeRegistries.length || isSubmitting}

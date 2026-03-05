@@ -296,7 +296,8 @@ export default function JoinAssemblyPage() {
         power: null,
         role: "owner",
         addedByUser: false,
-        coefi: p.coeficiente || p.Coeficiente || "0"
+        coefi: p.coeficiente || p.Coeficiente || "0",
+        votos: p.votos || p.Votos || "0"
       }));
 
       const manualProps = await Promise.all(
@@ -312,7 +313,8 @@ export default function JoinAssemblyPage() {
               power: powerUrl,
               role: v.role,
               addedByUser: true,
-              coefi: v.registry.coeficiente || v.registry.Coeficiente || "0"
+              coefi: v.registry.coeficiente || v.registry.Coeficiente || "0",
+              votos: v.registry.votos || v.registry.Votos || "0"
             };
           })
       );

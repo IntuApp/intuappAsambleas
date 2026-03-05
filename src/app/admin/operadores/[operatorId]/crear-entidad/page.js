@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import * as XLSX from "xlsx"; // Importamos la librería para leer Excel
+import * as XLSX from "xlsx";
+import { toast } from "react-toastify"; // Asegúrate de tenerlo instalado
 import CustomText from "@/components/basics/CustomText";
 import CustomButton from "@/components/basics/CustomButton";
 import CustomIcon from "@/components/basics/CustomIcon";
@@ -12,7 +13,6 @@ import EntityExcelUploadStep from "@/components/entities/EntityExcelUploadStep";
 import { createEntityWithRegistry } from "@/lib/entityActions";
 import SuccessModal from "@/components/modal/SuccessModal";
 
-// Tipos de entidad "hardcodeados" según tu imagen de BD. (Podrías traerlos de FB también)
 const entityTypes = [
   { id: "1", name: "Sindicato" },
   { id: "2", name: "Propiedad Horizontal" },
@@ -22,8 +22,7 @@ const entityTypes = [
 
 export default function CrearEntidadPage() {
   const router = useRouter();
-  const { operatorId } = useParams(); // ID del operador desde la URL
-  console.log(operatorId);
+  const { operatorId } = useParams();
 
   // Estados del Formulario Básico
   const [entityForm, setEntityForm] = useState({
@@ -57,29 +56,63 @@ export default function CrearEntidadPage() {
 
     const reader = new FileReader();
     reader.onload = (evt) => {
-      const bstr = evt.target.result;
-      const wb = XLSX.read(bstr, { type: "binary" });
-      const wsname = wb.SheetNames[0];
-      const ws = wb.Sheets[wsname];
+      try {
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
 
-      // Convertimos la hoja a JSON. defval: "" evita que ignore celdas vacías
-      const data = XLSX.utils.sheet_to_json(ws, { defval: "" });
+        // 1. Convertimos a JSON omitiendo celdas vacías
+        const rawData = XLSX.utils.sheet_to_json(ws, { defval: null });
 
-      if (data.length > 0) {
-        setExcelHeaders(Object.keys(data[0]));
-        setExcelData(data);
-      } else {
-        setErrorMsg("El archivo Excel está vacío.");
+        if (rawData.length > 0) {
+          // 2. Extraemos los headers REALES (evitamos las columnas vacías del archivo 2)
+          const allKeys = Object.keys(rawData[0]);
+          const realHeaders = allKeys.filter(key =>
+            !key.startsWith("__EMPTY") &&
+            key.trim() !== ""
+          );
+
+          // 3. Limpieza de filas: Solo columnas reales y filas con texto
+          const cleanData = rawData
+            .map(row => {
+              let newRow = {};
+              realHeaders.forEach(header => {
+                newRow[header] = row[header];
+              });
+              return newRow;
+            })
+            .filter(row => {
+              return Object.values(row).some(v => v !== null && String(v).trim() !== "");
+            });
+
+          // 4. Inicializar Aliases (Importante para que no salgan vacíos)
+          const initialAliases = {};
+          realHeaders.forEach(h => {
+            initialAliases[h] = h;
+          });
+
+          setExcelHeaders(realHeaders);
+          setExcelData(cleanData);
+          setColumnAliases(initialAliases);
+
+          toast.success("Archivo procesado correctamente");
+        } else {
+          toast.error("El archivo está vacío.");
+        }
+      } catch (error) {
+        console.error("Error al leer Excel:", error);
+        toast.error("Error procesando el archivo Excel");
       }
     };
     reader.readAsBinaryString(file);
+    e.target.value = null;
   };
 
   // ENVÍO FINAL A FIREBASE
   const handleSubmit = async () => {
     setErrorMsg("");
 
-    // Validaciones estrictas
     if (!entityForm.name || !entityForm.type) {
       setErrorMsg("El nombre de la entidad y el tipo son obligatorios.");
       return;
@@ -91,7 +124,7 @@ export default function CrearEntidadPage() {
 
     setIsLoading(true);
     try {
-      // Asegurar que la información a enviar al backend sean objetos planos
+      // Clonamos la data para evitar referencias circulares
       const plainExcelData = JSON.parse(JSON.stringify(excelData));
 
       const result = await createEntityWithRegistry(
@@ -106,19 +139,19 @@ export default function CrearEntidadPage() {
         setShowSuccessModal(true);
       }
     } catch (error) {
-      setErrorMsg(error.message);
+      console.error("Error en submit:", error);
+      setErrorMsg(error.message || "Ocurrió un error al crear la entidad.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-8 w-full ">
-
+    <div className="flex flex-col gap-8 w-full">
       <SuccessModal
         isOpen={showSuccessModal}
         title="¡Entidad creada con éxito!"
-        message="La entidad y su base de datos han sido configuradas."
+        message="La entidad y su base de datos han sido configuradas correctamente."
         buttonText="Volver al Operador"
         onConfirm={() => router.push(`/admin/operadores/${operatorId}`)}
       />
@@ -130,7 +163,8 @@ export default function CrearEntidadPage() {
       </div>
 
       {errorMsg && (
-        <div className="p-4 bg-red-100 border border-red-300 text-red-700 rounded-xl font-bold">
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl font-medium flex items-center gap-2">
+          <span className="w-2 h-2 bg-red-600 rounded-full"></span>
           {errorMsg}
         </div>
       )}
@@ -155,11 +189,11 @@ export default function CrearEntidadPage() {
         setColumnAliases={setColumnAliases}
       />
 
-      {/* BOTONES DE ACCIÓN (Cancel / Create) */}
+      {/* BOTONES DE ACCIÓN */}
       <div className="flex justify-end gap-4 mt-4">
         <CustomButton
           variant="secondary"
-          className="px-6 py-3 border-[2px] rounded-full"
+          className="px-8 py-3 border-[2px] rounded-full"
           onClick={() => router.back()}
           disabled={isLoading}
         >
@@ -170,17 +204,16 @@ export default function CrearEntidadPage() {
 
         <CustomButton
           variant="primary"
-          className="py-3 px-6 flex items-center justify-center gap-2 rounded-full"
+          className="py-3 px-8 flex items-center justify-center gap-2 rounded-full"
           onClick={handleSubmit}
           disabled={isLoading}
         >
-          <CustomIcon path={ICON_PATHS.check} size={24} color="#00093F" />
+          {!isLoading && <CustomIcon path={ICON_PATHS.check} size={20} color="#00093F" />}
           <CustomText variant="labelL" className="font-bold">
-            {isLoading ? "Creando Entidad..." : "Crear Entidad"}
+            {isLoading ? "Procesando..." : "Crear Entidad"}
           </CustomText>
         </CustomButton>
       </div>
-
     </div>
   );
 }

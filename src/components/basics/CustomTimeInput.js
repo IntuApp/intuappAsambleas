@@ -5,7 +5,7 @@ import CustomText from "@/components/basics/CustomText";
 export default function CustomTimeInput({
   label,
   required,
-  value = { hour: "08", minute: "00", ampm: "AM" },
+  value = { hour: "00", minute: "00", ampm: "AM" },
   onChange,
 }) {
   const sanitizeNumber = (val) => val.replace(/\D/g, "");
@@ -42,7 +42,7 @@ export default function CustomTimeInput({
           <input
             type="text"
             maxLength={2}
-            placeholder="08"
+            placeholder="00"
             value={value.hour}
             onChange={(e) => handleUpdate({ hour: sanitizeNumber(e.target.value).slice(0, 2) })}
             onBlur={(e) => handleUpdate({ hour: validateHour(e.target.value) })}

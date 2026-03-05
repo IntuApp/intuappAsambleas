@@ -21,6 +21,7 @@ const QuestionCard = ({
   onCancel,
   onViewVoters,
   assembyStatus,
+  isUserAssembled,
 }) => {
   const parseCoef = (val) =>
     parseFloat(String(val || 0).replace(",", ".")) || 0;
@@ -121,10 +122,7 @@ const QuestionCard = ({
                 const isCreated = q.statusId === QUESTION_STATUSES.CREATED;
 
                 // 🔥 CRÍTICO: Comparamos el ID de la opción
-                const votesForOpt = questionVotes.filter(
-                  (v) => v.selectedOptionIds && v.selectedOptionIds.includes(opt.id)
-                );
-
+                const votesForOpt = questionVotes.filter(v => v.selectedOptionIds?.includes(opt.id));
                 const votesForOptCount = votesForOpt.length;
                 const votesForOptCoef = votesForOpt.reduce((acc, v) => {
                   let power = v.votingPower;
@@ -136,7 +134,10 @@ const QuestionCard = ({
                   }
                   return acc + parseCoef(power);
                 }, 0);
-
+                const powerForOptSum = votesForOpt.reduce((acc, v) => {
+                  const reg = registries.find(r => r.ownerId === v.propertyOwnerId || r.id === v.propertyOwnerId);
+                  return acc + parseCoef(reg?.votos || reg?.Votos);
+                }, 0);
                 const displayPercentage = votesForOptCoef.toFixed(2);
                 const barWidth = totalVotedCoef > 0 ? (votesForOptCoef / totalVotedCoef) * 100 : 0;
 
@@ -165,7 +166,7 @@ const QuestionCard = ({
                           variant="bodyL"
                           className="font-bold text-[#3D3D44] whitespace-nowrap min-w-[120px] text-right"
                         >
-                          {displayPercentage}% ({votesForOptCount} votos)
+                          {displayPercentage}% ({powerForOptSum.toLocaleString()} votos)
                         </CustomText>
                       )}
                     </div>
@@ -199,11 +200,11 @@ const QuestionCard = ({
       )}
 
       {/* ---------------- ALERTAS Y ACCIONES ---------------- */}
-      {shouldShowResults && q.statusId !== QUESTION_STATUSES.CANCELED && (
+      {shouldShowResults && q.statusId !== QUESTION_STATUSES.CANCELED && !isUserAssembled && (
         <div className="bg-[#EEF0FF] border border-[#94A2FF] p-4 rounded-xl flex gap-3 items-center">
           <CustomIcon path={ICON_PATHS.info} size={24} className="text-[#4059FF]" />
           <CustomText variant="bodyM" className="font-bold text-[#333333]">
-            Resultados calculados sobre el 100% de la entidad, no en porcentajes reescalados.
+            Resultados calculados sobre el 100% de la entidad.
           </CustomText>
         </div>
       )}

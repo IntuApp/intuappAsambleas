@@ -62,9 +62,15 @@ const AttendanceTable = ({
             });
         });
 
+        const getFromMaster = (data, key) => {
+            const searchKey = key.toLowerCase().trim();
+            const realKey = Object.keys(data).find(k => k.toLowerCase().trim().includes(searchKey));
+            return realKey ? data[realKey] : null;
+        };
         // B. Procesar Pendientes (Los que están en masterList pero no en occupiedIds)
         Object.entries(masterList).forEach(([id, data]) => {
             if (!occupiedIds.has(id)) {
+                const numVotos = getFromMaster(data, "voto") || getFromMaster(data, "votos") || "1";
                 pend.push({
                     ...data,
                     id,
@@ -72,7 +78,8 @@ const AttendanceTable = ({
                     grupo: data.Grupo || data.grupo,
                     propiedad: data.Propiedad || data.propiedad,
                     coeficiente: data.Coeficiente || data.coeficiente,
-                    documento: data.Documento || data.documento
+                    documento: data.Documento || data.documento,
+                    votos: numVotos
                 });
             }
         });
@@ -80,6 +87,25 @@ const AttendanceTable = ({
         return { registrados: reg, pendientes: pend, eliminados: elim };
     }, [registrations, masterList]);
 
+
+    const visibleColumns = useMemo(() => {
+        // Unificamos todos los datos para saber si hay valores en alguna parte
+        const allData = [...registrados, ...pendientes, ...eliminados];
+
+        const cols = [
+            { id: "tipo", label: "Tipo" },
+            { id: "grupo", label: "Grupo" },
+            { id: "propiedad", label: "# Propiedad" },
+            { id: "coeficiente", label: "Coeficiente" },
+            { id: "votos", label: "Votos" },
+            { id: "documento", label: "Documento" },
+        ];
+
+        // Filtramos: Solo si al menos un registro tiene valor en esa columna
+        return cols.filter(col =>
+            allData.some(item => item[col.id] !== null && item[col.id] !== undefined)
+        );
+    }, [registrados, pendientes, eliminados]);
     // --- 2. FILTRADO POR PESTAÑA Y BÚSQUEDA ---
     const currentData = useMemo(() => {
         let source = [];
@@ -190,11 +216,10 @@ const AttendanceTable = ({
                 <table className="w-full text-left border-collapse min-w-[800px]">
                     <thead>
                         <tr className="bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                            <th className="py-4 px-6">Tipo</th>
-                            <th className="py-4 px-6">Grupo</th>
-                            <th className="py-4 px-6"># Propiedad</th>
-                            <th className="py-4 px-6">Coeficiente</th>
-                            <th className="py-4 px-6">Documento</th>
+                            {/* RENDERIZADO DINÁMICO DE HEADERS */}
+                            {visibleColumns.map(col => (
+                                <th key={col.id} className="py-4 px-6">{col.label}</th>
+                            ))}
 
                             {assembly?.requireFullName && activeTab === "Registrados" && (
                                 <th className="py-4 px-6">Nombre</th>
@@ -204,12 +229,10 @@ const AttendanceTable = ({
                                 <th className="py-4 px-6 text-center">Poder</th>
                             )}
 
-                            {/* 🔥 NUEVO: Columna de Voto Bloqueado para Funcionario */}
                             {mode === "funcionario" && activeTab === "Registrados" && (
                                 <th className="py-4 px-6 text-center ">Voto Bloqueado</th>
                             )}
 
-                            {/* Columna de Acción original (Oculta para el Funcionario) */}
                             {mode !== "funcionario" && activeTab !== "Pendientes" && (
                                 <th className="py-4 px-6 text-center">Acción</th>
                             )}
@@ -218,14 +241,15 @@ const AttendanceTable = ({
                     <tbody>
                         {currentItems.map((item, idx) => (
                             <tr key={item.id || idx} className="border-b border-gray-50 hover:bg-slate-50/50 transition text-sm text-[#0E3C42]">
-                                <td className="py-4 px-6 font-medium text-gray-500">{item.tipo || "-"}</td>
-                                <td className="py-4 px-6 font-medium text-gray-500">{item.grupo || "-"}</td>
-                                <td className="py-4 px-6 font-bold">{item.propiedad || "-"}</td>
-                                <td className="py-4 px-6 font-medium text-gray-500">{item.coeficiente || "0"}%</td>
-
-                                <td className="py-4 px-6 font-medium">
-                                    {activeTab === "Registrados" ? (item.mainDocument || "-") : (item.documento || "-")}
-                                </td>
+                                {/* RENDERIZADO DINÁMICO DE CELDAS */}
+                                {visibleColumns.map(col => (
+                                    <td key={col.id} className={`py-4 px-6 ${col.id === 'propiedad' ? 'font-bold' : 'font-medium text-gray-500'}`}>
+                                        {col.id === 'coeficiente'
+                                            ? `${parseFloat(item[col.id] || 0).toFixed(4).replace(/\.?0+$/, "")}%`
+                                            : (item[col.id] || "-")
+                                        }
+                                    </td>
+                                ))}
 
                                 {assembly?.requireFullName && activeTab === "Registrados" && (
                                     <td className="py-4 px-6 font-medium capitalize">
@@ -239,7 +263,6 @@ const AttendanceTable = ({
                                     </td>
                                 )}
 
-                                {/* 🔥 NUEVO: Mostrar si está bloqueado o no en el modo Funcionario */}
                                 {mode === "funcionario" && activeTab === "Registrados" && (
                                     <td className="py-4 px-6 text-center font-bold">
                                         {blockedProperties.includes(item.id) ? (
@@ -250,13 +273,11 @@ const AttendanceTable = ({
                                     </td>
                                 )}
 
-                                {/* Celda de Acción original */}
                                 {mode !== "funcionario" && activeTab !== "Pendientes" && (
                                     <td className="py-4 px-6 text-center">
                                         <CustomButton
                                             onClick={() => onAction && onAction(item, activeTab === "Registrados" ? "delete" : "restore")}
                                             className="p-2 rounded-full transition"
-                                            title={activeTab === "Registrados" ? "Eliminar registro" : "Restaurar registro"}
                                         >
                                             <CustomIcon path={activeTab === "Registrados" ? ICON_PATHS.delete : ICON_PATHS.refresh} size={20} />
                                         </CustomButton>

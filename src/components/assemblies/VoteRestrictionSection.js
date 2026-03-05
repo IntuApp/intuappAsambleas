@@ -18,36 +18,61 @@ export default function VoteRestrictionSection({
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    // Función de obtención de valor (robusta)
     const getValue = (item, key) => {
-        if (!item) return "-";
-        const lowerKey = key.toLowerCase();
-        const realKey = Object.keys(item).find(k => k.toLowerCase() === lowerKey);
-        return realKey ? item[realKey] : "-";
+        if (!item) return null;
+        const searchKey = key.toLowerCase().trim();
+        const realKey = Object.keys(item).find(k => k.toLowerCase().trim().includes(searchKey));
+        const value = realKey ? item[realKey] : null;
+
+        if (value === undefined || value === null || value === "") return null;
+
+        // --- NUEVA LÓGICA DE FORMATEO PARA COEFICIENTE ---
+        if (searchKey === "coeficiente") {
+            const num = parseFloat(value);
+            if (!isNaN(num)) {
+                // toFixed(4) asegura que solo veas 4 decimales. 
+                // parseFloat de nuevo quita ceros sobrantes al final (ej: 0.5500 -> 0.55)
+                return parseFloat(num.toFixed(2)).toString();
+            }
+        }
+
+        return String(value);
     };
 
-    // MODIFICACIÓN: El useMemo ahora SOLO filtra por búsqueda y tipo de filtro, 
-    // pero no se recalcula agresivamente solo por el cambio de un Set
+    // 1. Filtrado de items
     const filteredItems = useMemo(() => {
         return registries.filter((item) => {
-            const propiedad = String(getValue(item, "propiedad")).toLowerCase();
-            const documento = String(getValue(item, "documento")).toLowerCase();
-            const grupo = String(getValue(item, "grupo")).toLowerCase();
+            const prop = getValue(item, "propiedad")?.toLowerCase() || "";
+            const doc = getValue(item, "documento")?.toLowerCase() || "";
+            const grupo = getValue(item, "grupo")?.toLowerCase() || "";
             const search = searchTerm.toLowerCase();
 
-            const matchesSearch =
-                propiedad.includes(search) ||
-                documento.includes(search) ||
-                grupo.includes(search);
-
-            const isItemBlocked = blockedVoters.has(item.id);
-            const matchesFilter =
-                !filterType ||
-                (filterType === "blocked" && isItemBlocked) ||
-                (filterType === "unblocked" && !isItemBlocked);
+            const matchesSearch = prop.includes(search) || doc.includes(search) || grupo.includes(search);
+            const isBlocked = blockedVoters.has(item.id);
+            const matchesFilter = !filterType ||
+                (filterType === "blocked" && isBlocked) ||
+                (filterType === "unblocked" && !isBlocked);
 
             return matchesSearch && matchesFilter;
         });
-    }, [registries, searchTerm, filterType, blockedVoters]); // Mantenemos blockedVoters para que la lista se actualice si filtramos por "Bloqueados"
+    }, [registries, searchTerm, filterType, blockedVoters]);
+
+    // 2. DETERMINAR COLUMNAS VISIBLES
+    // Solo se muestran si al menos UN registro tiene datos en esa columna
+    const visibleColumns = useMemo(() => {
+        const potentialColumns = [
+            { id: "tipo", label: "Tipo" },
+            { id: "grupo", label: "Grupo" },
+            { id: "propiedad", label: "# Propiedad" },
+            { id: "coeficiente", label: "Coeficiente" },
+            { id: "documento", label: "Documento" },
+        ];
+
+        return potentialColumns.filter(col =>
+            filteredItems.some(item => getValue(item, col.id) !== null)
+        );
+    }, [filteredItems]);
 
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const currentItems = filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -98,11 +123,9 @@ export default function VoteRestrictionSection({
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-gray-50 text-[10px] font-bold uppercase text-[#838383]">
                         <tr>
-                            <th className="px-6 py-4 text-center">Tipo</th>
-                            <th className="px-6 py-4 text-center">Grupo</th>
-                            <th className="px-6 py-4 text-center"># Propiedad</th>
-                            <th className="px-6 py-4 text-center">Coeficiente</th>
-                            <th className="px-6 py-4 text-center">Documento</th>
+                            {visibleColumns.map(col => (
+                                <th key={col.id} className="px-6 py-4 text-center">{col.label}</th>
+                            ))}
                             <th className="px-6 py-4 text-center">Bloquear Voto</th>
                         </tr>
                     </thead>
@@ -110,21 +133,13 @@ export default function VoteRestrictionSection({
                         {currentItems.length > 0 ? (
                             currentItems.map((item) => (
                                 <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 text-center text-[#333333]">{getValue(item, "tipo")}</td>
-                                    <td className="px-6 py-4 text-center text-[#333333]">{getValue(item, "grupo")}</td>
-                                    <td className="px-6 py-4 text-center font-bold text-[#0E3C42]">{getValue(item, "propiedad")}</td>
-                                    <td className="px-6 py-4 text-center text-[#333333]">{getValue(item, "coeficiente")}</td>
-                                    <td className="px-6 py-4 text-center text-[#333333]">{getValue(item, "documento")}</td>
-                                    <td
-                                        className="px-6 py-4 flex justify-center cursor-pointer"
-                                        onClick={(e) => {
-                                            e.stopPropagation(); // Evita que el clic afecte a la fila
-                                            onToggleVote(item.id);
-                                        }}
-                                    >
-                                        <ToggleSwitch
-                                            checked={blockedVoters.has(item.id)}
-                                        />
+                                    {visibleColumns.map(col => (
+                                        <td key={col.id} className={`px-6 py-4 text-center ${col.id === 'propiedad' ? 'font-bold text-[#0E3C42]' : 'text-[#333333]'}`}>
+                                            {getValue(item, col.id) || "-"}
+                                        </td>
+                                    ))}
+                                    <td className="px-6 py-4 flex justify-center cursor-pointer" onClick={() => onToggleVote(item.id)}>
+                                        <ToggleSwitch checked={blockedVoters.has(item.id)} />
                                     </td>
                                 </tr>
                             ))

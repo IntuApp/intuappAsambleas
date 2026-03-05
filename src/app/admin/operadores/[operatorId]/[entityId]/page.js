@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 // Importamos los métodos (ajusta las rutas a tu proyecto real)
 import { listenToEntityById, listenToEntityAssemblies, getAssemblyRegistriesArray } from "@/lib/entity";
-import { deleteEntity, updateEntityBasicData } from "@/lib/entityActions"; // updateEntityBasicData lo hicimos antes
+import { deleteEntity, updateEntityBasicData, updateEntityDatabase } from "@/lib/entityActions"; // updateEntityBasicData lo hicimos antes
 import { getEntityTypes } from "@/lib/masterData";
 
 import Loader from "@/components/basics/Loader";
@@ -15,7 +15,7 @@ import CustomIcon from "@/components/basics/CustomIcon";
 
 import EntityDatabaseManager from "@/components/entities/EntityDatabaseManager";
 import EntityAssembliesSection from "@/components/entities/EntityAssembliesSection";
-import EntityEditModal from "@/components/entities/EntityEditModal"; 
+import EntityEditModal from "@/components/entities/EntityEditModal";
 
 import ConfirmationModal from "@/components/modal/ConfirmationModal";
 import SuccessModal from "@/components/modal/SuccessModal";
@@ -56,7 +56,7 @@ const EntityDetailPage = () => {
         adminPhone: "",
     });
     // Estado de carga específico para el botón de guardar del modal
-    const [isSavingEdit, setIsSavingEdit] = useState(false); 
+    const [isSavingEdit, setIsSavingEdit] = useState(false);
 
     // Escuchador de la Entidad
     useEffect(() => {
@@ -65,7 +65,7 @@ const EntityDetailPage = () => {
         const unsubscribeEntity = listenToEntityById(entityId, async (data) => {
             if (data) {
                 setEntityData(data);
-                
+
                 // 🔥 SOLUCIÓN: Llenamos el formData con los datos que llegan de Firebase
                 // Así cuando abras el modal, ya tiene la información actual
                 setFormData({
@@ -114,7 +114,7 @@ const EntityDetailPage = () => {
         setIsSavingEdit(true);
         try {
             // Llamamos a la Server Action que creamos en el paso anterior
-            const res = await updateEntityBasicData(entityId, formData); 
+            const res = await updateEntityBasicData(entityId, formData);
             if (res.success) {
                 toast.success("Entidad actualizada correctamente");
                 setIsEditModalOpen(false); // Cerramos el modal
@@ -127,11 +127,37 @@ const EntityDetailPage = () => {
         }
     };
 
+    const handleUpdateDatabase = async ({ newData, newHeaders, newAliases }) => {
+        try {
+            // 🔥 LIMPIEZA DE DATOS: Esto convierte los datos en objetos planos puros
+            // eliminando métodos de clase o prototipos que Next.js no puede serializar.
+            const cleanData = JSON.parse(JSON.stringify(newData));
+            const cleanHeaders = JSON.parse(JSON.stringify(newHeaders));
+            const cleanAliases = JSON.parse(JSON.stringify(newAliases));
+
+            // Llamamos a tu Server Action con los argumentos individuales que espera
+            const res = await updateEntityDatabase(
+                entityId,
+                cleanData,
+                cleanAliases,
+                cleanHeaders
+            );
+
+            if (res.success) {
+                return true;
+            }
+        } catch (error) {
+            console.error("Error en handleUpdateDatabase:", error);
+            // Lanzamos el error para que el componente hijo lo capture y muestre el toast
+            throw new Error(error.message || "Error al procesar los datos en el servidor");
+        }
+    };
+
     // Eliminar entidad
     const handleConfirmDeleteEntity = async () => {
         setIsDeleting(true);
         try {
-            const res = await deleteEntity(entityId); 
+            const res = await deleteEntity(entityId);
             if (res.success) {
                 setShowDeleteModal(false);
                 setShowSuccessModal(true);
@@ -147,8 +173,8 @@ const EntityDetailPage = () => {
 
     return (
         <>
-            <div className="flex flex-col w-full max-w-[1128px] gap-8">
-                
+            <div className="flex flex-col w-full gap-8">
+
                 {/* MODAL DE EDICIÓN */}
                 <EntityEditModal
                     isOpen={isEditModalOpen}
@@ -226,6 +252,7 @@ const EntityDetailPage = () => {
                         <EntityDatabaseManager
                             entityData={entityData}
                             registries={registries}
+                            onUpdateDatabase={handleUpdateDatabase}
                         />
                     </div>
                 )}

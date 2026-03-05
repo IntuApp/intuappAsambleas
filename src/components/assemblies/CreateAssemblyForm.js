@@ -30,8 +30,8 @@ export default function CreateAssemblyForm({ entityName, entityId, registries, o
     const [formData, setFormData] = useState({
         name: "",
         date: "",
-        hour: "00",
-        minute: "00",
+        hour: "",
+        minute: "",
         ampm: "AM",
         type: "Virtual", // Visual
         typeId: "2",    // DB: 1:Presencial, 2:Virtual, 3:Mixta
@@ -197,7 +197,7 @@ export default function CreateAssemblyForm({ entityName, entityId, registries, o
             <ConfirmationModal isOpen={showConfirmModal} onClose={() => setShowConfirmModal(false)} onConfirm={onConfirmSubmit} title="Confirmar Restricciones"
                 message={`¿Confirma el bloqueo de ${blockedVoters.size} asambleístas para esta asamblea?`} confirmText="Confirmar" isLoading={submitting} />
             <SuccessModal isOpen={showSuccessModal} title="¡Éxito!" message="Asamblea configurada correctamente." buttonText="Ver Asamblea"
-                onConfirm={() => router.push(isOperator ? `/operario/${entityId}/${createdId}` : `/admin/operadores/${operatorId}/${entityId}/${createdId}`)} />
+                onConfirm={() => router.push(isOperator ? `/admin/operadores/${operatorId}/${entityId}/${createdId}` : `/operario/${entityId}/${createdId}`)} />
         </div>
     );
 }

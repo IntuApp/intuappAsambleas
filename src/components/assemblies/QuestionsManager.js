@@ -26,7 +26,7 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
     const [isCreating, setIsCreating] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [viewingVotersForQuestion, setViewingVotersForQuestion] = useState(null);
-
+    const [editingQuestionId, setEditingQuestionId] = useState(null);
     // Form State
     const [newQuestion, setNewQuestion] = useState({
         title: "",
@@ -104,7 +104,68 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
             options: [...newQuestion.options, { id: `opt-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, text: "" }]
         });
     };
+    const handleEditRequest = (question) => {
+        setNewQuestion({
+            title: question.title,
+            type: question.typeId,
+            minSelections: question.minSelections || 1,
+            options: question.options || []
+        });
+        setEditingQuestionId(question.id);
+        setIsCreating(true); // Abrimos el formulario
+        // Scroll opcional al formulario
+        document.getElementById("add-question-form")?.scrollIntoView({ behavior: 'smooth' });
+    };
 
+    // Modificamos handleSaveQuestion para que soporte UPDATE
+    const handleSaveQuestion = async () => {
+        if (!newQuestion.title.trim()) return toast.error("El título es obligatorio.");
+
+        setIsSaving(true);
+        try {
+            const qRef = doc(db, "assemblyQuestions", assemblyId);
+
+            if (editingQuestionId) {
+                // LÓGICA DE EDICIÓN
+                const updatedQuestions = questionsList.map(q => {
+                    if (q.id === editingQuestionId) {
+                        return {
+                            ...q,
+                            title: newQuestion.title.trim(),
+                            typeId: newQuestion.type,
+                            minSelections: newQuestion.minSelections,
+                            options: newQuestion.type === QUESTION_TYPES.OPEN ? [] : newQuestion.options,
+                            updatedAt: new Date().toISOString(),
+                        };
+                    }
+                    return q;
+                });
+                await setDoc(qRef, { questions: updatedQuestions }, { merge: true });
+                toast.success("Pregunta actualizada");
+            } else {
+                // LÓGICA DE CREACIÓN (Tu código original)
+                const questionDataToSave = {
+                    id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    title: newQuestion.title.trim(),
+                    typeId: newQuestion.type,
+                    statusId: QUESTION_STATUSES.CREATED,
+                    createdAt: new Date().toISOString(),
+                    options: newQuestion.type === QUESTION_TYPES.OPEN ? [] : newQuestion.options,
+                    minSelections: newQuestion.minSelections
+                };
+                await setDoc(qRef, { questions: arrayUnion(questionDataToSave) }, { merge: true });
+                toast.success("Pregunta creada");
+            }
+
+            resetForm();
+            setEditingQuestionId(null);
+        } catch (error) {
+            toast.error("Error al guardar");
+            console.error(error);
+        } finally {
+            setIsSaving(false);
+        }
+    };
     const handleRemoveOption = (idxToRemove) => {
         const opts = newQuestion.options.filter((_, i) => i !== idxToRemove);
         setNewQuestion({
@@ -125,41 +186,6 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
             ]
         });
         setIsCreating(false);
-    };
-
-    // 3. Guardar nueva pregunta
-    const handleSaveQuestion = async () => {
-        if (!newQuestion.title.trim()) return toast.error("El título es obligatorio.");
-        if (newQuestion.type !== QUESTION_TYPES.OPEN && newQuestion.options.some(opt => !opt.text.trim())) {
-            return toast.error("Todas las opciones deben tener texto.");
-        }
-
-        setIsSaving(true);
-        try {
-            const questionDataToSave = {
-                id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                title: newQuestion.title.trim(),
-                typeId: newQuestion.type,
-                statusId: QUESTION_STATUSES.CREATED,
-                createdAt: new Date().toISOString(),
-                options: newQuestion.type === QUESTION_TYPES.OPEN ? [] : newQuestion.options,
-            };
-
-            if (newQuestion.type === QUESTION_TYPES.MULTIPLE) {
-                questionDataToSave.minSelections = newQuestion.minSelections;
-            }
-
-            const qRef = doc(db, "assemblyQuestions", assemblyId);
-            await setDoc(qRef, { questions: arrayUnion(questionDataToSave) }, { merge: true });
-
-            toast.success("Pregunta creada con éxito");
-            resetForm();
-        } catch (error) {
-            toast.error("Error al guardar la pregunta");
-            console.error(error);
-        } finally {
-            setIsSaving(false);
-        }
     };
 
     // 4. Acciones de las tarjetas
@@ -318,13 +344,14 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
 
                     {/* ACCIONES DEL FORMULARIO */}
                     <div className="flex justify-end gap-4">
-                        <button
+                        <CustomButton
+                            variant="secondary"
                             onClick={resetForm}
                             className="flex items-center gap-2 py-3 px-6 rounded-full border border-[#0E3C42] text-[#0E3C42] font-bold hover:bg-gray-50 transition-all"
                         >
                             <CustomIcon path={ICON_PATHS.delete} size={20} />
-                            <span>Borrar</span>
-                        </button>
+                            <span>{editingQuestionId ? "Cancelar edición" : "Cancelar"}</span>
+                        </CustomButton>
                         <CustomButton
                             variant="primary"
                             className="flex items-center gap-2 py-3 px-8 rounded-full font-bold shadow-sm"
@@ -355,6 +382,8 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
                             onCancel={handleCancelQuestion}
                             // 🔥 CONECTAMOS LA FUNCIÓN
                             onViewVoters={(questionData) => setViewingVotersForQuestion(questionData)}
+                            onEdit={handleEditRequest}
+
                         />
                     ))}
 

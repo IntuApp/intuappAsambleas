@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import CustomText from "../basics/CustomText";
 import CustomButton from "../basics/CustomButton";
 import CustomIcon from "../basics/CustomIcon";
@@ -20,9 +20,11 @@ export default function AssemblyLiveManager({
   registrations,   // Datos de assemblyRegistrations (registrations[], blockedProperties[])
   masterList,      // Objeto assemblyRegistries de assemblyRegistriesList
   onUpdateStatus,  // Función para cambiar statusID (Server Action)
-  onToggleRegister // Función para cambiar registerIsOpen (Server Action)
+  onToggleRegister, // Función para cambiar registerIsOpen (Server Action)
+  isOperator
 }) {
   const router = useRouter();
+  const { operatorId } = useParams(); // Obtenemos el ID de la URL
 
   const [showQrModal, setShowQrModal] = React.useState(false);
   const hiddenQrRef = React.useRef(null);
@@ -44,6 +46,36 @@ export default function AssemblyLiveManager({
     });
     return count;
   }, [registrations]);
+
+
+  const registeredVotesSum = React.useMemo(() => {
+    if (!registrations?.registrations) return 0;
+
+    return registrations.registrations.reduce((accUser, user) => {
+      if (user.isDeleted || !user.representedProperties) return accUser;
+
+      const userVotes = user.representedProperties.reduce((accProp, prop) => {
+        // Intentamos obtener 'votos' de la propiedad o del masterList como respaldo
+        const vStr = String(prop.votos || masterList[prop.ownerId]?.votos || masterList[prop.ownerId]?.Votos || "0");
+        const v = parseFloat(vStr.replace(',', '.'));
+        return accProp + (isNaN(v) ? 0 : v);
+      }, 0);
+
+      return accUser + userVotes;
+    }, 0);
+  }, [registrations, masterList]);
+
+  // 2. Suma total de votos de toda la asamblea (Meta)
+  const totalVotesSum = React.useMemo(() => {
+    if (!masterList) return 0;
+
+    return Object.values(masterList).reduce((acc, p) => {
+      console.log(p);
+      const vStr = String(p.Votos);
+      const v = parseFloat(vStr.replace(',', '.'));
+      return acc + (isNaN(v) ? 0 : v);
+    }, 0);
+  }, [masterList]);
 
   // Cálculo de Quórum basado en Coeficiente
   const quorum = React.useMemo(() => {
@@ -126,7 +158,7 @@ export default function AssemblyLiveManager({
           ) : (
             <CustomButton
               variant="primary"
-              onClick={() => router.push(`/operario/${entity.id}/gestionar-asamblea?assemblyId=${assembly.id}`)}
+              onClick={() => router.push(isOperator ? `/operario/${entity.id}/gestionar-asamblea?assemblyId=${assembly.id}` : `/admin/operadores/${operatorId}/${entity.id}/gestionar-asamblea?assemblyId=${assembly.id}`)}
               className="px-5 py-3 flex items-center gap-2"
             >
               <CustomIcon path={ICON_PATHS.pencil} size={24} />
@@ -244,8 +276,8 @@ export default function AssemblyLiveManager({
         <div className="w-full bg-[#FFFFFF] rounded-3xl p-6 gap-6 border border-[#F3F6F9] flex flex-col shadow-soft">
           <CustomText variant="bodyX" as="h5" className="font-bold text-[#0E3C42]">Asambleístas</CustomText>
           <AssemblyStatsBoxes
-            registeredCount={registeredPropertiesCount}
-            totalCount={totalCount}
+            registeredCount={registeredVotesSum}
+            totalCount={totalVotesSum}
             blockedCount={blockedCount}
           />
         </div>

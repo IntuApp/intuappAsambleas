@@ -104,7 +104,11 @@ const AdminPage = () => {
                                 const operatorName = operator.name || operator.representative?.name || "Operador Sin Nombre";
 
                                 return (
-                                    <div key={operator.id} className="w-full flex justify-between items-center p-4 border border-[#F3F6F9] rounded-2xl shadow-soft hover:shadow-sm cursor-pointer transition-all bg-white">
+                                    <div
+                                        key={operator.id}
+                                        onClick={() => router.push(`/admin/operadores/${operator.id}`)} // <-- Redirección añadida
+                                        className="w-full flex justify-between items-center p-4 border border-[#F3F6F9] rounded-2xl shadow-soft hover:shadow-sm cursor-pointer transition-all bg-white"
+                                    >
                                         <div className="flex flex-col">
                                             <CustomText variant="labelL" className="text-[#000000] font-bold truncate">
                                                 {operatorName}
@@ -139,9 +143,11 @@ const AdminPage = () => {
                                 const entityName = entity?.name || assembly.name;
 
                                 const isLive = assembly.statusID === "3" || assemblyStatuses[assembly.statusID] === "LIVE";
+                                console.log("ownerOp", ownerOp?.id);
+
 
                                 return (
-                                    <div key={assembly.id} className="flex justify-between items-center p-4 border border-gray-100 rounded-[16px] shadow-soft hover:shadow-sm cursor-pointer transition-all bg-white">
+                                    <div key={assembly.id} onClick={() => router.push(`/admin/operadores/${ownerOp?.id}/${assembly.entityId}/${assembly.id}`)} className="flex justify-between items-center p-4 border border-gray-100 rounded-[16px] shadow-soft hover:shadow-sm cursor-pointer transition-all bg-white">
                                         <div className="flex flex-col max-w-[65%]">
                                             <CustomText variant="labelL" className="text-[#0E3C42] font-bold truncate">
                                                 {operatorName}

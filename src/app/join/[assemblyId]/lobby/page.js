@@ -126,22 +126,48 @@ export default function AsambleistaLobbyPage() {
   }, [assemblyId, router]);
 
   // 3. CÁLCULOS MATEMÁTICOS (Igual a tu código anterior)
-  const { totalCount, registeredCount, quorumPercentage } = useMemo(() => {
+  const { totalCount, registeredCount, quorumPercentage, totalVotosRegistrados, totalVotosAsamblea } = useMemo(() => {
     const total = Object.keys(masterList || {}).length || 0;
-    if (total === 0 || !registrationsData?.registrations) return { totalCount: 0, registeredCount: 0, quorumPercentage: 0 };
-    const parseCoef = (val) => parseFloat(String(val || 0).replace(",", ".")) || 0;
-    let regCount = 0; let currentSum = 0;
-    registrationsData.registrations.forEach(user => {
+    if (total === 0) return { totalCount: 0, registeredCount: 0, quorumPercentage: 0, totalVotosRegistrados: 0, totalVotosAsamblea: 0 };
+
+    const parseNum = (val) => parseFloat(String(val || 0).replace(",", ".")) || 0;
+
+    // A. Conteo de asambleístas y suma de coeficiente/votos registrados
+    let regCount = 0;
+    let currentSumCoef = 0;
+    let currentSumVotos = 0;
+
+    (registrationsData?.registrations || []).forEach(user => {
       if (!user.isDeleted && user.representedProperties) {
         regCount += user.representedProperties.length;
         user.representedProperties.forEach(prop => {
-          const coef = parseCoef(prop.coefi || masterList[prop.ownerId]?.Coeficiente || masterList[prop.ownerId]?.coeficiente);
-          currentSum += coef;
+          // Coeficiente
+          const coef = parseNum(prop.coefi || masterList[prop.ownerId]?.Coeficiente || masterList[prop.ownerId]?.coeficiente);
+          currentSumCoef += coef;
+
+          // Votos (Usando tu lógica de Assembly Page)
+          const v = parseNum(prop.votos || masterList[prop.ownerId]?.votos || masterList[prop.ownerId]?.Votos);
+          currentSumVotos += v;
         });
       }
     });
-    const totalSum = Object.values(masterList).reduce((acc, p) => acc + parseCoef(p.Coeficiente || p.coeficiente), 0);
-    return { totalCount: total, registeredCount: regCount, quorumPercentage: totalSum > 0 ? (currentSum / totalSum) * 100 : 0 };
+
+    // B. Totales de toda la asamblea (Meta)
+    let totalSumCoef = 0;
+    let totalSumVotos = 0;
+
+    Object.values(masterList).forEach(p => {
+      totalSumCoef += parseNum(p.Coeficiente || p.coeficiente);
+      totalSumVotos += parseNum(p.Votos || p.votos);
+    });
+
+    return {
+      totalCount: total,
+      registeredCount: regCount,
+      quorumPercentage: totalSumCoef > 0 ? (currentSumCoef / totalSumCoef) * 100 : 0,
+      totalVotosRegistrados: currentSumVotos,
+      totalVotosAsamblea: totalSumVotos
+    };
   }, [masterList, registrationsData]);
 
   // DATOS DERIVADOS DE VOTACIONES
@@ -164,6 +190,7 @@ export default function AsambleistaLobbyPage() {
       toast.info("El enlace de la videollamada aún no está disponible.");
     }
   };
+
   const handleLogout = () => {
     sessionStorage.removeItem(`assembly_session_${assemblyId}`);
     router.push(`/join/${assemblyId}`);
@@ -219,6 +246,8 @@ export default function AsambleistaLobbyPage() {
             masterList={masterList}
             onJoinMeeting={handleJoinMeeting}
             quorumPercentage={quorumPercentage}
+            totalVotosRegistrados={totalVotosRegistrados}
+            totalVotosAsamblea={totalVotosAsamblea}
             registeredCount={registeredCount}
             totalCount={totalCount}
             blockedProperties={registrationsData?.blockedProperties || []}
@@ -260,7 +289,7 @@ export default function AsambleistaLobbyPage() {
 
                   return questionsToShow
                     .filter(q => q.statusId === QUESTION_STATUSES.FINISHED)
-                    .map(q => <QuestionCard key={q.id} q={q} registries={registrationsData?.registrations || []} isAdmin={false} votes={votes} assembyStatus={assembly.statusId} />);
+                    .map(q => <QuestionCard key={q.id} q={q} registries={registrationsData?.registrations || []} isAdmin={false} votes={votes} assembyStatus={assembly.statusId} isUserAssembled/>);
                 })()}
               </div>
             )}
@@ -390,13 +419,14 @@ export default function AsambleistaLobbyPage() {
           .filter((q) => q.statusId === QUESTION_STATUSES.LIVE)
           .map((q) => (
             <QuestionItem
-              key={q.id}Estás seguro de
+              key={q.id} Estás seguro de
               q={q}
               currentUser={currentUser}
               userRegistries={currentUser?.representedProperties || []}
               assembly={assembly}
               userVotes={votes}
               blockedProperties={registrationsData?.blockedProperties || []}
+              masterList={masterList}
               hideModal={false}
               forceModalOnly={true}
             />

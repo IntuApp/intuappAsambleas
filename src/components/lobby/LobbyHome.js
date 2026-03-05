@@ -13,8 +13,9 @@ export default function LobbyHome({
   entity,
   onJoinMeeting,
   quorumPercentage = 0,
-  registeredCount = 0,
-  totalCount = 0,
+  totalVotosRegistrados = 0,
+  totalVotosAsamblea = 0,
+  masterList,
   blockedProperties = [] // Array con los IDs de las propiedades bloqueadas
 }) {
 
@@ -33,56 +34,19 @@ export default function LobbyHome({
   return (
     <div className="flex flex-col gap-5 animate-in fade-in duration-300 px-10">
 
-      {/* 1. Saludo */}
-      <CustomText variant="Title" className="text-[#0E3C42]">
-        Hola, {currentUser?.firstName || "Asambleísta"}!
-      </CustomText>
-
-      {/* 2. Grid Superior: Info de Asamblea y Videollamada */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Card Izquierda: Info de la Asamblea */}
-        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 flex flex-col justify-evenly h-[220px] relative overflow-hidden">
-          <div className="absolute flex justify-end right-0 top-0 w-1/2 h-full opacity-50">
-            <img src="/logos/decorations/figureTwo.png" alt="Decoración" className="object-cover h-full" />
-          </div>
-
-          <div className="flex flex-col items-start gap-1">
-            <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">
-              Asamblea {assembly?.name}
-            </CustomText>
-            <CustomText variant="labelL" className="text-[#3D3D44]">
-              {entity?.name}
-            </CustomText>
-            <CustomText variant="labelL" className="text-[#3D3D44]">
-              {assembly?.date} - {assembly?.hour}
-            </CustomText>
-          </div>
-          <div className="flex justify-start mt-2">
-            <CustomTypeAssembly type={assembly?.typeId || assembly?.type} className="py-2 px-4" />
-          </div>
-        </div>
-
-        {/* Card Derecha: Videollamada y Alertas */}
-        <div className="flex flex-col justify-between h-[220px] overflow-hidden ">  
-
-          <div className="flex items-start gap-4 bg-white shadow-sm border border rounded-[32px] p-8">
-            <div className="bg-[#EEF0FF] p-2 rounded-xl shrink-0">
-              <CustomIcon path={ICON_PATHS.vote} className="text-[#6A7EFF]" size={32} />
-            </div>
-            <CustomText variant="labelL" className="text-[#0E3C42] font-medium leading-relaxed">
-              Las preguntas aparecerán en la pestaña "Votaciones", una por una, cuando el operador las active.
-            </CustomText>
-          </div>
-
+      <div className="grid grid-cols-2">
+        <CustomText variant="Title" className="text-[#0E3C42]">
+          Hola, {currentUser?.firstName || "Asambleísta"}!
+        </CustomText>
+        <div className="flex flex-col justify-between overflow-hidden ">
           {/* Botón de videollamada (Oculto si es Presencial) */}
           {assembly?.typeId !== "1" && assembly?.type !== "Presencial" && (
-            <div className="mt-auto pt-4 border-t border-gray-100">
+            <div className="flex justify-end mt-auto pt-4 ">
               <CustomButton
                 onClick={onJoinMeeting}
                 disabled={assembly?.statusID !== "2"} // 2 = Iniciada/Live
                 variant="primary"
-                className="w-full flex items-center justify-center gap-3 py-3"
+                className="w-1/2 flex items-center justify-center gap-3 py-3"
               >
                 <CustomIcon path={ICON_PATHS.videoCam} className="text-[#000000]" size={20} />
                 <CustomText variant="labelL" className="font-bold">
@@ -98,6 +62,36 @@ export default function LobbyHome({
           )}
         </div>
       </div>
+      {/* 1. Saludo */}
+
+
+      {/* 2. Grid Superior: Info de Asamblea y Videollamada */}
+      <div className="gap-6 w-full">
+
+        {/* Card Izquierda: Info de la Asamblea */}
+        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 flex flex-col justify-evenly h-[220px] relative overflow-hidden">
+          <div className="absolute flex justify-end right-0 top-0 w-1/2 h-full opacity-50">
+            <img src="/logos/decorations/figureTwo.png" alt="Decoración" className="object-cover h-full" />
+          </div>
+
+          <div className="flex flex-col items-start gap-1">
+            <CustomText variant="SubTitle" className="text-[#0E3C42] font-bold">
+              Asamblea {assembly?.name}
+            </CustomText>
+            <CustomText variant="bodyL" className="text-[#3D3D44]">
+              {entity?.name}
+            </CustomText>
+            <CustomText variant="bodyL" className="text-[#3D3D44]">
+              {assembly?.date} - {assembly?.hour}
+            </CustomText>
+          </div>
+          <div className="flex justify-start mt-2">
+            <CustomTypeAssembly type={assembly?.typeId || assembly?.type} className="py-3 px-4" />
+          </div>
+        </div>
+      </div>
+
+
 
       {/* 3. MENSAJES DE RESTRICCIÓN DE VOTO */}
       {isTotallyBlocked && (
@@ -118,13 +112,21 @@ export default function LobbyHome({
             </CustomText>
           </div>
           <div className="flex flex-col gap-1 pl-9">
-            {userBlockedProps.map((prop, idx) => (
+            {userBlockedProps.map((prop, idx) => {
+              console.log(prop);
+              const excelInfo = masterList[prop.ownerId]
+              console.log(excelInfo);
+              const tipo = excelInfo.Tipo || excelInfo.tipo || "";
+              const grupo = excelInfo.Grupo || excelInfo.grupo || "";
+              const propiedadNombre = excelInfo.Propiedad || excelInfo.propiedad || prop.ownerId;
+
               // Asumiendo que masterList guarda la info de Grupo/Tipo por ownerId. 
               // Si el lobby ya tiene esa info, la mostramos. Si no, mostramos el ID o el nombre de la propiedad.
-              <CustomText key={idx} variant="labelM" className="text-[#933D00] font-medium">
-                • Propiedad ID: {prop.ownerId} {/* TODO: Reemplazar por Tipo/Grupo si tienes acceso al MasterList aquí */}
+              return <CustomText key={idx} variant="labelM" className="text-[#333333] font-medium">
+
+                • Propiedad: {tipo} {grupo} {propiedadNombre}
               </CustomText>
-            ))}
+            })}
           </div>
         </div>
       )}
@@ -164,7 +166,7 @@ export default function LobbyHome({
                 </div>
               </div>
               <CustomText variant="TitleL" className="text-[#1F1F23] font-black mt-2">
-                {registeredCount} / {totalCount}
+                {totalVotosRegistrados.toLocaleString()} / {totalVotosAsamblea.toLocaleString()}
               </CustomText>
               <CustomText variant="bodyM" className="text-[#8E8E93]">
                 asambleístas registrados

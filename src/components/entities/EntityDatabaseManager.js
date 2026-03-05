@@ -16,7 +16,7 @@ export default function EntityDatabaseManager({ entityData, registries = [], onU
 
     // Estados de la tabla original
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10; 
+    const itemsPerPage = 10;
 
     // --------------------------------------------------------
     // NUEVOS ESTADOS PARA LA ACTUALIZACIÓN (MODAL Y EXCEL)
@@ -28,17 +28,28 @@ export default function EntityDatabaseManager({ entityData, registries = [], onU
     const [columnAliases, setColumnAliases] = useState({});
     const [isSaving, setIsSaving] = useState(false);
 
-    // 1. Extraemos los headers para pintar las columnas actuales
     const displayHeaders = useMemo(() => {
         if (registries.length === 0) return [];
+
+        let baseHeaders = [];
+
         if (entityData?.headers && entityData.headers.length > 0) {
-            return entityData.headers.map(header => ({
-                original: header,
-                display: entityData.columnAliases?.[header] || header
-            }));
+            baseHeaders = entityData.headers;
+        } else {
+            baseHeaders = Object.keys(registries[0]).filter(k => k !== 'id');
         }
-        const firstRegKeys = Object.keys(registries[0]).filter(k => k !== 'id');
-        return firstRegKeys.map(key => ({ original: key, display: key }));
+
+        const filteredHeaders = baseHeaders.filter(headerKey => {
+            return registries.some(row => {
+                const value = row[headerKey];
+                return value !== null && value !== undefined && String(value).trim() !== "";
+            });
+        });
+
+        return filteredHeaders.map(header => ({
+            original: header,
+            display: entityData.columnAliases?.[header] || header
+        }));
     }, [registries, entityData]);
 
     // 2. Lógica de Paginación
@@ -49,7 +60,7 @@ export default function EntityDatabaseManager({ entityData, registries = [], onU
     // --------------------------------------------------------
     // FUNCIONES DE ACTUALIZACIÓN
     // --------------------------------------------------------
-    
+
     // Leer el archivo y abrir el modal
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
@@ -64,15 +75,15 @@ export default function EntityDatabaseManager({ entityData, registries = [], onU
                 const wb = XLSX.read(bstr, { type: "binary" });
                 const wsname = wb.SheetNames[0];
                 const ws = wb.Sheets[wsname];
-                
+
                 // Convertimos el Excel a JSON
                 const data = XLSX.utils.sheet_to_json(ws);
-                
+
                 if (data.length > 0) {
                     const headers = Object.keys(data[0]);
                     setExcelHeaders(headers);
                     setExcelData(data);
-                    
+
                     // Si ya existían alias en la entidad, intentamos conservarlos para las columnas que coincidan
                     const initialAliases = {};
                     headers.forEach(h => {
@@ -91,9 +102,9 @@ export default function EntityDatabaseManager({ entityData, registries = [], onU
             }
         };
         reader.readAsBinaryString(file);
-        
+
         // Limpiamos el input para permitir subir el mismo archivo si hay error
-        e.target.value = null; 
+        e.target.value = null;
     };
 
     // Cerrar y limpiar modal
@@ -134,20 +145,20 @@ export default function EntityDatabaseManager({ entityData, registries = [], onU
                 <CustomText variant="bodyX" as="h5" className="font-bold text-[#0E3C42]">
                     Base de Datos de Asambleístas
                 </CustomText>
-                
+
                 {/* 🔥 Input oculto conectado a fileInputRef */}
-                <input 
-                    type="file" 
-                    accept=".xlsx, .xls" 
-                    ref={fileInputRef} 
-                    className="hidden" 
-                    onChange={handleFileUpload} 
+                <input
+                    type="file"
+                    accept=".xlsx, .xls"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileUpload}
                 />
 
                 <CustomButton
                     variant="primary"
                     // Al hacer clic, disparamos el input de archivo
-                    onClick={() => fileInputRef.current?.click()} 
+                    onClick={() => fileInputRef.current?.click()}
                     className="px-3 py-2 flex items-center gap-2"
                 >
                     <CustomIcon path={ICON_PATHS.cloudUpload} size={20} />
@@ -227,10 +238,10 @@ export default function EntityDatabaseManager({ entityData, registries = [], onU
                 🔥 MODAL DE ACTUALIZACIÓN CON EXCEL EDITOR
             ----------------------------------------------------- */}
             {isUpdateModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">                    
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     {/* Modal */}
                     <div className="bg-[#F8F9FB] w-full rounded-[32px] shadow-2xl relative flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300 z-10 overflow-hidden">
-                        
+
                         {/* Header Modal */}
                         <div className="px-8 py-6 border-b border-gray-200 bg-white flex justify-between items-center relative z-20">
                             <div>
