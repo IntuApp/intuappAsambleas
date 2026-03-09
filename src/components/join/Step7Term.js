@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import CustomText from "@/components/basics/CustomText";
 import CustomButton from "@/components/basics/CustomButton";
 import { Check } from "lucide-react"; // 🔥 Usamos Check de lucide-react
+import Loader from "../basics/Loader";
 
 export default function Step7Terms({ onAccept, loading }) {
   const [accepted, setAccepted] = useState(false);
@@ -68,7 +69,7 @@ export default function Step7Terms({ onAccept, loading }) {
         disabled={!accepted || loading}
         className="w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? "Procesando Registro..." : "Continuar"}
+        {loading ? <Loader /> : "Continuar"}
       </CustomButton>
     </div>
   );

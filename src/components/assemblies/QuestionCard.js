@@ -45,6 +45,13 @@ const QuestionCard = ({
     return acc + parseCoef(power);
   }, 0);
 
+  const totalVotedNominal = questionVotes.reduce((acc, v) => {
+    const reg = registries.find((r) => r.ownerId === v.propertyOwnerId || r.id === v.propertyOwnerId);
+    // Buscamos 'votos' o 'Votos' en el registro encontrado
+    const numVotos = parseCoef(reg?.votos || reg?.Votos || 0);
+    return acc + numVotos;
+  }, 0);
+
   const [elapsed, setElapsed] = useState(q.durationSeconds || 0);
   const totalVotesCount = questionVotes.length;
 
@@ -108,20 +115,22 @@ const QuestionCard = ({
         {shouldShowResults && (
           <div className="flex items-center gap-1">
             <CustomText variant="md:bodyX" className="font-medium text-[#1F1F23]">
-               Quórum 
+              Quórum
             </CustomText>
             <CustomText variant="md:bodyX" className="hidden md:inline font-medium text-[#1F1F23]">
-               de votación:
+              de votación:
             </CustomText>
             {/* 🔥 Aquí mostramos la suma directa de los coeficientes votados */}
             <CustomText variant="md:bodyX" className="font-bold text-[#1F1F23]">
               {totalVotedCoef.toFixed(2)}%
             </CustomText>
+            <CustomText variant="md:bodyX" className="font-bold text-[#1F1F23]">({totalVotedNominal.toLocaleString()} votos)</CustomText>
             <CustomIcon
               path={ICON_PATHS.error} // Ojo, este ícono parece de error, podrías querer cambiarlo a info o similar
               size={24}
               className="hidden md:inline text-[#0E3C42] m-2"
             />
+
           </div>
         )}
 

@@ -60,7 +60,7 @@ export default function VotersModal({
                     answerText = selectedTexts.join(", ");
                 } else {
                     answerText = "Voto en blanco / no registrado";
-                }
+                }                
 
                 return {
                     id: vote.propertyOwnerId + vote.registrationId,
@@ -71,6 +71,7 @@ export default function VotersModal({
                     propiedad: propertyData.Propiedad || propertyData.propiedad || ownerId,
                     // Preferimos el poder de voto guardado, luego el de la BD
                     coeficiente: vote.votingPower || propertyData.Coeficiente || propertyData.coeficiente || 0,
+                    votos: propertyData.votos || propertyData.Votos,
                     documento: vote.registrationId || "N/A",
                     respuesta: answerText,
                 };
@@ -149,6 +150,7 @@ export default function VotersModal({
                                     <th className="px-6 py-4 text-sm font-bold text-[#0E3C42]">Grupo</th>
                                     <th className="px-6 py-4 text-sm font-bold text-[#0E3C42]"># propiedad</th>
                                     <th className="px-6 py-4 text-sm font-bold text-[#0E3C42]">Coeficiente</th>
+                                    <th className="px-6 py-4 text-sm font-bold text-[#0E3C42]">Votos</th>
                                     <th className="px-6 py-4 text-sm font-bold text-[#0E3C42]">Documento</th>
                                     <th className="px-6 py-4 text-sm font-bold text-[#0E3C42]">Respuesta</th>
                                 </tr>
@@ -162,6 +164,7 @@ export default function VotersModal({
                                     </tr>
                                 ) : filteredVotes.length > 0 ? (
                                     filteredVotes.map((vote) => (
+                                        
                                         <tr key={vote.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4 text-sm text-[#3D3D44] capitalize">{vote.tipo}</td>
                                             <td className="px-6 py-4 text-sm text-[#3D3D44]">{vote.grupo}</td>
@@ -169,6 +172,7 @@ export default function VotersModal({
                                             <td className="px-6 py-4 text-sm text-[#3D3D44]">
                                                 {parseFloat(vote.coeficiente).toFixed(6)}
                                             </td>
+                                            <td className="px-6 py-4 text-sm text-[#3D3D44]">{vote.votos}</td>
                                             <td className="px-6 py-4 text-sm text-[#3D3D44]">{vote.documento}</td>
                                             <td className="px-6 py-4 text-sm text-[#3D3D44] font-medium">{vote.respuesta}</td>
                                         </tr>

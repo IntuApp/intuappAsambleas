@@ -55,6 +55,8 @@ export default function AssemblyLiveManager({
       if (user.isDeleted || !user.representedProperties) return accUser;
 
       const userVotes = user.representedProperties.reduce((accProp, prop) => {
+        console.log(prop);
+        
         // Intentamos obtener 'votos' de la propiedad o del masterList como respaldo
         const vStr = String(prop.votos || masterList[prop.ownerId]?.votos || masterList[prop.ownerId]?.Votos || "0");
         const v = parseFloat(vStr.replace(',', '.'));

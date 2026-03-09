@@ -177,6 +177,20 @@ export default function QuestionItem({
     return () => clearTimeout(timer);
   }, [showSuccess]);
 
+  // Valida que todas las propiedades tengan exactamente el número de selecciones requeridas
+  const isIndividualVoteValid = () => {
+    if (q.typeId !== QUESTION_TYPES.MULTIPLE) {
+      // Para otros tipos (Abierta/Única), validamos que exista respuesta en todas
+      return Object.keys(individualVotes).length === activeRegistries.length;
+    }
+
+    // Para múltiple, iteramos cada propiedad activa
+    return activeRegistries.every(reg => {
+      const votes = individualVotes[reg.ownerId]?.optionIds || [];
+      return votes.length === (q.minSelections || 0);
+    });
+  };
+
   // --- RENDERIZADOS CONDICIONALES ---
   if (q.statusId === QUESTION_STATUSES.FINISHED && votedCount === 0) return null;
 
@@ -321,9 +335,14 @@ export default function QuestionItem({
 
                     /* --- PASO 2: VOTAR --- */
                     <div className="w-full max-w-[564px] mx-auto pb-6">
-                      <div className="mb-6">
+                      <div className="mb-3">
                         <CustomText variant="TitleM" className="text-[#0E3C42] leading-tight font-black">{q.title}</CustomText>
                       </div>
+                      {q.typeId === QUESTION_TYPES.MULTIPLE && (
+                        <CustomText variant="bodyL" className="text-[#0E3C42] text-left font-bold mb-3">
+                          Seleccione {q.minSelections} opciones
+                        </CustomText>
+                      )}
 
                       {mode === "block" ? (
                         /* MODO BLOQUE */
@@ -352,29 +371,46 @@ export default function QuestionItem({
                             </div>
                           )}
 
-                          {/* MÚLTIPLE */}
+                          {/* MÚLTIPLE EN BLOQUE */}
                           {q.typeId === QUESTION_TYPES.MULTIPLE && (
                             <div className="flex flex-col gap-3">
-                              {q.options.map((opt) => (
-                                <label
-                                  key={opt.id}
-                                  className={`flex items-center gap-4 p-4 rounded-xl w-full border-[1.5px] cursor-pointer transition-all ${blockSelectedOptionIds.includes(opt.id) ? "border-[#4059FF] bg-indigo-50/30" : "bg-white border-[#E5E9F0] hover:border-gray-300"}`}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    className="hidden"
-                                    checked={blockSelectedOptionIds.includes(opt.id)}
-                                    onChange={() => toggleBlockOption(opt.id)}
-                                  />
-                                  <div className={`w-5 h-5 shrink-0 rounded-[6px] border-2 flex items-center justify-center ${blockSelectedOptionIds.includes(opt.id) ? "border-[#4059FF] bg-[#4059FF]" : "border-gray-300"}`}>
-                                    {blockSelectedOptionIds.includes(opt.id) && <Check size={14} className="text-white" strokeWidth={4} />}
-                                  </div>
-                                  <CustomText variant="bodyM" className={`text-[#0E3C42] text-left ${blockSelectedOptionIds.includes(opt.id) ? "font-bold" : "font-medium"}`}>
-                                    {opt.text}
-                                  </CustomText>
-                                </label>
-                              ))}
-                              <CustomButton disabled={blockSelectedOptionIds.length === 0 || isSubmitting} onClick={() => submitBlockVote({ optionIds: blockSelectedOptionIds })} variant="primary" className="w-full py-4 mt-6 shadow-lg shadow-indigo-100">
+                              {q.options.map((opt) => {
+                                const isSelected = blockSelectedOptionIds.includes(opt.id);
+                                // Bloquear si ya llegó al límite y esta opción no está seleccionada
+                                const isDisabled = !isSelected && blockSelectedOptionIds.length >= (q.minSelections || 0);
+
+                                return (
+                                  <label
+                                    key={opt.id}
+                                    className={`flex items-center gap-4 p-4 rounded-xl w-full border-[1.5px] transition-all 
+                                      ${isSelected ? "border-[#4059FF] bg-indigo-50/30" : "bg-white border-[#E5E9F0]"} 
+                                      ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-gray-300"}`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      className="hidden"
+                                      checked={isSelected}
+                                      disabled={isDisabled}
+                                      onChange={() => toggleBlockOption(opt.id)}
+                                    />
+                                    <div className={`w-5 h-5 shrink-0 rounded-[6px] border-2 flex items-center justify-center 
+                                      ${isSelected ? "border-[#4059FF] bg-[#4059FF]" : "border-gray-300"}`}>
+                                      {isSelected && <Check size={14} className="text-white" strokeWidth={4} />}
+                                    </div>
+                                    <CustomText variant="bodyM" className={`text-[#0E3C42] text-left ${isSelected ? "font-bold" : "font-medium"}`}>
+                                      {opt.text}
+                                    </CustomText>
+                                  </label>
+                                );
+                              })}
+
+                              <CustomButton
+                                // Habilitar SOLO si es exactamente igual a minSelections
+                                disabled={blockSelectedOptionIds.length !== (q.minSelections || 0) || isSubmitting}
+                                onClick={() => submitBlockVote({ optionIds: blockSelectedOptionIds })}
+                                variant="primary"
+                                className="w-full py-4 mt-6 shadow-lg shadow-indigo-100"
+                              >
                                 <CustomText variant="bodyM" className="font-bold">Confirmar Voto</CustomText>
                               </CustomButton>
                             </div>
@@ -420,15 +456,21 @@ export default function QuestionItem({
                                   />
                                 ) : (
                                   <div className="flex flex-col gap-3">
+                                    {/* MÚLTIPLE INDIVIDUAL */}
                                     {q.options.map((opt) => {
                                       const isMultiple = q.typeId === QUESTION_TYPES.MULTIPLE;
+                                      const currentVotes = individualVotes[reg.ownerId]?.optionIds || [];
                                       const isSelected = isMultiple
-                                        ? individualVotes[reg.ownerId]?.optionIds?.includes(opt.id)
+                                        ? currentVotes.includes(opt.id)
                                         : individualVotes[reg.ownerId]?.optionId === opt.id;
+
+                                      // Lógica de deshabilitar para individual múltiple
+                                      const isDisabled = isMultiple && !isSelected && currentVotes.length >= (q.minSelections || 0);
 
                                       return (
                                         <button
                                           key={opt.id}
+                                          disabled={isDisabled}
                                           onClick={() => {
                                             if (isMultiple) {
                                               setIndividualVotes((prev) => {
@@ -444,18 +486,11 @@ export default function QuestionItem({
                                               setIndividualVotes((p) => ({ ...p, [reg.ownerId]: { optionId: opt.id } }));
                                             }
                                           }}
-                                          className={`p-4 rounded-xl border-[1.5px] flex flex-row gap-4 items-center transition-all ${isSelected ? "border-[#4059FF] bg-indigo-50/30" : "bg-white border-[#E5E9F0] hover:border-gray-300"}`}
+                                          className={`p-4 rounded-xl border-[1.5px] flex flex-row gap-4 items-center transition-all 
+                                            ${isSelected ? "border-[#4059FF] bg-indigo-50/30" : "bg-white border-[#E5E9F0]"}
+                                            ${isDisabled ? "opacity-50 cursor-not-allowed" : "hover:border-gray-300"}`}
                                         >
-                                          {/* Icono Condicional Redondo o Cuadrado */}
-                                          {isMultiple ? (
-                                            <div className={`w-5 h-5 shrink-0 rounded-[6px] border-2 flex items-center justify-center ${isSelected ? "border-[#4059FF] bg-[#4059FF]" : "border-gray-300"}`}>
-                                              {isSelected && <Check size={14} className="text-white" strokeWidth={4} />}
-                                            </div>
-                                          ) : (
-                                            <div className={`w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center ${isSelected ? "border-[#4059FF]" : "border-gray-300"}`}>
-                                              {isSelected && <div className="w-2.5 h-2.5 bg-[#4059FF] rounded-full" />}
-                                            </div>
-                                          )}
+                                          {/* ... (tus iconos de Check o Radio) ... */}
                                           <CustomText variant="bodyM" className={`text-[#0E3C42] text-left ${isSelected ? "font-bold" : "font-medium"}`}>
                                             {opt.text}
                                           </CustomText>
@@ -469,7 +504,8 @@ export default function QuestionItem({
                           })}
                           <CustomButton
                             onClick={submitIndividualVotes}
-                            disabled={Object.keys(individualVotes).length < activeRegistries.length || isSubmitting}
+                            // Usamos nuestra función de validación
+                            disabled={!isIndividualVoteValid() || isSubmitting}
                             className="w-full py-4 mt-2 shadow-lg shadow-indigo-100"
                             variant="primary"
                           >
@@ -481,7 +517,7 @@ export default function QuestionItem({
                   )}
                 </div>
 
-                
+
               </>
             )}
           </div>

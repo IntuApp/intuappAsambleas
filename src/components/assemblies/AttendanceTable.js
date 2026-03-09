@@ -48,6 +48,7 @@ const AttendanceTable = ({
                     grupo: masterInfo.Grupo || masterInfo.grupo,
                     propiedad: masterInfo.Propiedad || masterInfo.propiedad,
                     coeficiente: prop.coefi || masterInfo.Coeficiente || masterInfo.coeficiente,
+                    votos: masterInfo.votos || masterInfo.Votos || prop.Votos,
                     documento: masterInfo.Documento || masterInfo.documento,
                     mainDocument: userReg.mainDocument,
                     firstName: userReg.firstName,
@@ -67,10 +68,12 @@ const AttendanceTable = ({
             const realKey = Object.keys(data).find(k => k.toLowerCase().trim().includes(searchKey));
             return realKey ? data[realKey] : null;
         };
-        // B. Procesar Pendientes (Los que están en masterList pero no en occupiedIds)
+        
         Object.entries(masterList).forEach(([id, data]) => {
             if (!occupiedIds.has(id)) {
-                const numVotos = getFromMaster(data, "voto") || getFromMaster(data, "votos") || "1";
+                // Usamos la lógica de búsqueda flexible para asegurar que traiga el valor
+                const votosFinales = getFromMaster(data, "voto") || getFromMaster(data, "votos") || data.Votos || "1";
+
                 pend.push({
                     ...data,
                     id,
@@ -78,8 +81,8 @@ const AttendanceTable = ({
                     grupo: data.Grupo || data.grupo,
                     propiedad: data.Propiedad || data.propiedad,
                     coeficiente: data.Coeficiente || data.coeficiente,
+                    votos: votosFinales, // 🔥 Cambiado de data.votos a votosFinales
                     documento: data.Documento || data.documento,
-                    votos: numVotos
                 });
             }
         });

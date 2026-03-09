@@ -72,16 +72,18 @@ export default function Step6Review({
               return (
                 <div key={realIndex} className=" w-full border border-[#DBE2E8] shadow-soft p-3 rounded-2xl flex items-center gap-4 ">
                   <CustomTypePropertie type={(item.registry.tipo || item.registry.Tipo || "").toLowerCase()} />
-
+                  {console.log(item)}
                   <div className="flex-1 min-w-0">
-                    {item.registry.grupo && (
+                    <div className="flex flex-row gap-1">
+                      {item.registry.Grupo && (
+                        <CustomText variant="bodyM" className="font-bold text-[#1F1F23] truncate">
+                          {item.registry.grupo || item.registry.Grupo} -
+                        </CustomText>
+                      )}
                       <CustomText variant="bodyM" className="font-bold text-[#1F1F23] truncate">
-                        {item.registry.grupo || item.registry.Grupo}
+                        {item.registry.propiedad || item.registry.Propiedad}
                       </CustomText>
-                    )}
-                    <CustomText variant="bodyM" className="font-bold text-[#1F1F23] truncate">
-                      {item.registry.propiedad || item.registry.Propiedad}
-                    </CustomText>
+                    </div>
 
                     <div className="flex items-center gap-2 flex-wrap mt-1">
                       <span className={`text-[14px] font-semibold px-2 py-0.5 rounded-full ${item.role === "owner" ? "text-[#0E3C42] bg-[#B8EAF0]" : "text-[#00093F] bg-[#D5DAFF]"

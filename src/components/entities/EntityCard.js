@@ -48,7 +48,7 @@ export default function EntityCard({
       </div>
 
       {/* Stats */}
-      <div className="max-w-[502px] max-h-[56px] w-full flex flex-col gap-2">
+      <div className="max-h-[56px] w-full flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <CustomText variant="bodyM" className="font-regular text-[#3D3D44]">
             Asambleistas:
@@ -69,7 +69,7 @@ export default function EntityCard({
       </div>
 
       {/* Assembly Info Section - Priority based */}
-      <div className="max-w-[502px] max-h-[56px] w-full flex flex-col gap-2">
+      <div className="max-h-[56px] w-full flex flex-col gap-2">
         {activeAssembly ? (
           <div className="bg-[#EEF0FF] border border-#94A2FF rounded-xl p-4 flex items-center justify-between">
             <div className="flex ">
@@ -94,7 +94,7 @@ export default function EntityCard({
             </div>
           </div>
         ) : nextAssembly ? (
-          <div className="max-w-[502px] max-h-[56px] w-full flex flex-col gap-2">
+          <div className="max-h-[56px] w-full flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <CustomText
                 variant="bodyM"
