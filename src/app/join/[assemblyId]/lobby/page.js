@@ -202,13 +202,18 @@ export default function AsambleistaLobbyPage() {
     <div className="flex min-h-screen font-sans">
 
       {/* SIDEBAR DESKTOP */}
-      <aside className="w-24 bg-white gap-8 flex items-center flex-col py-8">
-        <div className="">
-          <div className="">
-            <img src="/logos/logo-header.png" alt="Logo" />
-          </div>
+      <aside className="
+        fixed bottom-0 left-0 right-0 h-20 w-full bg-white border-t border-gray-100 flex flex-row items-center px-2 z-50
+        md:relative md:h-screen md:w-24 md:flex-col md:py-8 md:border-t-0 md:border-r
+      ">
+
+        {/* Logo: Lo ocultamos en mobile para ganar espacio */}
+        <div className="hidden md:block mb-8">
+          <img src="/logos/logo-header.png" alt="Logo" className="w-12 h-auto" />
         </div>
-        <div className="flex flex-col gap-2 px-2 flex-1">
+
+        {/* Contenedor de Items */}
+        <div className="flex flex-row md:flex-col justify-around md:justify-start gap-2 w-full md:flex-1">
           <NavItem id="inicio" icon={ICON_PATHS.home} label="Inicio" activeTab={activeTab} setActiveTab={setActiveTab} />
           <NavItem id="resultados" icon={ICON_PATHS.analytics} label="Resultados" activeTab={activeTab} setActiveTab={setActiveTab} />
           <NavItem id="perfil" icon={ICON_PATHS.person} label="Perfil" activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -217,7 +222,7 @@ export default function AsambleistaLobbyPage() {
       </aside>
 
       {/* CONTENIDO PRINCIPAL (Márgenes originales restaurados + mb-16 para móvil) */}
-      <main className="flex-1 flex flex-col overflow-y-auto px-16 py-8 bg-[#F3F6F9]">
+      <main className="flex-1 flex flex-col overflow-y-auto md:px-16 md:py-8 py-4 bg-[#F3F6F9]">
 
         {/* HEADER SUPERIOR ORIGINAL */}
         <div className="flex justify-between items-center mb-4 px-10">
@@ -289,7 +294,7 @@ export default function AsambleistaLobbyPage() {
 
                   return questionsToShow
                     .filter(q => q.statusId === QUESTION_STATUSES.FINISHED)
-                    .map(q => <QuestionCard key={q.id} q={q} registries={registrationsData?.registrations || []} isAdmin={false} votes={votes} assembyStatus={assembly.statusId} isUserAssembled/>);
+                    .map(q => <QuestionCard key={q.id} q={q} registries={registrationsData?.registrations || []} isAdmin={false} votes={votes} assembyStatus={assembly.statusId} isUserAssembled />);
                 })()}
               </div>
             )}

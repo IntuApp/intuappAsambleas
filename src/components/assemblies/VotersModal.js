@@ -138,15 +138,6 @@ export default function VotersModal({
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-
-                    <div className="flex items-center gap-2 mt-2">
-                        <CustomText variant="labelM" className="text-gray-500">
-                            Total de asambleístas que votaron:
-                        </CustomText>
-                        <span className="bg-[#B8EAF0] text-[#0E3C42] px-3 py-1 rounded-full text-xs font-bold">
-                            {questionVotes.length}
-                        </span>
-                    </div>
                 </div>
 
                 <div className="overflow-y-auto no-scrollbar p-8 pt-4 flex-1">

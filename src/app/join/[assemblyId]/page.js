@@ -359,7 +359,7 @@ export default function JoinAssemblyPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center font-sans bg-gray-50">
+    <main className="md:min-h-screen flex items-center justify-center font-sans bg-gray-50">
 
       {currentStep === STEPS.WELCOME && (
         <LoginMember assembly={assembly} entity={entity} onLogin={() => setCurrentStep(STEPS.DOCUMENT)} />

@@ -88,7 +88,7 @@ export default function LobbyProfile({ currentUser, masterList, onLogout }) {
             {/* PROPERTIES SECTION */}
             <div className="bg-white rounded-3xl p-8 shadow-sm border w-full border-gray-100 mt-6 gap-6">
 
-                <div className="flex flex-col md:flex-row justify-between items-center md:items-center gap-4 mb-10 w-full">
+                <div className="flex md:flex-row justify-between items-center md:items-center gap-4 mb-10 w-full">
                     <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">
                         Propiedades
                     </CustomText>
@@ -128,7 +128,7 @@ export default function LobbyProfile({ currentUser, masterList, onLogout }) {
                         const coefVisual = reg.coefi || excelInfo.Coeficiente || excelInfo.coeficiente || "0";
 
                         return (
-                            <div key={idx} className="py-3 px-4 rounded-2xl max-w-[344px] border border-[#DBE2E8]">
+                            <div key={idx} className="py-3 px-4 rounded-2xl md:max-w-[344px] border border-[#DBE2E8]">
                                 <div className="flex items-start gap-4">
                                     <div className="w-14 h-14 rounded-2xl bg-indigo-50/50 flex items-center justify-center text-[#8B9DFF]">
                                         <CustomTypePropertie type={tipo.toLowerCase()} className="p-2"/>

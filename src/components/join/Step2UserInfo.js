@@ -25,8 +25,8 @@ export default function Step2UserInfo({
   };
 
   return (
-    <div className="flex flex-col gap-8 w-full items-center max-w-[455px]">
-      <div className="text-center flex flex-col gap-2 ">
+    <div className="flex flex-col gap-8 w-full md:items-center max-w-[455px]">
+      <div className="md:text-center flex flex-col gap-2 ">
         <CustomText variant="TitleL" as="h3" className="text-[#0E3C42] font-black">
           Completa tus datos
         </CustomText>

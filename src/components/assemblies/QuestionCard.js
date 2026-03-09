@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import CustomText from "../basics/CustomText";
 import CustomButton from "../basics/CustomButton";
 import CustomIcon from "../basics/CustomIcon";
@@ -45,6 +45,7 @@ const QuestionCard = ({
     return acc + parseCoef(power);
   }, 0);
 
+  const [elapsed, setElapsed] = useState(q.durationSeconds || 0);
   const totalVotesCount = questionVotes.length;
 
   // 4. Quórum
@@ -55,6 +56,32 @@ const QuestionCard = ({
     q.statusId === QUESTION_STATUSES.FINISHED ||
     q.statusId === QUESTION_STATUSES.LIVE;
 
+  useEffect(() => {
+    let interval;
+
+    if (q.statusId === QUESTION_STATUSES.LIVE && q.startedAt) {
+      // Actualización constante mientras esté en vivo
+      interval = setInterval(() => {
+        const start = new Date(q.startedAt);
+        const now = new Date();
+        const diff = Math.floor((now - start) / 1000);
+        setElapsed(diff > 0 ? diff : 0);
+      }, 1000);
+    } else {
+      // Si está en CREATED o FINISHED, mostrar el valor estático de durationSeconds
+      setElapsed(q.durationSeconds || 0);
+    }
+
+    return () => clearInterval(interval);
+  }, [q.statusId, q.startedAt, q.durationSeconds]);
+
+  // Función para formatear (00:00)
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="bg-[#FFFFFF] p-8 flex flex-col gap-6 rounded-3xl border border-[#E5E7EB] shadow-sm">
 
@@ -63,6 +90,9 @@ const QuestionCard = ({
         <CustomText variant="bodyX" className="font-bold text-[#0E3C42]">
           {q.title}
         </CustomText>
+        {isAdmin && q.statusId !== QUESTION_STATUSES.CREATED && (
+          <CustomText variant="bodyM" className="font-bold text-[#1F1F23]">{formatTime(elapsed)}</CustomText>
+        )}
         {isAdmin && q.statusId === QUESTION_STATUSES.CREATED && (
           <CustomButton
             onClick={() => onEdit?.(q)}
@@ -74,20 +104,23 @@ const QuestionCard = ({
         )}
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center flex-row md:justify-between ">
         {shouldShowResults && (
           <div className="flex items-center gap-1">
-            <CustomText variant="bodyX" className="font-medium text-[#1F1F23]">
-              Quórum de votación:
+            <CustomText variant="md:bodyX" className="font-medium text-[#1F1F23]">
+               Quórum 
+            </CustomText>
+            <CustomText variant="md:bodyX" className="hidden md:inline font-medium text-[#1F1F23]">
+               de votación:
             </CustomText>
             {/* 🔥 Aquí mostramos la suma directa de los coeficientes votados */}
-            <CustomText variant="bodyX" className="font-bold text-[#1F1F23]">
-              {totalVotedCoef.toFixed(2)}
+            <CustomText variant="md:bodyX" className="font-bold text-[#1F1F23]">
+              {totalVotedCoef.toFixed(2)}%
             </CustomText>
             <CustomIcon
               path={ICON_PATHS.error} // Ojo, este ícono parece de error, podrías querer cambiarlo a info o similar
               size={24}
-              className="text-[#0E3C42] m-2"
+              className="hidden md:inline text-[#0E3C42] m-2"
             />
           </div>
         )}

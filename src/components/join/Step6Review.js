@@ -45,7 +45,7 @@ export default function Step6Review({
           <CustomText variant="bodyX" className="font-bold text-[#0E3C42]">
             Información personal
           </CustomText>
-          <div className="bg-white shadow-soft border border-gray-100 rounded-2xl py-3 pl-3 pr-8 flex items-center gap-5 max-w-fit">
+          <div className="bg-white shadow-soft border border-gray-100 rounded-2xl py-3 pl-3 pr-8 flex items-center gap-5 md:max-w-fit">
             <div className="p-2 bg-[#EEF0FF] rounded-full">
               <CustomIcon path={ICON_PATHS.accountCircle} size={40} className="text-[#6A7EFF]" />
             </div>
@@ -61,7 +61,7 @@ export default function Step6Review({
         </div>
 
         {/* Propiedades */}
-        <div className="flex flex-col gap-3 w-[738px]">
+        <div className="flex flex-col gap-3 w-full md:w-[738px]">
           <CustomText variant="bodyX" className="font-bold text-[#0E3C42]">
             Propiedades
           </CustomText>
@@ -74,6 +74,11 @@ export default function Step6Review({
                   <CustomTypePropertie type={(item.registry.tipo || item.registry.Tipo || "").toLowerCase()} />
 
                   <div className="flex-1 min-w-0">
+                    {item.registry.grupo && (
+                      <CustomText variant="bodyM" className="font-bold text-[#1F1F23] truncate">
+                        {item.registry.grupo || item.registry.Grupo}
+                      </CustomText>
+                    )}
                     <CustomText variant="bodyM" className="font-bold text-[#1F1F23] truncate">
                       {item.registry.propiedad || item.registry.Propiedad}
                     </CustomText>
@@ -118,7 +123,7 @@ export default function Step6Review({
       </div>
 
       {/* Footer Buttons */}
-      <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full">
+      <div className="flex flex-row md:flex-row items-center justify-center gap-4 w-full">
         {assembly.canAddOtherRepresentatives && (
           <CustomButton
             variant="secondary"

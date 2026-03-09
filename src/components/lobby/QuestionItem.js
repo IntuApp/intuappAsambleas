@@ -166,6 +166,17 @@ export default function QuestionItem({
     else toast.error("Error al votar");
   };
 
+  useEffect(() => {
+    let timer;
+    if (showSuccess) {
+      timer = setTimeout(() => {
+        setShowSuccess(false);
+      }, 10000); // 10000ms = 10 segundos
+    }
+
+    return () => clearTimeout(timer);
+  }, [showSuccess]);
+
   // --- RENDERIZADOS CONDICIONALES ---
   if (q.statusId === QUESTION_STATUSES.FINISHED && votedCount === 0) return null;
 
@@ -212,8 +223,7 @@ export default function QuestionItem({
         <div className="fixed inset-0 z-[100] flex flex-col justify-end items-center pointer-events-auto">
 
           {/* Fondo oscuro con desenfoque */}
-          <div className="absolute inset-0  backdrop-blur-sm" />
-
+          <div className="absolute inset-0 bg-[#00093F]/40 backdrop-blur-[2px] pointer-events-none" />
           {/* 🔥 CORRECCIÓN 2: w-full y max-w-[850px] para que tenga el ancho exacto de tu imagen, y redondeado solo arriba */}
           <div className="bg-[#F3F6F9] w-full rounded-t-[32px] shadow-[0_-8px_30px_rgba(0,0,0,0.1)] relative flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300 z-10 overflow-hidden">
 
@@ -398,7 +408,7 @@ export default function QuestionItem({
                             return (
                               <div key={reg.ownerId} className="bg-white rounded-[24px] p-6 flex flex-col gap-5 border border-gray-100 shadow-sm">
                                 <CustomText variant="bodyX" className="font-black text-[#0E3C42]">
-                                 {tipo} {grupo} {propiedadNombre}
+                                  {tipo} {grupo} {propiedadNombre}
                                 </CustomText>
 
                                 {q.typeId === QUESTION_TYPES.OPEN ? (
@@ -471,15 +481,7 @@ export default function QuestionItem({
                   )}
                 </div>
 
-                {/* Flecha indicadora de Scroll */}
-                <div className="absolute bottom-5 left-0 right-0 flex justify-center pointer-events-none">
-                  <button
-                    onClick={handleScrollDown}
-                    className="bg-white border border-[#E5E9F0] rounded-full p-2.5 shadow-md animate-bounce pointer-events-auto hover:bg-gray-50 transition-colors text-[#0E3C42]"
-                  >
-                    <ArrowDown size={20} />
-                  </button>
-                </div>
+                
               </>
             )}
           </div>

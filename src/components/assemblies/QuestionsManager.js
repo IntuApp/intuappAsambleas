@@ -151,7 +151,9 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
                     statusId: QUESTION_STATUSES.CREATED,
                     createdAt: new Date().toISOString(),
                     options: newQuestion.type === QUESTION_TYPES.OPEN ? [] : newQuestion.options,
-                    minSelections: newQuestion.minSelections
+                    minSelections: newQuestion.minSelections,
+                    startedAt: null,
+                    durationSeconds: 0
                 };
                 await setDoc(qRef, { questions: arrayUnion(questionDataToSave) }, { merge: true });
                 toast.success("Pregunta creada");
@@ -201,21 +203,34 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
     const handleToggleStatus = async (questionId, currentStatus) => {
         let newStatus = "";
         let confirmMessage = "";
+        let meta = {};
+        const question = questionsList.find(q => q.id === questionId);
 
         // Determinamos el nuevo estado y el mensaje de confirmación
         if (currentStatus === QUESTION_STATUSES.CREATED) {
             newStatus = QUESTION_STATUSES.LIVE;
+            meta.startedAt = new Date().toISOString();
+            meta.durationSeconds = 0;
         } else if (currentStatus === QUESTION_STATUSES.LIVE) {
             newStatus = QUESTION_STATUSES.FINISHED;
+            if (question?.startedAt) {
+                const now = new Date();
+                const start = new Date(question.startedAt);
+                meta.durationSeconds = Math.floor((now - start) / 1000);
+            }
         } else if (currentStatus === QUESTION_STATUSES.FINISHED) {
             newStatus = QUESTION_STATUSES.LIVE;
+            const previousDuration = question?.durationSeconds || 0;
+            const fakeStartTime = new Date(Date.now() - (previousDuration * 1000));
+
+            meta.startedAt = fakeStartTime.toISOString();
         }
 
         // Si el usuario cancela la alerta del navegador, no hacemos nada
 
         try {
             // Llamamos a nuestra nueva acción de servidor
-            await updateQuestionStatus(assemblyId, questionId, newStatus);
+            await updateQuestionStatus(assemblyId, questionId, newStatus, meta);
 
             // Notificamos al usuario según el cambio
             if (newStatus === QUESTION_STATUSES.LIVE) {
@@ -366,7 +381,7 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
             )}
 
             {/* LISTA DE PREGUNTAS: AHORA SÍ CONECTADA CON QUESTION CARD */}
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-10">
                 {/* 🔥 ORDENAMIENTO: De más reciente a más antigua usando createdAt */}
                 {[...questionsList]
                     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))

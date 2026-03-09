@@ -213,7 +213,7 @@ export async function cancelAssemblyQuestion(assemblyId, questionId) {
 /**
  * Actualiza el estado de una pregunta (Iniciar, Finalizar, Reabrir)
  */
-export async function updateQuestionStatus(assemblyId, questionId, newStatusId) {
+export async function updateQuestionStatus(assemblyId, questionId, newStatusId, meta = {}) {
   try {
     const qRef = doc(db, "assemblyQuestions", assemblyId);
     const snap = await getDoc(qRef);
@@ -231,7 +231,8 @@ export async function updateQuestionStatus(assemblyId, questionId, newStatusId) 
     // 2. Creamos la versión actualizada de la pregunta
     const updatedQuestion = {
       ...questionToUpdate,
-      statusId: String(newStatusId)
+      statusId: String(newStatusId),
+      ...meta
     };
 
     // 3. Operación atómica de Firebase

@@ -11,7 +11,7 @@ export default function Step4AddProperties({
   onContinue,
 }) {
   return (
-    <div className="flex flex-col items-center text-center w-[552px] gap-8 animate-in fade-in zoom-in-95 duration-500">
+    <div className="flex flex-col items-center md:text-center md:w-[552px] gap-8 animate-in fade-in zoom-in-95 duration-500">
       <div className="flex flex-col gap-2">
         <CustomText variant="TitleL" as="h1" className="text-[#0E3C42] font-bold">
           ¿Quieres añadir  otra propiedad?

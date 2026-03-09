@@ -34,7 +34,7 @@ export default function LobbyHome({
   return (
     <div className="flex flex-col gap-5 animate-in fade-in duration-300 px-10">
 
-      <div className="grid grid-cols-2">
+      <div className="md:grid grid-cols-2">
         <CustomText variant="Title" className="text-[#0E3C42]">
           Hola, {currentUser?.firstName || "Asambleísta"}!
         </CustomText>

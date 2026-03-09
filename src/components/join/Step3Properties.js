@@ -20,7 +20,7 @@ export default function Step3Properties({
   if (!currentReg) return null;
 
   return (
-    <div className="flex flex-col items-center w-full gap-8 animate-in fade-in zoom-in-95 max-w-[455px]">
+    <div className="flex flex-col md:items-center w-full gap-8 animate-in fade-in zoom-in-95 max-w-[455px]">
       <div className="flex flex-col gap-2">
         <CustomText variant="TitleL" as="h3" className="text-[#0E3C42] font-bold">
           Propiedades identificadas

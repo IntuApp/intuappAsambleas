@@ -19,7 +19,7 @@ export default function LoginMember({ assembly, entity, onLogin }) {
   return (
     <div className="min-h-screen w-full flex items-center justify-center ">
       {/* Tarjeta Maestra Proporcional */}
-      <div className="w-full min-h-screen h-full rounded-[40px] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] overflow-hidden flex flex-row justify-center">
+      <div className="w-full min-h-screen h-full rounded-[40px] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col flex-col-reverse md:flex-row justify-end md:justify-center">
 
         {/* LADO IZQUIERDO: INFORMACIÓN Y ACCESO */}
         <div className=" p-8 md:p-16 flex flex-col justify-center items-center">
@@ -33,17 +33,9 @@ export default function LoginMember({ assembly, entity, onLogin }) {
               >
                 Hola, asambleísta!
               </CustomText>
-              {!isFinalized && (
-                <CustomText
-                  variant="bodyL"
-                  className="text-[#1F1F23] font-regular"
-                >
-                  Accede a tu cuenta y disfruta de todos nuestros servicios.
-                </CustomText>
-              )}
             </div>
             <div className="relative overflow-hidden">
-              <div className="relative z-10 flex flex-col gap-2 p-3 bg-white rounded-3xl shadow-sm border border-[#F3F6F9]">
+              <div className="relative z-10 flex flex-col gap-2 px-6 py-3 bg-white rounded-3xl shadow-sm border border-[#F3F6F9]">
                 <CustomText
                   as="h5"
                   variant="bodyX"
@@ -151,12 +143,12 @@ export default function LoginMember({ assembly, entity, onLogin }) {
           </div>
         </div>
 
-        <div className=" max-w-[652px] w-full p-6 py-10 bg-[#F8F9FB]">
+        <div className=" md:max-w-[652px] w-full p-6 py-10 bg-[#F8F9FB]">
           <div className="w-full h-full relative rounded-[32px] overflow-hidden flex flex-col items-center justify-center shadow-inner">
             <img src="/bg/bg.png" alt="Branding" className="absolute inset-0 w-full h-full object-cover rounded-3xl" />
             <div className="absolute inset-0 bg-gradient-to-tr from-[#BFE6E2]/40 via-transparent to-[#C9CDF4]/40" />
 
-            <div className="relative z-10 flex flex-col items-center gap-2  max-w-[80%]">
+            <div className="py-10 relative z-10 flex flex-col items-center gap-2  max-w-[80%]">
               <img
                 src="/logos/assambly/iconLoginAssambly.png"
                 alt="IntuApp"

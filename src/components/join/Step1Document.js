@@ -14,7 +14,7 @@ export default function Step1Document({
   error, // Nueva prop
 }) {
   return (
-    <div className="flex flex-col gap-8 max-w-[455px] w-full items-center">
+    <div className="flex flex-col gap-8 max-w-[455px] w-full md:items-center">
       <CustomText variant="TitleL" as="h3" className="text-[#0E3C42] font-bold">
         Ingresa tu {label.toLowerCase()}
       </CustomText>

@@ -13,8 +13,8 @@ export default function JoinLayout({
     onBack
 }) {
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-[#F8F9FB] p-4 md:p-6 font-sans">
-            <div className="w-full max-w-[70%]  bg-white rounded-3xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] p-6 md:p-12 flex flex-col relative overflow-hidden">
+        <div className="md:min-h-screen w-full flex items-center justify-center bg-[#F8F9FB] p-4 md:p-6 font-sans">
+            <div className="w-full md:max-w-[70%]  md:bg-white rounded-3xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] p-2 md:p-12 flex flex-col relative overflow-hidden">
                 <div className="w-full flex items-center justify-between mb-10">
                     <CustomButton
                         onClick={onBack}
