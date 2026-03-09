@@ -3,13 +3,17 @@
 import { db } from "@/lib/firebase";
 // 🔥 CORRECCIÓN: Se agregaron arrayUnion y arrayRemove a la importación
 import {
+  writeBatch,
   collection,
   addDoc,
   doc,
   updateDoc,
   arrayUnion,
   arrayRemove,
-  getDoc
+  getDoc,
+  getDocs,
+  query,
+  where
 } from "firebase/firestore";
 
 /**
@@ -119,6 +123,37 @@ export async function updateLivePropertyBlock(registrationId, propertyId, isBloc
     throw new Error("Error al actualizar restricción: " + error.message);
   }
 }
+
+export const deleteAssembly = async (assemblyId) => {
+  try {
+    const batch = writeBatch(db);
+
+    const voteRef = doc(db, "assemblyVotes", assemblyId);
+    batch.delete(voteRef);
+
+    const questionRef = doc(db, "assemblyQuestions", assemblyId);
+    batch.delete(questionRef);
+
+    
+    const registrationsSnap = await getDocs(
+      query(collection(db, "assemblyRegistrations"), where("assemblyId", "==", assemblyId))
+    );
+    registrationsSnap.forEach((d) => batch.delete(d.ref));
+
+    const assemblyRef = doc(db, "assembly", assemblyId);
+    batch.delete(assemblyRef);
+
+    // Ejecutar el lote
+    await batch.commit();
+
+    return { success: true };
+
+  } catch (error) {
+    console.error("Error eliminando asamblea:", error);
+    return { success: false, error: error.message };
+  }
+};
+
 export async function deleteAssemblyRegistry(registrationRecordId, mainDocument, propertyOwnerId, isMainProperty) {
   try {
     // 1. Obtenemos el documento maestro directamente por su ID
@@ -260,7 +295,7 @@ export const updateUserSessionToken = async (assemblyId, mainDocument, sessionTo
 
   if (userToUpdate) {
     const updatedUser = { ...userToUpdate, sessionToken: sessionToken };
-    
+
     // Sacamos el viejo y metemos el nuevo con el token actualizado
     await updateDoc(regRef, { registrations: arrayRemove(userToUpdate) });
     await updateDoc(regRef, { registrations: arrayUnion(updatedUser) });

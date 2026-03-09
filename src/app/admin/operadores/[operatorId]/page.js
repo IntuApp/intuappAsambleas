@@ -9,6 +9,11 @@ import { ICON_PATHS } from "@/constans/iconPaths";
 import EntitiesList from "@/components/entities/EntitiesList";
 import { listenToOperatorById } from "@/lib/user";
 import { deleteOperator } from "@/lib/userActions";
+import { toast } from "react-toastify";
+
+// Solo necesitamos el ConfirmationModal ahora
+import ConfirmationModal from "@/components/modal/ConfirmationModal";
+import Loader from "@/components/basics/Loader";
 
 const Info = ({ label, value }) => (
     <div className="flex flex-col gap-1">
@@ -20,30 +25,53 @@ const Info = ({ label, value }) => (
 );
 
 const OperatorDetailPage = () => {
-    const { operatorId } = useParams(); // Obtenemos el ID de la URL
+    const { operatorId } = useParams();
     const router = useRouter();
 
     const [operatorData, setOperatorData] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    // Estados para eliminación
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         if (!operatorId) return;
         const unsubscribe = listenToOperatorById(operatorId, (data) => {
             setOperatorData(data);
+            setLoading(false);
         });
         return () => unsubscribe();
     }, [operatorId]);
 
     const handleDelete = async () => {
+        setIsDeleting(true);
         try {
-            await deleteOperator(operatorId);
-            router.push("/admin/operadores");
+            // 🔥 Ejecutamos la limpieza profunda
+            const res = await deleteOperator(operatorId);
+
+            if (res.success) {
+                toast.success("Operador eliminado correctamente");
+                setShowDeleteModal(false);
+                // 🚀 Redirección inmediata a la lista
+                router.push("/admin/operadores");
+            } else {
+                toast.error("Error al eliminar: " + res.error);
+                setIsDeleting(false); // Solo bajamos el loading si falló
+            }
         } catch (error) {
-            console.error("Error borrando:", error);
+            console.error("Error borrando operador:", error);
+            toast.error("Ocurrió un error inesperado al eliminar.");
+            setIsDeleting(false);
         }
     };
 
-    if (!operatorData) return <div className="p-8">Cargando detalles...</div>;
+    if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader /></div>;
+    
+    // Si el operador fue borrado, el listener de Firebase pondrá esto en null.
+    // Retornamos null para evitar que el componente intente renderizar data inexistente 
+    // mientras Next.js procesa el router.push
+    if (!operatorData) return null;
 
     return (
         <div className="flex flex-col gap-8 w-full">
@@ -55,9 +83,9 @@ const OperatorDetailPage = () => {
                 </CustomText>
 
                 <CustomButton
-                    variant="primary" // Usando tu variante "error" que definiste al principio
+                    variant="primary"
                     onClick={() => setShowDeleteModal(true)}
-                    className="px-5 py-3 flex items-center gap-2 "
+                    className="px-5 py-3 flex items-center gap-2"
                 >
                     <CustomIcon path={ICON_PATHS.delete} size={20} />
                     <CustomText variant="labelL" className="font-bold">
@@ -75,10 +103,10 @@ const OperatorDetailPage = () => {
 
                     <CustomButton
                         variant="primary"
-                        onClick={() => router.push(`/admin/operadores/${operatorId}/editar`)} // Enviamos al formulario de edición
+                        onClick={() => router.push(`/admin/operadores/${operatorId}/editar`)}
                         className="flex items-center gap-2 px-4 py-2"
                     >
-                        <CustomIcon path={ICON_PATHS.pencil || "M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Z"} size={16} />
+                        <CustomIcon path={ICON_PATHS.pencil} size={16} />
                         <CustomText variant="labelL" className="font-bold">
                             Editar información
                         </CustomText>
@@ -113,14 +141,22 @@ const OperatorDetailPage = () => {
                     </CustomButton>
                 </div>
 
-                {/* Le pasamos el entitiesData poblado desde Firebase */}
                 <EntitiesList
                     entities={operatorData.entitiesData || []}
-                    operatorId={operatorId} // Lo pasamos para que el hijo pueda construir bien las URLs
+                    operatorId={operatorId}
                 />
             </div>
 
-            {/* TODO: Implementar tu modal de confirmación de eliminación aquí (usando showDeleteModal y handleDelete) */}
+            {/* ÚNICO MODAL: CONFIRMACIÓN */}
+            <ConfirmationModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={handleDelete}
+                title="Eliminar Operario"
+                message="¿Estás seguro? Esta acción eliminará permanentemente al operario y TODA su información asociada (Entidades y Asambleas)."
+                confirmText="Eliminar Operario"
+                isLoading={isDeleting}
+            />
 
         </div>
     );

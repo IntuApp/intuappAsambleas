@@ -153,17 +153,29 @@ const EntityDetailPage = () => {
         }
     };
 
-    // Eliminar entidad
     const handleConfirmDeleteEntity = async () => {
+        if (!entityData || !entityId) {
+            toast.error("No se pudo obtener la información de la entidad para eliminar.");
+            return;
+        }
+
         setIsDeleting(true);
         try {
-            const res = await deleteEntity(entityId);
+            const res = await deleteEntity({
+                id: entityId,
+                assemblyRegistriesListId: entityData.assemblyRegistriesListId
+            });
+
             if (res.success) {
                 setShowDeleteModal(false);
                 setShowSuccessModal(true);
+            } else {
+                toast.error("Error al eliminar: " + res.error);
             }
         } catch (error) {
-            toast.error("Error al eliminar entidad");
+            console.error("Error en handleConfirmDeleteEntity:", error);
+            toast.error("Ocurrió un error inesperado.");
+        } finally {
             setIsDeleting(false);
         }
     };

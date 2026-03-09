@@ -14,6 +14,7 @@ import SuccessModal from "@/components/modal/SuccessModal";
 
 import { ICON_PATHS } from "@/constans/iconPaths";
 import CustomTypeAssembly from "../basics/CustomTypeAssembly";
+import { deleteAssembly } from "@/lib/assemblyActions";
 
 const EntityAssembliesSection = ({ entityId, assemblies, createAssemblyRoute, viewAssemblyRoute }) => {
   const router = useRouter();
@@ -72,6 +73,7 @@ const EntityAssembliesSection = ({ entityId, assemblies, createAssemblyRoute, vi
 
     setIsDeleting(true);
 
+    const result = await deleteAssembly(selectedAssembly.id);
 
     if (result.success) {
       setLocalAssemblies((prev) =>

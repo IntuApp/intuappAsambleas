@@ -1,7 +1,8 @@
 'use server';
 
 import { db } from "@/lib/firebase";
-import { collection, addDoc, doc, updateDoc, arrayUnion, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, arrayUnion, deleteDoc, query, writeBatch, getDocs, where } from "firebase/firestore";
+import { deleteAssembly } from "./assemblyActions";
 
 /**
  * Función auxiliar para normalizar el procesamiento de los registros.
@@ -142,13 +143,36 @@ export async function updateEntityBasicData(entityId, data) {
 }
 
 
-export async function deleteEntity(entityId) {
-  if (!db) throw new Error("Database connection not available");
+export const deleteEntity = async (entityData) => {
   try {
+    const { id: entityId, assemblyRegistriesListId } = entityData;
+
+    // 1. Buscamos todas las asambleas de esta entidad
+    const assembliesSnap = await getDocs(
+      query(collection(db, "assembly"), where("entityId", "==", entityId))
+    );
+
+    // 2. Borramos cada asamblea (cascada a votos, preguntas, etc.)
+    for (const aDoc of assembliesSnap.docs) {
+      await deleteAssembly(aDoc.id);
+    }
+
+    const batch = writeBatch(db);
+
+    // 3. Borrar el assemblyRegistriesList usando el ID que viene en la entidad
+    if (assemblyRegistriesListId) {
+      const registryRef = doc(db, "assemblyRegistriesList", assemblyRegistriesListId);
+      batch.delete(registryRef);
+    }
+
+    // 4. Borrar el documento de la Entidad
     const entityRef = doc(db, "entity", entityId);
-    await deleteDoc(entityRef);
+    batch.delete(entityRef);
+
+    await batch.commit();
     return { success: true };
   } catch (error) {
-    throw new Error(error.message || 'Error al eliminar la entidad');
+    console.error("Error al eliminar entidad:", error);
+    return { success: false, error: error.message };
   }
-}
+};
