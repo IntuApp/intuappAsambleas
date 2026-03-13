@@ -27,8 +27,8 @@ export default function Step4AddProperties({
           onChange={(v) => setAddAnotherDecision(v)}
           classContentOptions="flex flex-col gap-3"
           options={[
-            { label: "Sí, representar otra propiedad", value: "yes" },
-            { label: "No, no voy a representar otra", value: "no" },
+            { label: "Representar otra propiedad", value: "yes" },
+            { label: "No representar otra", value: "no" },
           ]}
         />
       </div>

@@ -34,6 +34,7 @@ export default function VotersModal({
             { id: "coeficiente", label: "Coeficiente", key: "coeficiente" },
             { id: "votos", label: "Votos", key: "votos" },
             { id: "documento", label: "Documento", key: "documento" },
+            { id: "firstName", label: "Nombre", key: "firstName" },
             { id: "respuesta", label: "Respuesta", key: "respuesta" },
         ];
 
@@ -83,6 +84,9 @@ export default function VotersModal({
                 } else {
                     answerText = "Voto en blanco / no registrado";
                 }
+                let name = vote.firstName + " " + vote.lastName;
+                console.log("propertyData", name);
+
 
                 return {
                     id: vote.propertyOwnerId + vote.registrationId,
@@ -95,6 +99,7 @@ export default function VotersModal({
                     coeficiente: vote.votingPower || propertyData.Coeficiente || propertyData.coeficiente || 0,
                     votos: propertyData.votos || propertyData.Votos,
                     documento: vote.registrationId || "N/A",
+                    firstName: name || "N/A",
                     respuesta: answerText,
                 };
             });
@@ -133,7 +138,7 @@ export default function VotersModal({
                 onClick={onClose}
             />
 
-            <div className="bg-white w-full max-w-[850px] rounded-[32px] shadow-2xl relative flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300 z-10 overflow-hidden">
+            <div className="bg-white w-full max-w-[1050px] rounded-[32px] shadow-2xl relative flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300 z-10 overflow-hidden">
                 <div className="px-8 pt-8 pb-6 border-b border-gray-100 flex flex-col gap-4 relative">
                     <button
                         onClick={onClose}
