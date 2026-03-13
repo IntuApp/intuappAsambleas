@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { toast } from "react-toastify";
 
 // Importamos los métodos 
 import { listenToEntityById, listenToEntityAssemblies, getAssemblyRegistriesArray } from "@/lib/entity";
@@ -81,7 +80,6 @@ const OperatorEntityDetailPage = () => {
                     setRegistries(regs);
                 }
             } else {
-                toast.error("La entidad no existe o fue eliminada.");
                 router.back();
             }
             setLoading(false);
@@ -103,7 +101,6 @@ const OperatorEntityDetailPage = () => {
     // Función para guardar la edición
     const handleSaveEntity = async () => {
         if (!formData.name || !formData.type) {
-            toast.error("El nombre y el tipo de entidad son obligatorios.");
             return;
         }
 
@@ -111,11 +108,9 @@ const OperatorEntityDetailPage = () => {
         try {
             const res = await updateEntityBasicData(entityId, formData); 
             if (res.success) {
-                toast.success("Entidad actualizada correctamente");
                 setIsEditModalOpen(false); 
             }
         } catch (error) {
-            toast.error(error.message || "Error al actualizar la entidad");
         } finally {
             setIsSavingEdit(false);
         }
@@ -131,7 +126,6 @@ const OperatorEntityDetailPage = () => {
                 setShowSuccessModal(true);
             }
         } catch (error) {
-            toast.error("Error al eliminar entidad");
             setIsDeleting(false);
         }
     };

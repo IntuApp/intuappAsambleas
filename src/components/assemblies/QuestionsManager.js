@@ -141,7 +141,6 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
                     return q;
                 });
                 await setDoc(qRef, { questions: updatedQuestions }, { merge: true });
-                toast.success("Pregunta actualizada");
             } else {
                 // LÓGICA DE CREACIÓN (Tu código original)
                 const questionDataToSave = {
@@ -156,13 +155,11 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
                     durationSeconds: 0
                 };
                 await setDoc(qRef, { questions: arrayUnion(questionDataToSave) }, { merge: true });
-                toast.success("Pregunta creada");
             }
 
             resetForm();
             setEditingQuestionId(null);
         } catch (error) {
-            toast.error("Error al guardar");
             console.error(error);
         } finally {
             setIsSaving(false);
@@ -194,9 +191,7 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
     const handleCancelQuestion = async (questionId) => {
         try {
             await cancelAssemblyQuestion(assemblyId, questionId);
-            toast.success("Votación cancelada");
         } catch (error) {
-            toast.error("Hubo un error al intentar cancelar la votación");
             console.error(error);
         }
     };
@@ -234,12 +229,9 @@ export default function QuestionsManager({ assemblyId, assemblyData }) {
 
             // Notificamos al usuario según el cambio
             if (newStatus === QUESTION_STATUSES.LIVE) {
-                toast.success("¡Votación iniciada con éxito!");
             } else if (newStatus === QUESTION_STATUSES.FINISHED) {
-                toast.success("Votación finalizada. Resultados guardados.");
             }
         } catch (error) {
-            toast.error("Hubo un error al cambiar el estado de la votación");
             console.error(error);
         }
     };

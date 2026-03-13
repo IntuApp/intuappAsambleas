@@ -22,7 +22,6 @@ import SuccessModal from "@/components/modal/SuccessModal";
 
 import { ICON_PATHS } from "@/constans/iconPaths";
 import { getIconPath, getTypeName } from "@/lib/utils";
-import { toast } from "react-toastify";
 
 const EntityDetailPage = () => {
     const params = useParams();
@@ -84,7 +83,6 @@ const EntityDetailPage = () => {
                     setRegistries(regs);
                 }
             } else {
-                toast.error("La entidad no existe o fue eliminada.");
                 router.back();
             }
             setLoading(false);
@@ -107,7 +105,6 @@ const EntityDetailPage = () => {
     const handleSaveEntity = async () => {
         // Validaciones básicas
         if (!formData.name || !formData.type) {
-            toast.error("El nombre y el tipo de entidad son obligatorios.");
             return;
         }
 
@@ -116,12 +113,10 @@ const EntityDetailPage = () => {
             // Llamamos a la Server Action que creamos en el paso anterior
             const res = await updateEntityBasicData(entityId, formData);
             if (res.success) {
-                toast.success("Entidad actualizada correctamente");
                 setIsEditModalOpen(false); // Cerramos el modal
                 // No necesitamos recargar porque el onSnapshot de Firebase actualizará todo instantáneamente
             }
         } catch (error) {
-            toast.error(error.message || "Error al actualizar la entidad");
         } finally {
             setIsSavingEdit(false);
         }
@@ -148,14 +143,12 @@ const EntityDetailPage = () => {
             }
         } catch (error) {
             console.error("Error en handleUpdateDatabase:", error);
-            // Lanzamos el error para que el componente hijo lo capture y muestre el toast
             throw new Error(error.message || "Error al procesar los datos en el servidor");
         }
     };
 
     const handleConfirmDeleteEntity = async () => {
         if (!entityData || !entityId) {
-            toast.error("No se pudo obtener la información de la entidad para eliminar.");
             return;
         }
 
@@ -170,11 +163,8 @@ const EntityDetailPage = () => {
                 setShowDeleteModal(false);
                 setShowSuccessModal(true);
             } else {
-                toast.error("Error al eliminar: " + res.error);
             }
         } catch (error) {
-            console.error("Error en handleConfirmDeleteEntity:", error);
-            toast.error("Ocurrió un error inesperado.");
         } finally {
             setIsDeleting(false);
         }

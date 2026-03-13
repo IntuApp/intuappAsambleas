@@ -31,13 +31,10 @@ const OperadorCrearAsambleaPage = () => {
                         setRegistries(regs);
                     } catch (error) {
                         console.error("Error cargando registros:", error);
-                        toast.error("No se pudo cargar la base de datos de asambleístas.");
                     }
                 } else {
-                    toast.warning("Esta entidad no tiene una base de datos de asambleístas cargada.");
                 }
             } else {
-                toast.error("La entidad no existe.");
                 router.back();
             }
             setLoading(false);

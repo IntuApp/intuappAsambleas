@@ -9,7 +9,6 @@ import { ICON_PATHS } from "@/constans/iconPaths";
 import EntitiesList from "@/components/entities/EntitiesList";
 import { listenToOperatorById } from "@/lib/user";
 import { deleteOperator } from "@/lib/userActions";
-import { toast } from "react-toastify";
 
 // Solo necesitamos el ConfirmationModal ahora
 import ConfirmationModal from "@/components/modal/ConfirmationModal";
@@ -51,17 +50,14 @@ const OperatorDetailPage = () => {
             const res = await deleteOperator(operatorId);
 
             if (res.success) {
-                toast.success("Operador eliminado correctamente");
                 setShowDeleteModal(false);
                 // 🚀 Redirección inmediata a la lista
                 router.push("/admin/operadores");
             } else {
-                toast.error("Error al eliminar: " + res.error);
                 setIsDeleting(false); // Solo bajamos el loading si falló
             }
         } catch (error) {
             console.error("Error borrando operador:", error);
-            toast.error("Ocurrió un error inesperado al eliminar.");
             setIsDeleting(false);
         }
     };

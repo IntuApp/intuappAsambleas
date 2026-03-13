@@ -281,7 +281,6 @@ export default function AssembliesList({
                   <CustomButton
                     onClick={() => {
                       if (assembly.operatorId === "sin-operador") {
-                        toast.warning("Esta asamblea pertenece a una entidad sin operador asignado.");
                         return;
                       }
                       router.push(`/admin/operadores/${assembly.operatorId}/${assembly.entityId}/${assembly.id}`)
@@ -368,7 +367,6 @@ export default function AssembliesList({
                             <CustomButton
                               onClick={() => {
                                 if (assembly.operatorId === "sin-operador") {
-                                  toast.warning("Esta asamblea pertenece a una entidad sin operador asignado.");
                                   return;
                                 }
                                 router.push(`/admin/operadores/${assembly.operatorId}/${assembly.entityId}/${assembly.id}`);

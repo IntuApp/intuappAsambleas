@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { listenToEntityById, getAssemblyRegistriesArray } from "@/lib/entity";
 import CreateAssemblyForm from "@/components/assemblies/CreateAssemblyForm";
 import Loader from "@/components/basics/Loader";
-import { toast } from "react-toastify";
 
 const CrearAsambleaPage = () => {
     const { operatorId, entityId } = useParams();
@@ -33,13 +32,10 @@ const CrearAsambleaPage = () => {
                         setRegistries(regs);
                     } catch (error) {
                         console.error("Error cargando registros:", error);
-                        toast.error("No se pudo cargar la base de datos de asambleístas.");
                     }
                 } else {
-                    toast.warning("Esta entidad no tiene una base de datos de asambleístas cargada.");
                 }
             } else {
-                toast.error("La entidad no existe.");
                 router.back();
             }
             setLoading(false);

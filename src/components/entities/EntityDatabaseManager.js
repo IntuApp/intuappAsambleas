@@ -2,7 +2,6 @@
 import React, { useState, useMemo, useRef } from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, X } from "lucide-react";
 import * as XLSX from "xlsx"; // 🔥 Necesario para leer el Excel
-import { toast } from "react-toastify";
 
 import CustomText from "../basics/CustomText";
 import CustomButton from "../basics/CustomButton";
@@ -95,11 +94,9 @@ export default function EntityDatabaseManager({ entityData, registries = [], onU
                     // Abrimos el modal
                     setIsUpdateModalOpen(true);
                 } else {
-                    toast.error("El archivo de Excel está vacío.");
                 }
             } catch (error) {
                 console.error("Error leyendo Excel:", error);
-                toast.error("Error al leer el archivo Excel.");
             }
         };
         reader.readAsBinaryString(file);
@@ -130,11 +127,9 @@ export default function EntityDatabaseManager({ entityData, registries = [], onU
                     newAliases: columnAliases
                 });
             }
-            toast.success("Base de datos actualizada con éxito");
             handleCloseModal();
         } catch (error) {
             console.error("Error actualizando BD:", error);
-            toast.error("Error al actualizar la base de datos");
         } finally {
             setIsSaving(false);
         }

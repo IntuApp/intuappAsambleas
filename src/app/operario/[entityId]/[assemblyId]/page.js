@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { toast } from "react-toastify";
 
 // Métodos de lógica
 import { listenToAssemblyLive, getEntityMasterList } from "@/lib/assembly";
@@ -37,7 +36,6 @@ const OperatorAssemblyPage = () => {
         // 1. Escuchar la Asamblea y los Registros (Check-ins/Bloqueos) en tiempo real
         const unsubscribeLive = listenToAssemblyLive(assemblyId, async (data) => {
             if (!data) {
-                toast.error("La asamblea no existe");
                 router.back();
                 return;
             }
@@ -67,25 +65,20 @@ const OperatorAssemblyPage = () => {
         try {
             await updateAssemblyStatus(assemblyId, newStatus);
             const statusNames = { "2": "iniciada", "3": "finalizada" };
-            toast.success(`Asamblea ${statusNames[newStatus]} con éxito`);
         } catch (error) {
-            toast.error(error.message);
         }
     };
 
     const handleToggleRegister = async (isOpen) => {
         try {
             await toggleRegistration(assemblyId, isOpen);
-            toast.info(isOpen ? "Registros abiertos" : "Registros cerrados");
         } catch (error) {
-            toast.error(error.message);
         }
     };
 
     const handleToggleBlock = async (propertyId, isBlocking) => {
         // 1. Verificación preventiva
         if (!registrations?.id) {
-            toast.error("El registro de asistencia no ha cargado. Intente de nuevo.");
             return;
         }
 
@@ -95,11 +88,8 @@ const OperatorAssemblyPage = () => {
             const result = await updateLivePropertyBlock(registrations.id, propertyId, isBlocking);
 
             if (result.success) {
-                toast.info(isBlocking ? "Voto restringido" : "Restricción removida");
             }
         } catch (error) {
-            toast.error("Error al actualizar la restricción");
-            console.error(error);
         }
     };
 
@@ -123,17 +113,13 @@ const OperatorAssemblyPage = () => {
                 );
 
                 if (isMainProperty) {
-                    toast.success("Asambleísta retirado. Todas sus propiedades fueron liberadas.");
                 } else {
-                    toast.success("Propiedad manual liberada con éxito.");
                 }
 
             } catch (error) {
                 console.error("Error al liberar propiedad:", error);
-                toast.error("Hubo un error al intentar liberar la propiedad.");
             }
         } else if (actionType === "restore") {
-            toast.info("La función de restaurar se implementará pronto.");
         }
     };
 

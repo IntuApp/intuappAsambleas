@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
-import { toast } from "react-toastify"; // Asegúrate de tenerlo instalado
 import CustomText from "@/components/basics/CustomText";
 import CustomButton from "@/components/basics/CustomButton";
 import CustomIcon from "@/components/basics/CustomIcon";
@@ -96,13 +95,10 @@ export default function CrearEntidadPage() {
           setExcelData(cleanData);
           setColumnAliases(initialAliases);
 
-          toast.success("Archivo procesado correctamente");
         } else {
-          toast.error("El archivo está vacío.");
         }
       } catch (error) {
         console.error("Error al leer Excel:", error);
-        toast.error("Error procesando el archivo Excel");
       }
     };
     reader.readAsBinaryString(file);
