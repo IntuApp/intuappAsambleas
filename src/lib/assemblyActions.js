@@ -64,6 +64,54 @@ export async function createFullAssembly(entityId, assemblyData, blockedIds) {
     throw new Error(error.message || 'Error al procesar la creación de la asamblea');
   }
 }
+/**
+ * Actualiza los datos de una asamblea existente y sus restricciones de voto.
+ */
+export async function updateFullAssembly(assemblyId, assemblyData) {
+  if (!db) throw new Error("Database connection not available");
+
+  try {
+    const batch = writeBatch(db);
+
+    // 1. Referencia al documento de la asamblea
+    const assemblyRef = doc(db, "assembly", assemblyId);
+
+    // 2. Referencia al documento de registros (donde están los bloqueados)
+    // Usamos el ID que viene en la data de la asamblea
+    const registrationId = assemblyData.registrationRecordId;
+    if (!registrationId) throw new Error("No se encontró el ID de registro de esta asamblea");
+    const registrationRef = doc(db, "assemblyRegistrations", registrationId);
+
+    // 3. Preparar los datos de actualización de la asamblea
+    // Solo mapeamos los campos que están en el modal de edición
+    const assemblyUpdates = {
+      name: assemblyData.name,
+      date: assemblyData.date,
+      hour: assemblyData.hour,
+      typeId: String(assemblyData.typeId),
+      meetLink: assemblyData.meetLink || "",
+      hasWppSupport: Boolean(assemblyData.hasWppSupport),
+      wppPhone: assemblyData.wppPhone || "",
+      requireFullName: Boolean(assemblyData.requireFullName),
+      requireEmail: Boolean(assemblyData.requireEmail),
+      requirePhone: Boolean(assemblyData.requirePhone),
+      powerLimit: String(assemblyData.powerLimit || "0"),
+      updatedAt: new Date().toISOString()
+    };
+
+
+    // 5. Ejecutar en batch para asegurar consistencia
+    batch.update(assemblyRef, assemblyUpdates);
+
+    await batch.commit();
+
+    return { success: true };
+
+  } catch (error) {
+    console.error("Error actualizando asamblea completa:", error);
+    throw new Error(error.message || 'Error al procesar la actualización de la asamblea');
+  }
+}
 
 /**
  * Cambia el estado de la asamblea (1: Creada, 2: Live, 3: Finalizada)
@@ -134,7 +182,7 @@ export const deleteAssembly = async (assemblyId) => {
     const questionRef = doc(db, "assemblyQuestions", assemblyId);
     batch.delete(questionRef);
 
-    
+
     const registrationsSnap = await getDocs(
       query(collection(db, "assemblyRegistrations"), where("assemblyId", "==", assemblyId))
     );
@@ -285,19 +333,22 @@ export async function updateQuestionStatus(assemblyId, questionId, newStatusId, 
     throw new Error(error.message);
   }
 }
-export const updateUserSessionToken = async (assemblyId, mainDocument, sessionToken) => {
-  const regRef = doc(db, "assemblyRegistrations", assemblyId);
-  const snap = await getDoc(regRef);
-  if (!snap.exists()) return;
+// Ejemplo de cómo debería ser para que Firestore dispare el evento correctamente
+export const updateUserSessionToken = async (assemblyId, documentId, newToken) => {
+  const q = query(collection(db, "assemblyRegistrations"), where("assemblyId", "==", assemblyId));
+  const snap = await getDocs(q);
 
-  const data = snap.data();
-  const userToUpdate = (data.registrations || []).find(r => r.mainDocument === mainDocument);
+  if (!snap.empty) {
+    const docRef = snap.docs[0].ref;
+    const data = snap.docs[0].data();
 
-  if (userToUpdate) {
-    const updatedUser = { ...userToUpdate, sessionToken: sessionToken };
+    const updatedRegistrations = data.registrations.map(reg => {
+      if (reg.mainDocument === documentId) {
+        return { ...reg, sessionToken: newToken };
+      }
+      return reg;
+    });
 
-    // Sacamos el viejo y metemos el nuevo con el token actualizado
-    await updateDoc(regRef, { registrations: arrayRemove(userToUpdate) });
-    await updateDoc(regRef, { registrations: arrayUnion(updatedUser) });
+    await updateDoc(docRef, { registrations: updatedRegistrations });
   }
 };

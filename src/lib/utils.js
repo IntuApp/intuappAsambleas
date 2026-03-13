@@ -89,3 +89,36 @@ export const parseHour = (hourString) => {
 
   return { hour, minute, ampm };
 };
+
+export const formatShortDateWithMonth = (dateString) => {
+  if (!dateString) return "";
+
+  const months = [
+    "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+    "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+  ];
+
+  // Dividimos la cadena para evitar problemas de zona horaria de Date
+  const [year, month, day] = dateString.split("-");
+
+  // El mes en el array es base 0, por eso restamos 1
+  const monthName = months[parseInt(month, 10) - 1];
+
+  return `${day}/${monthName}/${year}`;
+};
+export const formatIsoDateToShort = (dateString) => {
+  if (!dateString) return "";
+
+  const dateOnly = dateString.split("T")[0];
+
+  const months = [
+    "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+    "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+  ];
+
+  const [year, month, day] = dateOnly.split("-");
+
+  const monthName = months[parseInt(month, 10) - 1];
+
+  return `${day}/${monthName}/${year}`;
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 // Importamos los métodos (ajusta las rutas a tu proyecto real)
@@ -179,6 +179,17 @@ const EntityDetailPage = () => {
             setIsDeleting(false);
         }
     };
+    const totalVotesSum = useMemo(() => {
+        if (!registries || registries.length === 0) return 0;
+
+        return registries.reduce((acc, item) => {
+            const vStr = String(item.votos || item.Votos || "0");
+
+            const v = parseFloat(vStr.replace(',', '.'));
+
+            return acc + (isNaN(v) ? 0 : v);
+        }, 0);
+    }, [registries]);
 
     if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader /></div>;
     if (!entityData) return null;
@@ -236,19 +247,28 @@ const EntityDetailPage = () => {
                                 </CustomButton>
                             </div>
 
-                            <div className="grid md:grid-cols-3 gap-8">
-                                <Info label="NIT" value={entityData.nit} />
-                                <Info
-                                    label="Tipo entidad"
-                                    value={getTypeName(entityData.typeID)}
-                                    icon={<CustomIcon path={getIconPath(entityData.typeID)} size={14} />}
-                                />
-                                <Info label="Asambleístas" value={registries.length} />
-                                <Info label="Ciudad" value={entityData.city} />
-                                <Info label="Dirección" value={entityData.address} />
-                                <Info label="Admin" value={entityData.adminEntity?.name} />
-                                <Info label="Email" value={entityData.adminEntity?.email} />
-                                <Info label="Teléfono" value={entityData.adminEntity?.phone} />
+                            <div className="flex flex-col gap-5">
+                                <div className="grid grid-cols-3 gap-8">
+                                    <Info label="NIT" value={entityData.nit} />
+                                    <Info
+                                        label="Tipo entidad"
+                                        value={getTypeName(entityData.typeID)}
+                                        icon={<CustomIcon path={getIconPath(entityData.typeID)} size={14} />}
+                                    />
+                                    <Info
+                                        label="Asambleístas"
+                                        value={`${totalVotesSum}`}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-3 gap-8">
+                                    <Info label="Ciudad" value={entityData.city} />
+                                    <Info label="Dirección" value={entityData.address} />
+                                </div>
+                                <div className="grid grid-cols-3 gap-8">
+                                    <Info label="Admin" value={entityData.adminEntity?.name} />
+                                    <Info label="Email" value={entityData.adminEntity?.email} />
+                                    <Info label="Teléfono" value={entityData.adminEntity?.phone} />
+                                </div>
                             </div>
                         </div>
 

@@ -202,13 +202,13 @@ export default function JoinAssemblyPage() {
     try {
       const { exists, userData } = await checkExistingRegistration(assemblyId, regDocument);
       if (exists) {
-        // 🔥 1. Generamos un token aleatorio único
-        const newToken = Date.now() + "_" + crypto.randomUUID();
-        // 🔥 2. Lo guardamos en sessionStorage (No en localStorage)
+        // 🔥 Generamos el token incluyendo el Timestamp actual
+        const newToken = `${Date.now()}_${crypto.randomUUID()}`;
+
         sessionStorage.setItem(`assembly_session_${assemblyId}`, regDocument);
         sessionStorage.setItem(`assembly_token_${assemblyId}`, newToken);
 
-        // 🔥 3. Actualizamos Firebase y redirigimos
+        // Actualizamos Firebase con el nuevo token (que tiene la hora nueva)
         await updateUserSessionToken(assemblyId, regDocument, newToken);
 
         toast.success(`Bienvenido de nuevo, ${userData.firstName}`);
@@ -322,8 +322,7 @@ export default function JoinAssemblyPage() {
       const allRepresented = [...initialProps, ...manualProps];
 
       // 🔥 Generamos el token de sesión única AQUÍ
-      const newToken = crypto.randomUUID();
-
+      const newToken = `${Date.now()}_${crypto.randomUUID()}`;
       const memberObject = {
         firstName: userInfo.firstName,
         lastName: userInfo.lastName,
@@ -338,10 +337,11 @@ export default function JoinAssemblyPage() {
 
       await addMemberToAssemblyRegistration(assemblyId, memberObject);
 
-      // 🔥 Guardamos en sessionStorage con el token que acabamos de generar
+      // 1. Guardar primero
       sessionStorage.setItem(`assembly_session_${assemblyId}`, regDocument);
       sessionStorage.setItem(`assembly_token_${assemblyId}`, newToken);
 
+      // 2. Navegar después
       toast.success("¡Registro exitoso!");
       router.push(`/join/${assemblyId}/lobby`);
 
@@ -353,7 +353,41 @@ export default function JoinAssemblyPage() {
     }
   };
 
-  // --- RENDERIZADO ---
+  const validateNoOverlap = () => {
+    // 1. Obtener IDs de lo que el usuario tiene en su lista actual (automáticas + manuales)
+    const currentInitialIds = verificationQueue.map(p => p.id);
+    const currentManualIds = verifiedRegistries.filter(v => v.isManual).map(v => v.registry.id);
+    const allAttemptedIds = [...currentInitialIds, ...currentManualIds];
+
+    // 2. Verificar si alguno de esos IDs ya existe en la DB (vía el listener en tiempo real)
+    const takenIds = allAttemptedIds.filter(id => registeredOwnerIds.has(id));
+
+    if (takenIds.length > 0) {
+      const conflictNames = [
+        ...verificationQueue,
+        ...verifiedRegistries.map(v => v.registry)
+      ]
+        .filter(item => takenIds.includes(item.id))
+        .map(item => item.Propiedad || item.propiedad)
+        .join(", ");
+
+      // 3. Notificar el error fatal
+      toast.error(
+        `Conflicto detectado: Las propiedades [${conflictNames}] ya han sido registradas por otro usuario. Por seguridad, el proceso se reiniciará.`
+      );
+
+      // 4. LIMPIEZA TOTAL: Sacamos al usuario del flujo
+      setVerifiedRegistries([]);
+      setVerificationQueue([]);
+      setRegDocument(""); // Opcional: borrar el documento para forzar re-ingreso
+      setCurrentStep(STEPS.DOCUMENT);
+
+      return false; // Bloquea el avance a TERMS
+    }
+
+    return true; // Todo limpio, puede continuar
+  };
+
   if (loading || !assembly || !entity) {
     return <div className="h-screen w-full flex items-center justify-center bg-[#F8F9FB]"><Loader /></div>;
   }
@@ -414,6 +448,7 @@ export default function JoinAssemblyPage() {
                   availableGroups={availableGroups}
                   availableProperties={availableProperties}
                   getFieldLabel={getFieldLabel}
+                  verifiedRegistries={verifiedRegistries}
                   assembly={assembly}
                   onConfirm={confirmManualAdd}
                 />
@@ -433,7 +468,12 @@ export default function JoinAssemblyPage() {
                 setAddAnotherDecision("yes");
                 setCurrentStep(STEPS.ADD_MANUAL);
               }}
-              onContinue={() => setCurrentStep(STEPS.TERMS)}
+              onContinue={() => {
+                const isClean = validateNoOverlap();
+                if (isClean) {
+                  setCurrentStep(STEPS.TERMS);
+                }
+              }}
             />
           )}
 

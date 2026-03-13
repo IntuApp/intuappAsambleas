@@ -4,6 +4,7 @@ import CustomInput from "@/components/basics/CustomInput";
 import CustomButton from "@/components/basics/CustomButton";
 import CustomIcon from "@/components/basics/CustomIcon";
 import { ICON_PATHS } from "@/constans/iconPaths";
+import { toast } from "react-toastify";
 
 export default function Step1Document({
   document,
@@ -51,12 +52,7 @@ export default function Step1Document({
 
           {/* MENSAJE DE ERROR EN ROJO */}
           {error && (
-            <CustomText
-              variant="bodyS"
-              className="text-red-500 font-bold pl-2 animate-in fade-in slide-in-from-top-1"
-            >
-              No se encontró el documento ingresado. Por favor, verifique.
-            </CustomText>
+            toast.error("No se encontró el documento ingresado. Por favor, verifique.")
           )}
         </div>
       </div>

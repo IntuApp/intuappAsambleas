@@ -15,6 +15,7 @@ import SuccessModal from "@/components/modal/SuccessModal";
 import { ICON_PATHS } from "@/constans/iconPaths";
 import CustomTypeAssembly from "../basics/CustomTypeAssembly";
 import { deleteAssembly } from "@/lib/assemblyActions";
+import { formatShortDateWithMonth } from "@/lib/utils";
 
 const EntityAssembliesSection = ({ entityId, assemblies, createAssemblyRoute, viewAssemblyRoute }) => {
   const router = useRouter();
@@ -132,9 +133,9 @@ const EntityAssembliesSection = ({ entityId, assemblies, createAssemblyRoute, vi
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="py-4 px-6 font-bold">Nombre</th>
-                <th className="py-4 px-6 font-bold">Fecha</th>
-                <th className="py-4 px-6 font-bold">Hora</th>
+                <th className="py-4 px-6 font-bold text-center">Nombre</th>
+                <th className="py-4 px-6 font-bold text-center">Fecha</th>
+                <th className="py-4 px-6 font-bold text-center">Hora</th>
                 <th className="py-4 px-6 font-bold text-center">Tipo</th>
                 <th className="py-4 px-6 font-bold text-center">Estado</th>
                 <th className="py-4 px-6 font-bold text-center">Acción</th>
@@ -151,14 +152,16 @@ const EntityAssembliesSection = ({ entityId, assemblies, createAssemblyRoute, vi
               ) : (
                 filteredAssemblies.map((assembly) => (
                   <tr key={assembly.id} className="hover:bg-gray-50">
-                    <td className="py-4 px-6">{assembly.name}</td>
-                    <td className="py-4 px-6">{assembly.date || "-"}</td>
-                    <td className="py-4 px-6">{assembly.hour || "-"}</td>
+                    <td className="py-4 px-6 text-center">{assembly.name}</td>
+                    <td className="py-4 px-6 text-center">{formatShortDateWithMonth(assembly.date) || "-"}</td>
+                    <td className="py-4 px-6 text-center">{assembly.hour || "-"}</td>
                     <td className="py-4 px-6 text-center">
-                      <CustomTypeAssembly
-                        type={assembly.type}
-                        className="justify-center bg-transparent border border-[#DBE2E8]"
-                      />
+                      <div className="flex items-center justify-center">
+                        <CustomTypeAssembly
+                          type={assembly.typeId}
+                          className="justify-center bg-transparent px-4 py-2 border border-[#DBE2E8]"
+                        />
+                      </div>
                     </td>
                     <td className="py-4 px-6 text-center">
                       <CustomStates

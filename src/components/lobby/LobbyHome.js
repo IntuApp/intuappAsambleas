@@ -46,7 +46,7 @@ export default function LobbyHome({
                 onClick={onJoinMeeting}
                 disabled={assembly?.statusID !== "2"} // 2 = Iniciada/Live
                 variant="primary"
-                className="w-1/2 flex items-center justify-center gap-3 py-3"
+                className="w-full md:w-1/2 flex items-center justify-center gap-3 py-3 "
               >
                 <CustomIcon path={ICON_PATHS.videoCam} className="text-[#000000]" size={20} />
                 <CustomText variant="labelL" className="font-bold">
@@ -66,28 +66,29 @@ export default function LobbyHome({
 
 
       {/* 2. Grid Superior: Info de Asamblea y Videollamada */}
-      <div className="gap-6 w-full">
+      <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 flex flex-col justify-evenly h-[220px] relative overflow-hidden">
 
-        {/* Card Izquierda: Info de la Asamblea */}
-        <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 flex flex-col justify-evenly h-[220px] relative overflow-hidden">
-          <div className="absolute flex justify-end right-0 top-0 w-1/2 h-full opacity-50">
-            <img src="/logos/decorations/figureTwo.png" alt="Decoración" className="object-cover h-full" />
-          </div>
+        {/* Imagen de fondo: le bajamos el z-index con z-0 */}
+        <div className="absolute flex justify-end right-0 top-0 w-1/2 h-full opacity-50 z-0">
+          <img src="/logos/decorations/figureTwo.png" alt="Decoración" className="object-cover h-full" />
+        </div>
 
-          <div className="flex flex-col items-start gap-1">
-            <CustomText variant="SubTitle" className="text-[#0E3C42] font-bold">
-              Asamblea {assembly?.name}
-            </CustomText>
-            <CustomText variant="bodyL" className="text-[#3D3D44]">
-              {entity?.name}
-            </CustomText>
-            <CustomText variant="bodyL" className="text-[#3D3D44]">
-              {assembly?.date} - {assembly?.hour}
-            </CustomText>
-          </div>
-          <div className="flex justify-start mt-2">
-            <CustomTypeAssembly type={assembly?.typeId || assembly?.type} className="py-3 px-4" />
-          </div>
+        {/* Contenido de texto: le ponemos relative y z-10 para que suba de capa */}
+        <div className="relative z-10 flex flex-col items-start gap-1">
+          <CustomText variant="SubTitle" className="text-[#0E3C42] font-bold">
+            Asamblea {assembly?.name}
+          </CustomText>
+          <CustomText variant="bodyL" className="text-[#3D3D44]">
+            {entity?.name}
+          </CustomText>
+          <CustomText variant="bodyL" className="text-[#3D3D44]">
+            {assembly?.date} - {assembly?.hour}
+          </CustomText>
+        </div>
+
+        {/* También al botón/badge le ponemos relative y z-10 */}
+        <div className="relative z-10 flex justify-start mt-2">
+          <CustomTypeAssembly type={assembly?.typeId || assembly?.type} className="py-3 px-4" />
         </div>
       </div>
 

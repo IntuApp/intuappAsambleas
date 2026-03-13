@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import CustomText from "../basics/CustomText";
 import CustomButton from "../basics/CustomButton";
@@ -13,6 +13,7 @@ import { ICON_PATHS } from "@/constans/iconPaths";
 import { toast } from "react-toastify";
 import QrModal from "@/components/modal/QrModal";
 import { QRCodeCanvas } from "qrcode.react";
+import { formatShortDateWithMonth } from "@/lib/utils";
 
 export default function AssemblyLiveManager({
   assembly,        // Datos de la asamblea (id, name, date, hour, statusID, etc.)
@@ -21,7 +22,7 @@ export default function AssemblyLiveManager({
   masterList,      // Objeto assemblyRegistries de assemblyRegistriesList
   onUpdateStatus,  // Función para cambiar statusID (Server Action)
   onToggleRegister, // Función para cambiar registerIsOpen (Server Action)
-  isOperator
+  setIsEditing
 }) {
   const router = useRouter();
   const { operatorId } = useParams(); // Obtenemos el ID de la URL
@@ -56,8 +57,6 @@ export default function AssemblyLiveManager({
 
       const userVotes = user.representedProperties.reduce((accProp, prop) => {
         console.log(prop);
-        
-        // Intentamos obtener 'votos' de la propiedad o del masterList como respaldo
         const vStr = String(prop.votos || masterList[prop.ownerId]?.votos || masterList[prop.ownerId]?.Votos || "0");
         const v = parseFloat(vStr.replace(',', '.'));
         return accProp + (isNaN(v) ? 0 : v);
@@ -160,7 +159,7 @@ export default function AssemblyLiveManager({
           ) : (
             <CustomButton
               variant="primary"
-              onClick={() => router.push(isOperator ? `/operario/${entity.id}/gestionar-asamblea?assemblyId=${assembly.id}` : `/admin/operadores/${operatorId}/${entity.id}/gestionar-asamblea?assemblyId=${assembly.id}`)}
+              onClick={() => setIsEditing(true)}
               className="px-5 py-3 flex items-center gap-2"
             >
               <CustomIcon path={ICON_PATHS.pencil} size={24} />
@@ -176,7 +175,7 @@ export default function AssemblyLiveManager({
           <div className="flex flex-row items-center gap-2 bg-[#FFFFFF] px-2 py-1 rounded-lg border border-gray-100">
             <CustomIcon path={ICON_PATHS.calendar} size={16} />
             <CustomText variant="labelM" className="font-medium text-[#00093F]">
-              {assembly.date} - {assembly.hour}
+              {formatShortDateWithMonth(assembly.date)} - {assembly.hour}
             </CustomText>
           </div>
           <CustomTypeAssembly type={assembly.typeId} />

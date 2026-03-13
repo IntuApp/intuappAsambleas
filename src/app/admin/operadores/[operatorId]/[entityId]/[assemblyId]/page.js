@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 
 // Métodos de lógica que definimos anteriormente
 import { listenToAssemblyLive, getEntityMasterList } from "@/lib/assembly";
-import { updateAssemblyStatus, toggleRegistration, updateLivePropertyBlock, deleteAssemblyRegistry } from "@/lib/assemblyActions";
+import { updateAssemblyStatus, toggleRegistration, updateLivePropertyBlock, deleteAssemblyRegistry, updateFullAssembly } from "@/lib/assemblyActions";
 import { listenToEntityById } from "@/lib/entity";
 
 import AssemblyLiveManager from "@/components/assemblies/AssemblyLiveManager";
@@ -16,6 +16,8 @@ import AttendanceTable from "@/components/assemblies/AttendanceTable";
 import CustomButton from "@/components/basics/CustomButton";
 import QuestionsManager from "@/components/assemblies/QuestionsManager";
 import CustomText from "@/components/basics/CustomText";
+import AssemblyEditModal from "@/components/assemblies/AssemblyEditModal";
+
 
 const AssemblyPage = () => {
     const { entityId, assemblyId } = useParams();
@@ -28,6 +30,7 @@ const AssemblyPage = () => {
     const [registrations, setRegistrations] = useState(null);
     const [masterList, setMasterList] = useState({});
     const [mainTab, setMainTab] = useState("Asambleistas");
+    const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
         if (!assemblyId || !entityId) return;
@@ -149,11 +152,36 @@ const AssemblyPage = () => {
         }
     };
 
+    const handleSaveAssembly = async (updatedAssembly) => {
+        try {
+            // 1. Actualizamos el documento de la asamblea
+            await updateFullAssembly(assemblyId, updatedAssembly);
+
+            toast.success("Asamblea actualizada correctamente");
+            setIsEditing(false); // Cierra el modal
+        } catch (error) {
+            console.error("Error al guardar la asamblea:", error);
+            toast.error("Error al actualizar la asamblea");
+        }
+    };
+
     if (!assemblyData || !entityData) {
         return (
             <div className="flex min-h-screen items-center justify-center">
                 <Loader />
             </div>
+        );
+    }
+    if (isEditing) {
+        return (
+            <AssemblyEditModal
+                isOpen={true}
+                onClose={() => setIsEditing(false)} // Al cerrar, vuelve al dashboard
+                assemblyData={assemblyData}
+                registries={Object.values(masterList || {})}
+                entityId={entityData.id}
+                handleSaveAssembly={handleSaveAssembly}
+            />
         );
     }
 
@@ -166,6 +194,7 @@ const AssemblyPage = () => {
                 masterList={masterList}
                 onUpdateStatus={handleUpdateStatus}
                 onToggleRegister={handleToggleRegister}
+                setIsEditing={setIsEditing}
             />
             <div className="w-full bg-[#FFFFFF] rounded-full p-2 border border-[#F3F6F9] flex flex-row gap-1">
                 <CustomButton
@@ -200,17 +229,17 @@ const AssemblyPage = () => {
             )}
             {mainTab === "Asambleistas" && (
                 <LiveVoteRestrictionManager
-                // 🔥 IMPORTANTE: Transformamos el mapa de objetos asegurando que el ID esté adentro
-                registries={Object.entries(masterList).map(([id, data]) => ({
-                    ...data,
-                    id: id // Inyectamos el ID de la llave del mapa en el objeto
-                }))}
-                blockedProperties={registrations?.blockedProperties || []}
-                onToggleBlock={handleToggleBlock}
-                isFinished={assemblyData.statusID === "3"}
-                entityHeaders={entityData.headers || []}
-                columnAliases={entityData.columnAliases || {}}
-            />
+                    // 🔥 IMPORTANTE: Transformamos el mapa de objetos asegurando que el ID esté adentro
+                    registries={Object.entries(masterList).map(([id, data]) => ({
+                        ...data,
+                        id: id // Inyectamos el ID de la llave del mapa en el objeto
+                    }))}
+                    blockedProperties={registrations?.blockedProperties || []}
+                    onToggleBlock={handleToggleBlock}
+                    isFinished={assemblyData.statusID === "3"}
+                    entityHeaders={entityData.headers || []}
+                    columnAliases={entityData.columnAliases || {}}
+                />
             )}
         </div>
     );

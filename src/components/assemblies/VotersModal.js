@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Search, X } from "lucide-react";
 import CustomText from "@/components/basics/CustomText";
 import CustomButton from "@/components/basics/CustomButton";
-import { getDataByOwnerId } from "@/lib/masterData"; 
+import { getDataByOwnerId } from "@/lib/masterData";
 import { useParams } from "next/navigation";
 
 const QUESTION_TYPES = { UNIQUE: "1", MULTIPLE: "2", YES_NO: "3", OPEN: "4" };
@@ -24,6 +24,28 @@ export default function VotersModal({
         return votes.filter((v) => v.questionId === question.id);
     }, [votes, question]);
 
+    const columns = useMemo(() => {
+        if (enrichedVotes.length === 0) return [];
+
+        const baseCols = [
+            { id: "tipo", label: "Tipo", key: "tipo" },
+            { id: "grupo", label: "Grupo", key: "grupo" },
+            { id: "propiedad", label: "# propiedad", key: "propiedad" },
+            { id: "coeficiente", label: "Coeficiente", key: "coeficiente" },
+            { id: "votos", label: "Votos", key: "votos" },
+            { id: "documento", label: "Documento", key: "documento" },
+            { id: "respuesta", label: "Respuesta", key: "respuesta" },
+        ];
+
+        // Filtramos: Solo mostrar la columna si al menos un registro tiene un valor válido (no "N/A", no vacío)
+        return baseCols.filter(col =>
+            enrichedVotes.some(vote => {
+                const val = vote[col.key];
+                return val && val !== "" && val !== "N/A" && val !== "n/a";
+            })
+        );
+    }, [enrichedVotes]);
+
     // 2. Efecto para enriquecer los votos consultando a Firebase
     useEffect(() => {
         const fetchPropertyData = async () => {
@@ -41,7 +63,7 @@ export default function VotersModal({
                 // Llamamos a la nueva función de Firebase
                 const result = await getDataByOwnerId(ownerId, assemblyId);
                 console.log(result);
-                
+
 
                 let propertyData = {};
                 if (result.success && result.data) {
@@ -60,7 +82,7 @@ export default function VotersModal({
                     answerText = selectedTexts.join(", ");
                 } else {
                     answerText = "Voto en blanco / no registrado";
-                }                
+                }
 
                 return {
                     id: vote.propertyOwnerId + vote.registrationId,
@@ -146,13 +168,11 @@ export default function VotersModal({
                         <table className="w-full text-left border-collapse">
                             <thead className="bg-white border-b border-gray-200">
                                 <tr>
-                                    <th className="px-6 py-4 text-sm font-bold text-[#0E3C42]">Tipo</th>
-                                    <th className="px-6 py-4 text-sm font-bold text-[#0E3C42]">Grupo</th>
-                                    <th className="px-6 py-4 text-sm font-bold text-[#0E3C42]"># propiedad</th>
-                                    <th className="px-6 py-4 text-sm font-bold text-[#0E3C42]">Coeficiente</th>
-                                    <th className="px-6 py-4 text-sm font-bold text-[#0E3C42]">Votos</th>
-                                    <th className="px-6 py-4 text-sm font-bold text-[#0E3C42]">Documento</th>
-                                    <th className="px-6 py-4 text-sm font-bold text-[#0E3C42]">Respuesta</th>
+                                    {columns.map((col) => (
+                                        <th key={col.id} className="px-6 py-4 text-sm font-bold text-[#0E3C42]">
+                                            {col.label}
+                                        </th>
+                                    ))}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -164,17 +184,20 @@ export default function VotersModal({
                                     </tr>
                                 ) : filteredVotes.length > 0 ? (
                                     filteredVotes.map((vote) => (
-                                        
                                         <tr key={vote.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 text-sm text-[#3D3D44] capitalize">{vote.tipo}</td>
-                                            <td className="px-6 py-4 text-sm text-[#3D3D44]">{vote.grupo}</td>
-                                            <td className="px-6 py-4 text-sm text-[#3D3D44]">{vote.propiedad}</td>
-                                            <td className="px-6 py-4 text-sm text-[#3D3D44]">
-                                                {parseFloat(vote.coeficiente).toFixed(6)}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-[#3D3D44]">{vote.votos}</td>
-                                            <td className="px-6 py-4 text-sm text-[#3D3D44]">{vote.documento}</td>
-                                            <td className="px-6 py-4 text-sm text-[#3D3D44] font-medium">{vote.respuesta}</td>
+                                            {/* RENDERIZADO DINÁMICO DE CELDAS */}
+                                            {columns.map((col) => (
+                                                <td key={col.id} className="px-6 py-4 text-sm text-[#3D3D44]">
+                                                    {col.id === "coeficiente"
+                                                        ? parseFloat(vote.coeficiente).toFixed(6)
+                                                        : col.id === "tipo"
+                                                            ? <span className="capitalize">{vote.tipo}</span>
+                                                            : col.id === "respuesta"
+                                                                ? <span className="font-medium">{vote.respuesta}</span>
+                                                                : vote[col.key]
+                                                    }
+                                                </td>
+                                            ))}
                                         </tr>
                                     ))
                                 ) : (

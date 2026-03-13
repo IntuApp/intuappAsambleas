@@ -9,6 +9,7 @@ import CustomButton from "../basics/CustomButton";
 import CustomIcon from "../basics/CustomIcon";
 import { ICON_PATHS } from "@/constans/iconPaths";
 import { ExcelEditor } from "@/components/entities/ExcelEditor"; // Importamos tu editor
+import { formatIsoDateToShort } from "@/lib/utils";
 
 export default function EntityDatabaseManager({ entityData, registries = [], onUpdateDatabase }) {
     // Referencia para el input de archivo oculto
@@ -174,7 +175,7 @@ export default function EntityDatabaseManager({ entityData, registries = [], onU
                 </CustomText>
                 {entityData?.createdAt && (
                     <CustomText variant="labelM" className="font-bold bg-[#ABE7E5] text-[#0E3C42] px-2 py-1 rounded-full">
-                        {new Date(entityData.createdAt).toLocaleDateString()}
+                        {formatIsoDateToShort(entityData.createdAt)}
                     </CustomText>
                 )}
             </div>

@@ -2,12 +2,14 @@ import { cookies } from 'next/headers';
 import { AuthProvider } from '@/context/AuthContext';
 import { Red_Hat_Display } from 'next/font/google';
 import './globals.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // 1. Instanciamos la fuente y creamos una variable CSS
 const redHatDisplay = Red_Hat_Display({
   subsets: ['latin'],
   variable: '--font-red-hat-display',
-  display: 'swap', 
+  display: 'swap',
 });
 
 export default async function RootLayout({ children }) {
@@ -23,6 +25,18 @@ export default async function RootLayout({ children }) {
         <AuthProvider initialSession={initialSession}>
           {children}
         </AuthProvider>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
+        />
       </body>
     </html>
   );

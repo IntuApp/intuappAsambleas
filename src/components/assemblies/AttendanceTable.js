@@ -68,7 +68,7 @@ const AttendanceTable = ({
             const realKey = Object.keys(data).find(k => k.toLowerCase().trim().includes(searchKey));
             return realKey ? data[realKey] : null;
         };
-        
+
         Object.entries(masterList).forEach(([id, data]) => {
             if (!occupiedIds.has(id)) {
                 // Usamos la lógica de búsqueda flexible para asegurar que traiga el valor
@@ -101,14 +101,14 @@ const AttendanceTable = ({
             { id: "propiedad", label: "# Propiedad" },
             { id: "coeficiente", label: "Coeficiente" },
             { id: "votos", label: "Votos" },
-            { id: "documento", label: "Documento" },
+            { id: activeTab === "Registrados" ? "mainDocument" : "documento", label: "Documento" },
         ];
 
         // Filtramos: Solo si al menos un registro tiene valor en esa columna
         return cols.filter(col =>
             allData.some(item => item[col.id] !== null && item[col.id] !== undefined)
         );
-    }, [registrados, pendientes, eliminados]);
+    }, [registrados, pendientes, eliminados, activeTab]);
     // --- 2. FILTRADO POR PESTAÑA Y BÚSQUEDA ---
     const currentData = useMemo(() => {
         let source = [];

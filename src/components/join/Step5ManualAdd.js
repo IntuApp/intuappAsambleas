@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import CustomText from "@/components/basics/CustomText";
 import CustomOptionSelect from "@/components/basics/CustomOptionSelect";
 import CustomButton from "@/components/basics/CustomButton";
 import CustomIcon from "@/components/basics/CustomIcon";
 import { ICON_PATHS } from "@/constans/iconPaths";
+import CustomSelect from "../basics/CustomSelect";
 
 export default function Step5ManualAdd({
     manualData,
@@ -15,7 +16,8 @@ export default function Step5ManualAdd({
     availableProperties,
     getFieldLabel,
     assembly,
-    onConfirm
+    onConfirm,
+    verifiedRegistries = []
 }) {
 
     const handleUpdate = (field, value) => {
@@ -31,6 +33,15 @@ export default function Step5ManualAdd({
             sensitivity: "base",
         });
     };
+    const powerLimitNum = parseInt(assembly?.powerLimit || "0", 10);
+    const currentProxyCount = useMemo(() => {
+        return verifiedRegistries.filter(reg =>
+            reg.role === "proxy"
+        ).length;
+    }, [verifiedRegistries]);
+    const hasReachedLimit = powerLimitNum > 0 && currentProxyCount >= powerLimitNum;
+    console.log("powerLimit", powerLimitNum);
+    console.log("verifiedRegistries", currentProxyCount);
 
     // Creamos copias ordenadas para no mutar los props originales
     const sortedTypes = [...availableTypes].sort(alphanumericSort);
@@ -59,6 +70,14 @@ export default function Step5ManualAdd({
             </div>
 
             <div className="w-full flex flex-col gap-5">
+                {hasReachedLimit && (
+                    <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl flex items-center gap-2 animate-in zoom-in-95">
+                        <CustomIcon path={ICON_PATHS.info} size={20} className="text-amber-600 mt-0.5" />
+                        <CustomText variant="bodyS" className="">
+                            Seleccionaste el límite de propiedades como apoderado ({powerLimitNum}).
+                        </CustomText>
+                    </div>
+                )}
                 {/* 1. SELECTOR DE TIPO */}
                 {sortedTypes.length > 1 && (
                     <div className={containerStyles}>
@@ -104,22 +123,18 @@ export default function Step5ManualAdd({
                 {showProperty && (
                     <div className={containerStyles}>
                         <label className={labelStyles}>{getFieldLabel("Propiedad")} *</label>
-                        <select
-                            className={selectStyles}
-                            value={manualData.registry?.id || ""}
-                            onChange={(e) => {
-                                const selectedId = e.target.value;
-                                const reg = sortedProperties.find(p => p.id === selectedId);
-                                handleUpdate("registry", reg);
-                            }}
-                        >
+                        <CustomSelect lvalue={manualData.registry?.id || ""} onChange={(e) => {
+                            const selectedId = e.target.value;
+                            const reg = sortedProperties.find(p => p.id === selectedId);
+                            handleUpdate("registry", reg);
+                        }}>
                             <option key="def-prop" value="">Selecciona {getFieldLabel("Propiedad").toLowerCase()}</option>
                             {sortedProperties.map((p, index) => (
                                 <option key={`prop-${p.id}-${index}`} value={p.id}>
                                     {p.Propiedad || p.propiedad}
                                 </option>
                             ))}
-                        </select>
+                        </CustomSelect>
                     </div>
                 )}
 
@@ -134,7 +149,11 @@ export default function Step5ManualAdd({
                                 classContentOptions="flex flex-col gap-3"
                                 options={[
                                     { label: "Como propietario", value: "owner" },
-                                    { label: "Como apoderado", value: "proxy" },
+                                    {
+                                        label: "Como apoderado",
+                                        value: "proxy",
+                                        disabled: hasReachedLimit
+                                    },
                                 ]}
                             />
                         </div>
@@ -153,10 +172,9 @@ export default function Step5ManualAdd({
             <CustomButton
                 variant="primary"
                 onClick={onConfirm}
-                disabled={!manualData.registry}
-                className="py-4 w-full font-bold"
+                disabled={!manualData.registry || (manualData.role === "proxy" && hasReachedLimit)} className="py-4 w-full font-bold"
             >
-                Añadir Propiedad
+                Continuar
             </CustomButton>
         </div>
     );

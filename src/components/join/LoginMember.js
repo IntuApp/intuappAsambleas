@@ -22,8 +22,8 @@ export default function LoginMember({ assembly, entity, onLogin }) {
       <div className="w-full min-h-screen h-full rounded-[40px] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col flex-col-reverse md:flex-row justify-end md:justify-center">
 
         {/* LADO IZQUIERDO: INFORMACIÓN Y ACCESO */}
-        <div className=" p-8 md:p-16 flex flex-col justify-center items-center">
-          <div className="w-full flex flex-col gap-8 rounded-3xl p-7">
+        <div className=" px-8 md:p-16 flex flex-col justify-center items-center">
+          <div className="w-full flex flex-col gap-8 rounded-3xl px-7">
 
             <div className="w-full gap-2 flex flex-col">
               <CustomText
@@ -143,7 +143,7 @@ export default function LoginMember({ assembly, entity, onLogin }) {
           </div>
         </div>
 
-        <div className=" md:max-w-[652px] w-full p-6 py-10 bg-[#F8F9FB]">
+        <div className=" md:max-w-[652px] w-full p-6 md:py-10 bg-[#F8F9FB]">
           <div className="w-full h-full relative rounded-[32px] overflow-hidden flex flex-col items-center justify-center shadow-inner">
             <img src="/bg/bg.png" alt="Branding" className="absolute inset-0 w-full h-full object-cover rounded-3xl" />
             <div className="absolute inset-0 bg-gradient-to-tr from-[#BFE6E2]/40 via-transparent to-[#C9CDF4]/40" />

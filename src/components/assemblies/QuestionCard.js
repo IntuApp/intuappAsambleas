@@ -90,13 +90,18 @@ const QuestionCard = ({
   };
 
   return (
-    <div className="bg-[#FFFFFF] p-8 flex flex-col gap-6 rounded-3xl border border-[#E5E7EB] shadow-sm">
-
+    <div className="bg-[#FFFFFF] p-4 md:p-8 flex flex-col gap-4 md:gap-6 rounded-3xl border border-[#E5E7EB] shadow-sm">
+      <div className="md:hidden flex justify-end">
+        <CustomQuestionStatus status={q.statusId} />
+      </div>
       {/* ---------------- TOP ---------------- */}
       <div className="flex justify-between items-start">
         <CustomText variant="bodyX" className="font-bold text-[#0E3C42]">
           {q.title}
         </CustomText>
+        {!isAdmin && (
+          <CustomText variant="bodyM" className="font-bold text-[#1F1F23]">{formatTime(elapsed)}</CustomText>
+        )}
         {isAdmin && q.statusId !== QUESTION_STATUSES.CREATED && (
           <CustomText variant="bodyM" className="font-bold text-[#1F1F23]">{formatTime(elapsed)}</CustomText>
         )}
@@ -111,31 +116,38 @@ const QuestionCard = ({
         )}
       </div>
 
-      <div className="flex items-center flex-row md:justify-between ">
+      <div className="flex  md:flex-row md:items-center md:justify-between gap-4">
+
+        {/* SECCIÓN QUÓRUM: En móvil quedará abajo por el flex-col-reverse */}
         {shouldShowResults && (
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
             <CustomText variant="md:bodyX" className="font-medium text-[#1F1F23]">
               Quórum
             </CustomText>
             <CustomText variant="md:bodyX" className="hidden md:inline font-medium text-[#1F1F23]">
               de votación:
             </CustomText>
-            {/* 🔥 Aquí mostramos la suma directa de los coeficientes votados */}
+
             <CustomText variant="md:bodyX" className="font-bold text-[#1F1F23]">
               {totalVotedCoef.toFixed(2)}%
             </CustomText>
-            <CustomText variant="md:bodyX" className="font-bold text-[#1F1F23]">({totalVotedNominal.toLocaleString()} votos)</CustomText>
+
+            <CustomText variant="md:bodyX" className="font-bold text-[#1F1F23]">
+              ({totalVotedNominal.toLocaleString()} votos)
+            </CustomText>
+
             <CustomIcon
-              path={ICON_PATHS.error} // Ojo, este ícono parece de error, podrías querer cambiarlo a info o similar
+              path={ICON_PATHS.error}
               size={24}
               className="hidden md:inline text-[#0E3C42] m-2"
             />
-
           </div>
         )}
 
-        <div className="flex items-center gap-4 ml-auto">
-          <CustomQuestionStatus status={q.statusId} />
+        <div className="flex items-center gap-4 ml-auto justify-end">
+          <div className="hidden md:block">
+            <CustomQuestionStatus status={q.statusId} />
+          </div>
 
           {isAdmin &&
             (q.statusId === QUESTION_STATUSES.LIVE ||

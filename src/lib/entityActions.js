@@ -40,17 +40,22 @@ export async function createEntityWithRegistry(operatorId, entityData, excelData
   if (!db) throw new Error("Database connection not available");
 
   try {
-    // PROCESAMIENTO: Ahora usa headers originales como llaves
     const processedRegistry = processExcelRows(excelData, excelHeaders);
 
-    // 1. CREAR REGISTRO DE ASAMBLEÍSTAS
+    // 🔥 CALCULAR TOTAL DE VOTOS AQUÍ
+    const totalVotesSum = excelData.reduce((acc, row) => {
+      // Buscamos la columna que contenga "voto" en el objeto original del excel
+      const votosKey = Object.keys(row).find(k => k.toLowerCase().includes('voto'));
+      const vStr = votosKey ? String(row[votosKey] || "0") : "1";
+      const vNum = parseFloat(vStr.replace(',', '.'));
+      return acc + (isNaN(vNum) ? 0 : vNum);
+    }, 0);
+
     const registryRef = await addDoc(collection(db, "assemblyRegistriesList"), {
       assemblyRegistries: processedRegistry,
       createdAt: new Date().toISOString()
     });
 
-    // 2. CREAR LA ENTIDAD
-    // Guardamos los alias por separado como referencia para el frontend
     const newEntity = {
       name: entityData.name,
       nit: entityData.nit || "",
@@ -63,11 +68,11 @@ export async function createEntityWithRegistry(operatorId, entityData, excelData
         phone: entityData.adminPhone || ""
       },
       assemblyRegistriesListId: registryRef.id,
-      columnAliases: columnAliases || {}, // Se guarda la referencia { "Original": "Alias" }
+      columnAliases: columnAliases || {},
       headers: excelHeaders || [],
       databaseStatus: "done",
       createdAt: new Date().toISOString(),
-      totalRegistries: excelData.length
+      totalVotes: totalVotesSum,
     };
 
     const entityRef = await addDoc(collection(db, "entity"), newEntity);
@@ -91,6 +96,13 @@ export async function updateEntityDatabase(entityId, excelData, columnAliases, e
   try {
     const processedRegistry = processExcelRows(excelData, excelHeaders);
 
+    const totalVotesSum = excelData.reduce((acc, row) => {
+      const votosKey = Object.keys(row).find(k => k.toLowerCase().includes('voto'));
+      const vStr = votosKey ? String(row[votosKey] || "0") : "1";
+      const vNum = parseFloat(vStr.replace(',', '.'));
+      return acc + (isNaN(vNum) ? 0 : vNum);
+    }, 0);
+
     const newRegistryRef = await addDoc(collection(db, "assemblyRegistriesList"), {
       assemblyRegistries: processedRegistry,
       createdAt: new Date().toISOString(),
@@ -100,9 +112,9 @@ export async function updateEntityDatabase(entityId, excelData, columnAliases, e
     const entityRef = doc(db, "entity", entityId);
     await updateDoc(entityRef, {
       assemblyRegistriesListId: newRegistryRef.id,
-      columnAliases: columnAliases, // Permite editar o añadir nuevos alias en el futuro
+      columnAliases: columnAliases,
       headers: excelHeaders,
-      totalRegistries: excelData.length,
+      totalVotes: totalVotesSum,
       databaseStatus: "done",
       updatedAt: new Date().toISOString()
     });

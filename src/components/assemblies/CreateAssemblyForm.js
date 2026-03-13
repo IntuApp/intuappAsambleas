@@ -108,13 +108,18 @@ export default function CreateAssemblyForm({ entityName, entityId, registries, o
     const onConfirmSubmit = async () => {
         setSubmitting(true);
         try {
-            // Formateamos la hora en un solo string: "HH:mm AM/PM"
-            const fullTimeStr = `${formData.hour}:${formData.minute} ${formData.ampm}`;
+            // Lógica mejorada para manejar minutos vacíos
+            const hour = formData.hour || "12"; // Valor por defecto si la hora está vacía
+            const minute = formData.minute || "00"; // Si está vacío, ponemos "00"
+            const ampm = formData.ampm || "AM";
 
-            // Enviamos los datos con la hora ya formateada
+            const fullTimeStr = `${hour}:${minute} ${ampm}`;
+
             const dataWithFormattedTime = {
                 ...formData,
-                hour: fullTimeStr
+                hour: fullTimeStr,
+                // También es buena idea limpiar minute por si la DB espera consistencia
+                minute: minute
             };
 
             const res = await createFullAssembly(entityId, dataWithFormattedTime, Array.from(blockedVoters));

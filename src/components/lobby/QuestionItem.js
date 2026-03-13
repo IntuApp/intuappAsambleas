@@ -491,6 +491,19 @@ export default function QuestionItem({
                                             ${isDisabled ? "opacity-50 cursor-not-allowed" : "hover:border-gray-300"}`}
                                         >
                                           {/* ... (tus iconos de Check o Radio) ... */}
+                                          {isMultiple ? (
+                                            // Icono Checkbox para Múltiple
+                                            <div className={`w-5 h-5 shrink-0 rounded-[6px] border-2 flex items-center justify-center 
+                                              ${isSelected ? "border-[#4059FF] bg-[#4059FF]" : "border-gray-300"}`}>
+                                              {isSelected && <Check size={14} className="text-white" strokeWidth={4} />}
+                                            </div>
+                                          ) : (
+                                            // Icono Radio para Única / Sí-No
+                                            <div className={`w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center 
+                                              ${isSelected ? "border-[#4059FF]" : "border-gray-300"}`}>
+                                              {isSelected && <div className="w-2.5 h-2.5 bg-[#4059FF] rounded-full" />}
+                                            </div>
+                                          )}
                                           <CustomText variant="bodyM" className={`text-[#0E3C42] text-left ${isSelected ? "font-bold" : "font-medium"}`}>
                                             {opt.text}
                                           </CustomText>

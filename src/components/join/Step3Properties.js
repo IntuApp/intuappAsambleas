@@ -21,7 +21,7 @@ export default function Step3Properties({
 
   return (
     <div className="flex flex-col md:items-center w-full gap-8 animate-in fade-in zoom-in-95 max-w-[455px]">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 md:text-center">
         <CustomText variant="TitleL" as="h3" className="text-[#0E3C42] font-bold">
           Propiedades identificadas
         </CustomText>
@@ -81,7 +81,7 @@ export default function Step3Properties({
       <CustomButton
         variant="primary"
         onClick={() => onContinue(role, file)}
-        className="py-5 px-4 font-bold w-full rounded-xl shadow-lg shadow-blue-100"
+        className="py-5 px-4 font-bold w-full "
       >
         Continuar
       </CustomButton>

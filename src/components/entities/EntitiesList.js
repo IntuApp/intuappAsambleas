@@ -35,7 +35,7 @@ export default function EntitiesList({ entities = [], operatorId, isOperator }) 
             const city = entity.city || entity.adminEntity?.city || "Sin ciudad";
             const address = entity.address || "Sin dirección";
             // Tomamos el número que guardamos al crearla (o 0 si es antigua)
-            const asambleistasCount = entity.totalRegistries || 0; 
+            const asambleistasCount = entity.totalVotes || 0; 
 
             // Construimos el objeto props que tu EntityCard espera
             const cardProps = {
@@ -82,7 +82,7 @@ export default function EntitiesList({ entities = [], operatorId, isOperator }) 
             <tbody>
               {processedEntities.map((entity) => {
                 const city = entity.city || entity.adminEntity?.city || "Sin ciudad";
-                const asambleistasCount = entity.totalRegistries || 0;
+                const asambleistasCount = entity.totalVotes || 0;
 
                 return (
                   <tr key={entity.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">

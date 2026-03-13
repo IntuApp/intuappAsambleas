@@ -89,34 +89,61 @@ export default function AsambleistaLobbyPage() {
   }, [assemblyId, router]);
 
   // 2. ESCUCHAR REGISTROS, PREGUNTAS Y VOTOS
+  // 2. ESCUCHAR REGISTROS, PREGUNTAS Y VOTOS
+  // 2. ESCUCHAR REGISTROS, PREGUNTAS Y VOTOS
   useEffect(() => {
     const sessionDocument = sessionStorage.getItem(`assembly_session_${assemblyId}`);
+    const localToken = sessionStorage.getItem(`assembly_token_${assemblyId}`); // Traemos el token local aquí
+
     if (!sessionDocument) return router.replace(`/join/${assemblyId}`);
 
-    // A. Registros
+    // A. Registros (Aquí centralizamos la seguridad)
     const qReg = query(collection(db, "assemblyRegistrations"), where("assemblyId", "==", assemblyId));
     const unsubReg = onSnapshot(qReg, (snapshot) => {
       if (!snapshot.empty) {
         const data = snapshot.docs[0].data();
         setRegistrationsData(data);
-        const myUserData = (data.registrations || []).find(reg => String(reg.mainDocument) === String(sessionDocument) && !reg.isDeleted);
+
+        const myUserData = (data.registrations || []).find(reg =>
+          String(reg.mainDocument).trim() === String(sessionDocument).trim() && !reg.isDeleted
+        );
+
         if (!myUserData) {
-          sessionStorage.removeItem(`assembly_session_${assemblyId}`);
+          sessionStorage.clear();
           return router.replace(`/join/${assemblyId}`);
         }
+
+        // 🔥 VALIDACIÓN DE SESIÓN ÚNICA (DENTRO DEL MISMO LISTENER)
+        if (myUserData.sessionToken && localToken) {
+          if (myUserData.sessionToken !== localToken) {
+            const dbTimestamp = parseInt(myUserData.sessionToken.split('_')[0]);
+            const localTimestamp = parseInt(localToken.split('_')[0]);
+
+            // Si el token de la DB es más nuevo, cerramos esta sesión
+            if (dbTimestamp > localTimestamp) {
+              toast.error("Sesión iniciada en otro dispositivo.");
+              sessionStorage.clear();
+              // Usamos window.location para asegurar limpieza total del estado de React
+              window.location.href = `/join/${assemblyId}`;
+              return;
+            }
+          }
+        }
+
         setCurrentUser(myUserData);
         setUserVotingPreference(myUserData.votingPreference || "block");
         setLoading(false);
-      } else setLoading(false);
+      } else {
+        setLoading(false);
+      }
     });
 
-    // B. Preguntas
+    // B. Preguntas y C. Votos se mantienen igual...
     const qRef = doc(db, "assemblyQuestions", assemblyId);
     const unsubQ = onSnapshot(qRef, (docSnap) => {
       if (docSnap.exists()) setQuestionsList(docSnap.data().questions || []);
     });
 
-    // C. Votos
     const vRef = doc(db, "assemblyVotes", assemblyId);
     const unsubV = onSnapshot(vRef, (docSnap) => {
       if (docSnap.exists()) setVotes(docSnap.data().votes || []);
@@ -222,8 +249,7 @@ export default function AsambleistaLobbyPage() {
       </aside>
 
       {/* CONTENIDO PRINCIPAL (Márgenes originales restaurados + mb-16 para móvil) */}
-      <main className="flex-1 flex flex-col overflow-y-auto md:px-16 md:py-8 py-4 bg-[#F3F6F9]">
-
+      <main className="flex-1 h-full overflow-y-auto bg-[#F3F6F9] pb-32 md:pb-8 md:px-16 md:py-8 py-4">
         {/* HEADER SUPERIOR ORIGINAL */}
         <div className="flex justify-between items-center mb-4 px-10">
           <div className=" bg-white rounded-full p-2 flex items-center gap-2 px-4 shadow-sm border border-gray-100">
@@ -313,14 +339,14 @@ export default function AsambleistaLobbyPage() {
                       <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${userVotingPreference === "individual" ? "bg-[#8B9DFF] border-[#8B9DFF]" : "border-gray-300"}`}>
                         {userVotingPreference === "individual" && <Check size={16} className="text-black" />}
                       </div>
-                      <span className={`block text-sm font-bold ${userVotingPreference === "individual" ? "text-[#0E3C42]" : "text-gray-400"}`}>Votar individual</span>
+                      <span className={`block text-sm font-bold ${userVotingPreference === "individual" ? "text-[#0E3C42]" : "text-gray-400"}`}>Individual</span>
                     </div>
                     {/* Botón Bloque */}
                     <div onClick={() => setUserVotingPreference("block")} className="flex items-center gap-3 cursor-pointer group">
                       <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${userVotingPreference === "block" ? "bg-[#8B9DFF] border-[#8B9DFF]" : "border-gray-300"}`}>
                         {userVotingPreference === "block" && <Check size={16} className="text-black" />}
                       </div>
-                      <span className={`block text-sm font-bold ${userVotingPreference === "block" ? "text-[#0E3C42]" : "text-gray-400"}`}>Votar en bloque</span>
+                      <span className={`block text-sm font-bold ${userVotingPreference === "block" ? "text-[#0E3C42]" : "text-gray-400"}`}>En bloque</span>
                     </div>
                   </div>
                 </div>
@@ -424,7 +450,7 @@ export default function AsambleistaLobbyPage() {
           .filter((q) => q.statusId === QUESTION_STATUSES.LIVE)
           .map((q) => (
             <QuestionItem
-              key={q.id} Estás seguro de
+              key={q.id}
               q={q}
               currentUser={currentUser}
               userRegistries={currentUser?.representedProperties || []}

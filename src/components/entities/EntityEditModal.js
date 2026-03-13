@@ -27,43 +27,21 @@ export default function EntityEditModal({
 
   return (
     // Overlay oscuro
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#00093F80] p-4">
-      
-      {/* Contenedor del Modal */}
-      <div className="bg-white rounded-3xl w-full max-w-[800px] max-h-[90vh] overflow-y-auto shadow-xl flex flex-col relative animate-in fade-in zoom-in duration-200">
-        
-        {/* Botón Cerrar (Esquina superior derecha) */}
-        <button 
-          onClick={onClose}
-          className="absolute top-6 right-6 text-gray-400 hover:text-gray-700 transition-colors"
-        >
-           {/* Si tienes un icono de X (close) en ICON_PATHS, úsalo. Si no, SVG básico */}
-           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-             <line x1="18" y1="6" x2="6" y2="18"></line>
-             <line x1="6" y1="6" x2="18" y2="18"></line>
-           </svg>
-        </button>
+    <div className="">
 
-        {/* Encabezado del Modal */}
-        <div className="p-8 pb-4 border-b border-gray-100">
-          <CustomText variant="TitleL" className="font-bold text-[#0E3C42]">
-            Editar Información General
-          </CustomText>
-          <CustomText variant="bodyM" className="text-gray-500 mt-1">
-            Modifique los datos básicos y administrativos de la entidad.
-          </CustomText>
-        </div>
+      {/* Contenedor del Modal */}
+      <div className="bg-white rounded-3xl w-full overflow-y-auto shadow-xl flex flex-col relative animate-in fade-in zoom-in duration-200">
 
         {/* Cuerpo del Modal (Formulario) */}
-        <div className="p-8 flex flex-col gap-6">
-          
+        <div className="p-8 flex flex-col gap-4">
+
           {/* SECCIÓN 1: Datos de la Entidad */}
           <div className="flex flex-col gap-4">
-            <CustomText variant="bodyX" className="font-bold text-[#333333]">
+            <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">
               Datos de la Entidad
             </CustomText>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <CustomInput
                 label="Nombre de la entidad"
                 value={entityForm.name}
@@ -76,14 +54,11 @@ export default function EntityEditModal({
                 label="NIT"
                 value={entityForm.nit}
                 onChange={(e) => handleChange("nit", e.target.value)}
-                placeholder="Escribe aquí el NIT"
+                placeholder="Escribe aquí el Nit"
                 optional
                 classLabel="font-bold text-[#333333]"
                 classInput="w-full rounded-lg border focus:border-[#94A2FF] outline-none transition-colors px-4 py-3"
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <CustomSelect
                 label="Tipo de entidad"
                 value={entityForm.type}
@@ -91,14 +66,16 @@ export default function EntityEditModal({
                 classLabel="font-bold text-[#333333]"
                 classSelect="w-full rounded-lg border focus:border-[#94A2FF] outline-none transition-colors px-4 py-3 text-gray-600"
               >
-                <option value="">Seleccione el tipo</option>
+                <option value="">Selecciona aquí el tipo de unidad</option>
                 {entityTypes.map((type) => (
                   <option key={type.id} value={type.id}>
                     {type.name}
                   </option>
                 ))}
               </CustomSelect>
+            </div>
 
+            <div className="grid md:grid-cols-3 gap-6">
               <CustomSelect
                 label="Ciudad"
                 value={entityForm.city}
@@ -107,7 +84,7 @@ export default function EntityEditModal({
                 classLabel="font-bold text-[#333333]"
                 classSelect="w-full rounded-lg border focus:border-[#94A2FF] outline-none transition-colors px-4 py-3 text-gray-600"
               >
-                <option value="">Seleccione la ciudad</option>
+                <option value="">Selecciona aquí la ciudad</option>
                 {colombiaCities.map((city) => (
                   <option key={city} value={city}>
                     {city}
@@ -131,16 +108,17 @@ export default function EntityEditModal({
 
           {/* SECCIÓN 2: Administrador */}
           <div className="flex flex-col gap-4">
-            <CustomText variant="bodyX" className="font-bold text-[#333333]">
-              Datos del Administrador
+            <CustomText variant="bodyL" className="text-[#333333] font-regular">
+              Ingrese los detalles básicos del administrador o funcionario de la
+              entidad:
             </CustomText>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <CustomInput
                 label="Nombre"
                 value={entityForm.adminName}
                 onChange={(e) => handleChange("adminName", e.target.value)}
-                placeholder="Nombre del admin"
+                placeholder="Escribe aquí el nombredel admin"
                 optional
                 classLabel="font-bold text-[#333333]"
                 classInput="w-full rounded-lg border focus:border-[#94A2FF] outline-none transition-colors px-4 py-3"
@@ -149,7 +127,7 @@ export default function EntityEditModal({
                 label="Correo"
                 value={entityForm.adminEmail}
                 onChange={(e) => handleChange("adminEmail", e.target.value)}
-                placeholder="Correo del admin"
+                placeholder="Escribe aquí el correo"
                 optional
                 classLabel="font-bold text-[#333333]"
                 classInput="w-full rounded-lg border focus:border-[#94A2FF] outline-none transition-colors px-4 py-3"
@@ -158,7 +136,7 @@ export default function EntityEditModal({
                 label="Celular"
                 value={entityForm.adminPhone}
                 onChange={(e) => handleChange("adminPhone", e.target.value)}
-                placeholder="Número de contacto"
+                placeholder="Escribe aquí el número"
                 optional
                 classLabel="font-bold text-[#333333]"
                 classInput="w-full rounded-lg border focus:border-[#94A2FF] outline-none transition-colors px-4 py-3"
@@ -169,7 +147,7 @@ export default function EntityEditModal({
         </div>
 
         {/* Footer del Modal (Botones) */}
-        <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-4 rounded-b-3xl">
+        <div className="p-6 border-t border-gray-100 flex justify-end gap-4 rounded-b-3xl">
           <CustomButton
             variant="secondary"
             onClick={onClose}
