@@ -287,10 +287,7 @@ export default function JoinAssemblyPage() {
 
   // Guardado Final Estructurado
   const handleFinalSubmit = async () => {
-    setLoading(true);
     try {
-      toast.info("Finalizando registro...");
-
       const initialProps = verificationQueue.map(p => ({
         ownerId: p.id,
         power: null,
@@ -341,15 +338,10 @@ export default function JoinAssemblyPage() {
       sessionStorage.setItem(`assembly_session_${assemblyId}`, regDocument);
       sessionStorage.setItem(`assembly_token_${assemblyId}`, newToken);
 
-      // 2. Navegar después
-      toast.success("¡Registro exitoso!");
       router.push(`/join/${assemblyId}/lobby`);
-
     } catch (error) {
-      console.error("Fallo en guardado:", error);
       toast.error("Error al guardar el registro.");
     } finally {
-      setLoading(false);
     }
   };
 
@@ -478,7 +470,7 @@ export default function JoinAssemblyPage() {
           )}
 
           {currentStep === STEPS.TERMS && (
-            <Step7Terms onAccept={handleFinalSubmit} loading={loading} />
+            <Step7Terms onAccept={handleFinalSubmit} />
           )}
 
         </JoinLayout>

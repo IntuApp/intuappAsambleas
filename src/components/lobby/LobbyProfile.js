@@ -55,7 +55,7 @@ export default function LobbyProfile({ currentUser, masterList, onLogout }) {
     const showPagination = totalPages > 1;
 
     return (
-        <div className="flex flex-col items-center justify-center gap-6">
+        <div className="flex flex-col items-center justify-center gap-6 px-10">
 
             <div className="max-w-[550px] mx-auto bg-white rounded-3xl p-6 shadow-xl shadow-indigo-100/20 border border-gray-100 flex flex-col items-start gap-3 text-start relative overflow-hidden">
                 <div className="flex items-start gap-2">
@@ -101,12 +101,13 @@ export default function LobbyProfile({ currentUser, masterList, onLogout }) {
             {/* PROPERTIES SECTION */}
             <div className="bg-white rounded-3xl p-8 shadow-sm border w-full border-gray-100 mt-6 gap-6">
 
-                <div className="flex md:flex-row justify-between items-center md:items-center gap-4 mb-10 w-full">
+                <div className="flex flex-col text-start flex-col-reverse md:flex-row justify-between md:items-center md:items-center md:gap-4 mb-10 w-full">
                     <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">
                         Propiedades
                     </CustomText>
 
-                    <div className="max-w-[151px]">
+                    <div className="flex justify-end">
+                        <div className="md:max-w-[151px]">
                         <select
                             value={sortPropertiesBy}
                             onChange={(e) => setSortPropertiesBy(e.target.value)}
@@ -115,6 +116,7 @@ export default function LobbyProfile({ currentUser, masterList, onLogout }) {
                             <option>Nombre</option>
                             <option>Coeficiente</option>
                         </select>
+                    </div>
                     </div>
                 </div>
 

@@ -28,6 +28,7 @@ import CustomIcon from "@/components/basics/CustomIcon";
 import { ICON_PATHS } from "@/constans/iconPaths";
 import CustomTypePropertie from "@/components/join/CustomTypePropertie";
 import LobbyProfile from "@/components/lobby/LobbyProfile";
+import LobbyHelp from "@/components/lobby/LobbyHelp";
 
 // --- SUBCOMPONENTE NAVEGACIÓN ---
 const NavItem = ({ id, icon, label, activeTab, setActiveTab }) => (
@@ -440,8 +441,7 @@ export default function AsambleistaLobbyPage() {
         {/* ---------------- PESTAÑA: AYUDA ---------------- */}
         {activeTab === "ayuda" && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <CustomText variant="TitleM" className="font-black text-[#0E3C42] mb-8">Preguntas frecuentes</CustomText>
-            {/* Acordeones de ayuda */}
+            <LobbyHelp />
           </div>
         )}
 
