@@ -149,8 +149,8 @@ export default function LobbyProfile({ currentUser, masterList, onLogout }) {
                                         <CustomTypePropertie type={tipo.toLowerCase()} className="p-2" />
                                     </div>
 
-                                    <div className="flex-1 flex flex-col gap-0">
-                                        <CustomText variant="bodyM" className="font-bold truncate">
+                                    <div className="flex-1 flex flex-col gap-1 ">
+                                        <CustomText variant="bodyS" className="font-bold truncate flex-col">
                                             {tipo && tipo !== "-" ? `${tipo} - ` : ""}
                                             {grupo && grupo !== "-" ? `${grupo} - ` : ""}
                                             {propiedadNombre}
@@ -158,7 +158,7 @@ export default function LobbyProfile({ currentUser, masterList, onLogout }) {
 
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <CustomText
-                                                variant="bodyS"
+                                                variant="labelS"
                                                 className={`font-medium px-2 py-1 rounded-full ${isProxy
                                                     ? "text-[#00093F] bg-[#D5DAFF] "
                                                     : "text-[#0E3C42] bg-[#B8EAF0]"

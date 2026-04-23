@@ -298,24 +298,7 @@ const FuncionarioPage = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* AVISOS LEGALES */}
-                        <div className="bg-[#FFF4E5] border border-orange-100 rounded-[32px] p-8 relative overflow-hidden flex gap-6 items-start">
-                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-[#F98A56] shadow-sm shrink-0">
-                                <AlertTriangle size={24} />
-                            </div>
-                            <div className="space-y-3">
-                                <h4 className="font-black text-[#8B4513] uppercase tracking-[0.1em] text-xs">Sobre el resultado de las votaciones</h4>
-                                <p className="text-[#8B4513]/80 text-sm font-bold">
-                                    Los resultados emitidos se obtienen con base en los coeficientes (Ley 675 de 2001):
-                                </p>
-                                <ul className="space-y-2 text-[#8B4513]/70 text-xs font-medium list-disc pl-4">
-                                    <li><b>Art 37:</b> El voto equivale al porcentaje del coeficiente de copropiedad.</li>
-                                    <li><b>Art 45:</b> Las decisiones se toman con el voto favorable de la mitad más uno de los coeficientes presentes.</li>
-                                </ul>
-                            </div>
-                        </div>
+                        </div>            
 
                         <div className="bg-[#F5F7FF] border border-indigo-100 rounded-[32px] p-8 relative overflow-hidden flex gap-6 items-start">
                             <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-[#4059FF] shadow-sm shrink-0">

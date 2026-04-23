@@ -7,6 +7,7 @@ import CustomButton from "@/components/basics/CustomButton";
 import CustomIcon from "@/components/basics/CustomIcon";
 import { ICON_PATHS } from "@/constans/iconPaths";
 import CustomSelect from "../basics/CustomSelect";
+import { ChevronDown } from "lucide-react";
 
 export default function Step5ManualAdd({
     manualData,
@@ -80,14 +81,13 @@ export default function Step5ManualAdd({
                 )}
                 {/* 1. SELECTOR DE TIPO */}
                 {sortedTypes.length > 1 && (
-                    <div className={containerStyles}>
-                        <label className={labelStyles}>{getFieldLabel("Tipo")} *</label>
+                    <div className="relative">
                         <select
-                            className={selectStyles}
+                            className={`${selectStyles} appearance-none pr-10`}
                             value={manualData.type}
                             onChange={(e) => {
                                 handleUpdate("type", e.target.value);
-                                handleUpdate("group", ""); // Limpiar hijos al cambiar padre
+                                handleUpdate("group", "");
                                 handleUpdate("registry", null);
                             }}
                         >
@@ -96,6 +96,11 @@ export default function Step5ManualAdd({
                                 <option key={`type-${t}-${index}`} value={t}>{t}</option>
                             ))}
                         </select>
+
+                        <ChevronDown
+                            size={18}
+                            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                        />
                     </div>
                 )}
 
@@ -103,19 +108,29 @@ export default function Step5ManualAdd({
                 {showGroup && (
                     <div className={containerStyles}>
                         <label className={labelStyles}>{getFieldLabel("Grupo")} *</label>
-                        <select
-                            className={selectStyles}
-                            value={manualData.group}
-                            onChange={(e) => {
-                                handleUpdate("group", e.target.value);
-                                handleUpdate("registry", null); // Limpiar propiedad al cambiar grupo
-                            }}
-                        >
-                            <option key="def-group" value="">Selecciona {getFieldLabel("Grupo").toLowerCase()}</option>
-                            {sortedGroups.map((g, index) => (
-                                <option key={`group-${g}-${index}`} value={g}>{g}</option>
-                            ))}
-                        </select>
+
+                        <div className="relative">
+                            <select
+                                className={`${selectStyles} appearance-none pr-10`}
+                                value={manualData.group}
+                                onChange={(e) => {
+                                    handleUpdate("group", e.target.value);
+                                    handleUpdate("registry", null);
+                                }}
+                            >
+                                <option key="def-group" value="">
+                                    Selecciona {getFieldLabel("Grupo").toLowerCase()}
+                                </option>
+                                {sortedGroups.map((g, index) => (
+                                    <option key={`group-${g}-${index}`} value={g}>{g}</option>
+                                ))}
+                            </select>
+
+                            <ChevronDown
+                                size={18}
+                                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                            />
+                        </div>
                     </div>
                 )}
 
@@ -134,6 +149,10 @@ export default function Step5ManualAdd({
                                     {p.Propiedad || p.propiedad}
                                 </option>
                             ))}
+                            <ChevronDown
+                                size={18}
+                                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                            />
                         </CustomSelect>
                     </div>
                 )}
@@ -155,6 +174,10 @@ export default function Step5ManualAdd({
                                         disabled: hasReachedLimit
                                     },
                                 ]}
+                            />
+                            <ChevronDown
+                                size={18}
+                                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                             />
                         </div>
 

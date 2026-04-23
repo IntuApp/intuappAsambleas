@@ -303,7 +303,7 @@ export default function AsambleistaLobbyPage() {
             {resultSubTab === "global" && (
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-1">
-                  <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">Asamblea {assembly.name}</CustomText>
+                  <CustomText variant="bodyX" className="text-[#0E3C42] font-bold">{assembly.name}</CustomText>
                   <CustomText variant="labelL" className="text-[#0E3C42] font-regular">Estos son los resultados de las votaciones de esta asamblea.</CustomText>
                 </div>
 

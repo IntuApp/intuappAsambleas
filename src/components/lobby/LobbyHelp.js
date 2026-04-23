@@ -70,7 +70,7 @@ export default function LobbyHelp() {
 
                 <img
                     src="/logos/decorations/figureTwo.png"
-                    className="absolute bottom-0 right-0 h-full w-auto pointer-events-none select-none"
+                    className="hidden sm:block absolute bottom-0 right-0 h-full w-auto pointer-events-none select-none"
                     alt="decoration"
                 />
             </div>
@@ -93,18 +93,6 @@ export default function LobbyHelp() {
 
                 <FAQItem question="¿Cómo edito mi registro?">
                     <p>No se puede editar. Debe solicitar al operador logístico la eliminación para volver a registrarse.</p>
-                </FAQItem>
-
-                <FAQItem question="Sobre los resultados de las votaciones">
-                    <div className="space-y-4">
-                        <p className="font-bold">Los resultados emitidos en la plataforma se obtienen con base en los coeficientes, según lo establecido en la Ley 675 de 2001:</p>
-                        <ul className="space-y-3">
-                            <li>
-                                <span className="font-bold text-[#0E3C42]">Artículo 45. Quórum y mayorías:</span>
-                                "Con excepción de los casos en que la ley o el reglamento de propiedad horizontal exijan un quórum o mayoría superior... la asamblea general sesionará con un número plural de propietarios... que representen más de la mitad de los coeficientes de copropiedad..."
-                            </li>
-                        </ul>
-                    </div>
                 </FAQItem>
             </div>
         </div >
