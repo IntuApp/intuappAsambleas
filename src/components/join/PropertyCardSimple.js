@@ -17,12 +17,14 @@ export default function PropertyCardSimple({ registry }) {
         <CustomTypePropertie type={tipo.toLowerCase().trim()} size={24} />
       </div>
       <div className="flex flex-col text-left overflow-hidden">
-        <CustomText variant="bodyM" className="font-bold text-[#0E3C42] truncate">
-          {grupo ? `${grupo} ` : ""}
-        </CustomText>
-        <CustomText variant="bodyM" className="font-bold text-[#0E3C42] truncate">
-          {tipo ? `${tipo} ` : ""} {propiedad}
-        </CustomText>
+        <div className="flex gap-1">
+          <CustomText variant="bodyM" className="font-bold text-[#0E3C42] truncate">
+            {grupo ? `${grupo} ` : ""} -
+          </CustomText>
+          <CustomText variant="bodyM" className="font-bold text-[#0E3C42] truncate">
+            {tipo ? `${tipo} ` : ""} {propiedad}
+          </CustomText>
+        </div>
         <div className="flex items-center gap-1 mt-0.5">
           <CustomText variant="labelM" className="text-[#838383]">
             Coeficiente:

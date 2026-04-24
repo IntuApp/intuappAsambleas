@@ -107,16 +107,24 @@ export default function LobbyProfile({ currentUser, masterList, onLogout }) {
                     </CustomText>
 
                     <div className="flex justify-end">
-                        <div className="md:max-w-[151px]">
-                        <select
-                            value={sortPropertiesBy}
-                            onChange={(e) => setSortPropertiesBy(e.target.value)}
-                            className="w-[151px] min-h-[48px] border rounded-2xl px-5 py-4 outline-none font-bold text-[#0E3C42] text-sm appearance-none cursor-pointer">
-                            <option>Ordenar por</option>
-                            <option>Nombre</option>
-                            <option>Coeficiente</option>
-                        </select>
-                    </div>
+                        <div className="md:max-w-[151px] relative">
+
+                            <select
+                                value={sortPropertiesBy}
+                                onChange={(e) => setSortPropertiesBy(e.target.value)}
+                                className="w-[151px] min-h-[48px] border rounded-2xl px-5 py-4 pr-10 outline-none font-bold text-[#0E3C42] text-sm appearance-none cursor-pointer"
+                            >
+                                <option>Ordenar por</option>
+                                <option>Nombre</option>
+                                <option>Coeficiente</option>
+                            </select>
+
+                            <ChevronDown
+                                size={18}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#0E3C42]"
+                            />
+
+                        </div>
                     </div>
                 </div>
 
@@ -150,11 +158,15 @@ export default function LobbyProfile({ currentUser, masterList, onLogout }) {
                                     </div>
 
                                     <div className="flex-1 flex flex-col gap-1 ">
-                                        <CustomText variant="bodyS" className="font-bold truncate flex-col">
-                                            {tipo && tipo !== "-" ? `${tipo} - ` : ""}
-                                            {grupo && grupo !== "-" ? `${grupo} - ` : ""}
-                                            {propiedadNombre}
-                                        </CustomText>
+                                        <div className="flex flex-wrap">
+                                            <CustomText variant="bodyS" className="font-bold truncate flex-col">
+                                                {grupo && grupo !== "-" ? `${grupo} - ` : ""}
+                                            </CustomText>
+                                            <CustomText variant="bodyS" className="font-bold truncate flex-col">
+                                                {tipo && tipo !== "-" ? `${tipo} - ` : ""}
+                                                {propiedadNombre}
+                                            </CustomText>
+                                        </div>
 
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <CustomText
@@ -206,8 +218,8 @@ export default function LobbyProfile({ currentUser, masterList, onLogout }) {
                                     key={i}
                                     onClick={() => setCurrentPage(i + 1)}
                                     className={`w-10 h-10 rounded-full transition font-bold text-sm ${currentPage === i + 1
-                                            ? "bg-[#8B9DFF] text-white"
-                                            : "bg-white border border-gray-100 text-gray-400 hover:bg-gray-50"
+                                        ? "bg-[#8B9DFF] text-white"
+                                        : "bg-white border border-gray-100 text-gray-400 hover:bg-gray-50"
                                         }`}
                                 >
                                     {i + 1}

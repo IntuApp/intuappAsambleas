@@ -257,57 +257,78 @@ const FuncionarioPage = () => {
                     /* CONTENIDO TAB SOBRE INTUAPP */
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-10 mx-8">
                         {/* HERO GRADIENT CARD */}
-                        <div className="bg-gradient-to-br from-[#80D9D1] via-[#8B9DFF] to-[#6372FF] rounded-[32px] md:rounded-[48px] p-8 md:p-16 text-white relative overflow-hidden shadow-lg">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-[60px]" />
-                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-[60px]" />
-
+                        <div className="relative overflow-hidden rounded-[32px] bg- p-8 sm:p-10 shadow-soft">
                             <div className="relative z-10 flex flex-col items-center text-center">
-                                <div className="text-white font-black text-4xl md:text-[56px] tracking-tighter flex items-center gap-4 mb-4 drop-shadow-md">
-                                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full border-[6px] border-white flex items-center justify-center shadow-lg">
-                                        <div className="w-3 h-3 bg-white rounded-full" />
-                                    </div>
-                                    intuapp
-                                </div>
-                                <h3 className="text-xl md:text-2xl font-black opacity-95 italic">
+                                <img src="/logos/logo/component.png" alt="decoration" />
+                                <CustomText variant="bodyX" className="text-[#0E3C42] font-medium">
                                     Lo complejo hecho simple
-                                </h3>
+                                </CustomText>
                             </div>
 
+                            <div className="absolute -top-20 -left-40 w-[500px] h-[500px] bg-[#94A2FF] opacity-80 blur-[90px] rounded-full pointer-events-none" />
+
+                            <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] bg-[#ABE7E5] opacity-80 blur-[90px] rounded-full pointer-events-none" />
+
+                            <div className="absolute -top-10 right-0 w-[500px] h-[500px] bg-[#ABE7E5] opacity-80 blur-[90px] rounded-full pointer-events-none" />
+
+                            <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-[#94A2FF] opacity-80 blur-[100px] rounded-full pointer-events-none" />
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 relative z-10 mt-12 max-w-5xl mx-auto">
                                 <div className="bg-white rounded-[24px] p-6 shadow-lg text-[#0E3C42]">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <ShieldCheck size={28} className="text-[#4059FF]" />
-                                        <h4 className="font-black uppercase tracking-[0.1em] text-sm">Nuestra Misión</h4>
-                                    </div>
-                                    <p className="text-sm leading-relaxed text-gray-600 font-medium">
+                                    <CustomText variant="bodyL" className="text-[#0E3C42] font-black mb-2">
+                                        Nuestra Misión
+                                    </CustomText>
+                                    <CustomText variant="bodyS" className="text-gray-600 font-medium leading-relaxed">
                                         Creamos herramientas funcionales con un enfoque intuitivo para simplificar lo complejo. Nuestro objetivo es hacer que la gestión de asambleas sea accesible y eficiente para todos.
-                                    </p>
+                                    </CustomText>
                                 </div>
 
                                 <div className="bg-white rounded-[24px] p-6 shadow-lg text-[#0E3C42]">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <Trophy size={28} className="text-[#4059FF]" />
-                                        <h4 className="font-black uppercase tracking-[0.1em] text-sm">Experiencia</h4>
-                                    </div>
-                                    <p className="text-sm leading-relaxed text-gray-600 font-medium">
+                                    <CustomText variant="bodyL" className="text-[#0E3C42] font-black mb-2">
+                                        Experiencia
+                                    </CustomText>
+                                    <CustomText variant="bodyS" className="text-gray-600 font-medium mb-1">
                                         Más de 10 años de experiencia en la gestión de asambleas.
-                                    </p>
-                                    <div className="mt-2 text-xs text-gray-400 font-bold space-y-1">
+                                    </CustomText>
+                                    <CustomText variant="bodyS" className="text-black font-black space-y-1">
                                         <p>• 500+ asambleas exitosas</p>
                                         <p>• Miles de Asambleístas satisfechos</p>
-                                    </div>
+                                    </CustomText>
                                 </div>
                             </div>
-                        </div>            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 relative z-10 mt-12 max-w-5xl mx-auto">
+                                <div className="bg-white rounded-[24px] p-6 shadow-lg text-[#0E3C42]">
+                                    <CustomText variant="bodyL" className="text-[#0E3C42] font-black mb-2">
+                                        ¿Qué hacemos?
+                                    </CustomText>
+                                    <CustomText variant="bodyS" className="text-gray-600 font-medium leading-relaxed mb-1">
+                                        Somos una herramienta que facilita y dinamiza el proceso de registros y votaciones en las asambleas.
+                                    </CustomText>
+                                </div>
 
-                        <div className="bg-[#F5F7FF] border border-indigo-100 rounded-[32px] p-8 relative overflow-hidden flex gap-6 items-start">
-                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-[#4059FF] shadow-sm shrink-0">
-                                <Info size={24} />
+                                <div className="bg-white rounded-[24px] p-6 shadow-lg text-[#0E3C42]">
+                                    <CustomText variant="bodyL" className="text-[#0E3C42] font-black mb-2">
+                                        Nuestro Rol
+                                    </CustomText>
+                                    <CustomText variant="bodyS" className="text-gray-600 font-medium leading-relaxed mb-1">
+                                        Somos la herramienta tecnológica que facilita el proceso, no el operador logístico que realiza tu asamblea.
+                                    </CustomText>
+                                </div>
                             </div>
+                        </div>
+
+                        <div className="bg-[#EEF0FF] border border-[#94A2FF] rounded-[16px] p-8 relative overflow-hidden flex gap-2 items-start">
+
                             <div className="space-y-3">
-                                <h4 className="font-black text-[#0E3C42] uppercase tracking-[0.1em] text-xs">Aclaración</h4>
-                                <ul className="space-y-2 text-gray-600 text-xs font-medium list-disc pl-4">
-                                    <li><b>Intuapp</b> es una herramienta tecnológica de apoyo, no ejerce control sobre la asamblea.</li>
+                                <div className="flex items-center gap-2">
+                                    <CustomIcon
+                                        path={ICON_PATHS.info}
+                                        size={20}
+                                    />
+                                    <CustomText variant="bodyS" className=" font-bold">Importante</CustomText>
+
+                                </div>
+                                <ul className=" text-base list-disc pl-8">
+                                    <li>Intuapp es una herramienta tecnológica de apoyo, no ejerce control sobre la asamblea.</li>
                                     <li>No determinamos la validez de las decisiones.</li>
                                     <li>No se aplica regla de tres ni un nuevo 100% sobre los presentes.</li>
                                 </ul>
@@ -315,14 +336,7 @@ const FuncionarioPage = () => {
                         </div>
                     </div>
                 )}
-            </main>
-
-            {/* ---------------- FOOTER ---------------- */}
-            <footer className="mt-auto py-8 border-t border-gray-200 bg-white text-center">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
-                    IntuApp &copy; {new Date().getFullYear()} - Todos los derechos reservados
-                </p>
-            </footer>
+            </main>            
 
         </div>
     );

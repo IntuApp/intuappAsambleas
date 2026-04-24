@@ -66,7 +66,7 @@ export default function LobbyHome({
 
 
       {/* 2. Grid Superior: Info de Asamblea y Videollamada */}
-      <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 flex flex-col justify-evenly h-[220px] relative overflow-hidden">
+      <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 flex flex-col justify-evenly md:h-[220px] relative overflow-hidden">
 
         {/* Imagen de fondo: le bajamos el z-index con z-0 */}
         <div className="absolute flex justify-end right-0 top-0 w-1/2 h-full opacity-50 z-0">
