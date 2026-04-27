@@ -224,25 +224,13 @@ const FuncionarioPage = () => {
                 {activeTab === "Asambleistas" ? (
 
                     /* CONTENIDO TAB ASAMBLEISTAS */
-                    <div className="bg-white rounded-[32px] p-6 mx-8 md:p-10 shadow-sm border border-gray-100 animate-in fade-in duration-500 pb-8">
-                        <CustomText variant="TitleM" className="font-bold text-[#0E3C42] mb-6">Asistencia</CustomText>
-
-                        {/* ALERTA INFORMATIVA (Solo visual) */}
-                        <div className="bg-[#FFF4E5] border border-orange-200 rounded-2xl p-4 md:p-5 flex gap-4 items-start mb-6">
-                            <AlertTriangle className="text-[#F98A56] shrink-0 mt-0.5" size={24} />
-                            <div className="flex flex-col gap-1">
-                                <CustomText variant="bodyS" className="font-black text-[#8B4513]">Importante</CustomText>
-                                <CustomText variant="labelL" className="text-[#8B4513]/80 leading-relaxed">
-                                    La responsabilidad de definir a qué asambleístas se les restringe el voto recae exclusivamente en el Operador Logístico o en la administración o funcionario de la entidad. IntuApp no valida las causales de restricción ni asume responsabilidad legal por el uso de esta función.
-                                </CustomText>
-                            </div>
-                        </div>
-
+                    <div>
                         {/* TABLA DE ASISTENCIA (Usando tu componente y pasándole masterList) */}
                         <AttendanceTable
                             assembly={assemblyData}
                             registrations={registrations?.registrations}
                             masterList={masterList}
+                            isFuncionario={true}
 
                             // 👇 ESTO ES CLAVE PARA QUE FUNCIONE LA COLUMNA
                             blockedProperties={registrations?.blockedProperties || []}
@@ -258,7 +246,7 @@ const FuncionarioPage = () => {
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-10 mx-8">
                         {/* HERO GRADIENT CARD */}
                         <div className="relative overflow-hidden rounded-[32px] bg- p-8 sm:p-10 shadow-soft">
-                            <div className="relative z-10 flex flex-col items-center text-center">
+                            <div className="relative z-10 flex flex-col items-center text-center sm:py-8">
                                 <img src="/logos/logo/component.png" alt="decoration" />
                                 <CustomText variant="bodyX" className="text-[#0E3C42] font-medium">
                                     Lo complejo hecho simple
